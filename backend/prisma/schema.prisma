@@ -1,0 +1,43 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String        @id @default(uuid())
+  studentId    String        @unique
+  email        String        @unique
+  name         String
+  contactInfo  String?       // เช่น Line ID, เบอร์โทร (อัปเดตภายหลังในหน้า Profile)
+  isBanned     Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  products     Product[]
+  reservations Reservation[]
+}
+
+model Product {
+  id             String        @id @default(uuid())
+  title          String
+  price          Float
+  imageUrl       String?       // เก็บ Path ของไฟล์รูปภาพในเครื่อง (/uploads/...)
+  meetupLocation String        // จุดนัดรับสินค้า (เช่น หอสมุด มช., ลานสัก, โรงอาหารอ่างแก้ว)
+  isAvailable    Boolean       @default(true)
+  sellerId       String
+  seller         User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  reservations   Reservation[]
+}
+
+model Reservation {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  buyerId   String
+  buyer     User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  status    String   @default("PENDING") // PENDING, COMPLETED, CANCELLED
+  createdAt DateTime @default(now())
+}

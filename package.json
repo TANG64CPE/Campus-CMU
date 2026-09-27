@@ -1,0 +1,17 @@
+{
+  "name": "campusmart-workspace",
+  "version": "1.0.0",
+  "description": "CampusMart - Chiang Mai University Campus Marketplace",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd backend && npm run build && cd ../frontend && npm run build",
+    "test": "cd backend && npm test",
+    "prisma:seed": "cd backend && npm run prisma:seed",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
+  },
+  "keywords": ["cmu", "marketplace", "chiang-mai-university"],
+  "author": "CampusMart Team",
+  "license": "MIT"
+}
