@@ -14,6 +14,7 @@ model User {
   email        String        @unique
   name         String
   contactInfo  String?       // เช่น Line ID, เบอร์โทร (อัปเดตภายหลังในหน้า Profile)
+  role         String        @default("STUDENT") // "STUDENT" | "ADMIN"
   isBanned     Boolean       @default(false)
   createdAt    DateTime      @default(now())
   products     Product[]

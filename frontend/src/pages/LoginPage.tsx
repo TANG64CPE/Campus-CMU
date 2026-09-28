@@ -31,6 +31,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       email: 'thanakorn_arch@cmu.ac.th',
       desc: 'สถาปัตยกรรมศาสตร์ (มีคีย์บอร์ด Logitech)',
     },
+    {
+      studentId: 'ADMIN001',
+      name: 'อาจารย์ ผู้ดูแลระบบ (Admin CPE)',
+      email: 'admin_cpe@cmu.ac.th',
+      desc: 'ผู้ดูแลระบบ — จัดการบัญชีผู้ขาย ผู้ซื้อ และตรวจสอบสถิติ',
+      role: 'ADMIN',
+    },
   ];
 
   const handleSelectMock = async (preset: typeof mockPresets[0]) => {

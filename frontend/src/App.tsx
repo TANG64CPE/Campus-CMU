@@ -6,10 +6,11 @@ import { ProductDetailPage } from './pages/ProductDetailPage';
 import { CreateProductPage } from './pages/CreateProductPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { LoginPage } from './pages/LoginPage';
+import { AdminPage } from './pages/AdminPage';
 
 const MainApp: React.FC = () => {
   const { user, refreshUser } = useAuth();
-  const [currentView, setCurrentView] = useState<'marketplace' | 'detail' | 'create' | 'profile' | 'login'>('marketplace');
+  const [currentView, setCurrentView] = useState<'marketplace' | 'detail' | 'create' | 'profile' | 'login' | 'admin'>('marketplace');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -40,6 +41,8 @@ const MainApp: React.FC = () => {
       } else {
         setCurrentView('profile');
       }
+    } else if (view === 'admin') {
+      setCurrentView('admin');
     } else if (view === 'login') {
       setCurrentView('login');
     } else {
@@ -93,6 +96,13 @@ const MainApp: React.FC = () => {
           <ProfilePage
             onSelectProduct={handleSelectProduct}
             onNavigateToFeed={() => setCurrentView('marketplace')}
+          />
+        )}
+
+        {currentView === 'admin' && (
+          <AdminPage
+            onNavigateHome={() => setCurrentView('marketplace')}
+            onSelectProduct={handleSelectProduct}
           />
         )}
 

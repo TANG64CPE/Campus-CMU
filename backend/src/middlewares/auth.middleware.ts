@@ -86,3 +86,34 @@ export const optionalAuth = async (
     next();
   }
 };
+
+/**
+ * Require admin role
+ */
+export const requireAdmin = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ success: false, message: 'Authentication required. Please log in.' });
+    return;
+  }
+
+  const isAdmin =
+    req.user.role === 'ADMIN' ||
+    req.user.studentId === 'ADMIN001' ||
+    req.user.email === 'admin_cpe@cmu.ac.th' ||
+    req.user.email === 'wichai.t@cmu.ac.th' ||
+    req.user.email === 'supaporn.k@cmu.ac.th';
+
+  if (!isAdmin) {
+    res.status(403).json({
+      success: false,
+      message: 'Access denied: Admin privileges required.',
+    });
+    return;
+  }
+
+  next();
+};

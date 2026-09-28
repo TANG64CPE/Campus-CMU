@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, Product, Reservation, SellerContact } from '../types';
+import { User, Product, Reservation, SellerContact, AdminStats, AdminUserSummary, AdminUserDetail } from '../types';
 
 const api = axios.create({
   baseURL: '/api',
@@ -18,7 +18,7 @@ export const authApi = {
   logout: async (): Promise<void> => {
     await api.post('/auth/logout');
   },
-  mockLogin: async (data: { studentId?: string; name?: string; email?: string }): Promise<User> => {
+  mockLogin: async (data: { studentId?: string; name?: string; email?: string; role?: string }): Promise<User> => {
     const res = await api.post<{ success: boolean; user: User }>('/auth/mock-login', data);
     return res.data.user;
   },
@@ -120,6 +120,42 @@ export const userApi = {
       `/users/products/${productId}/toggle-status`
     );
     return res.data.product;
+  },
+};
+
+export const adminApi = {
+  getStats: async (): Promise<AdminStats> => {
+    const res = await api.get<{ success: boolean; stats: AdminStats }>('/admin/stats');
+    return res.data.stats;
+  },
+  getUsers: async (params?: {
+    search?: string;
+    role?: string;
+    status?: string;
+    side?: string;
+  }): Promise<AdminUserSummary[]> => {
+    const res = await api.get<{ success: boolean; users: AdminUserSummary[] }>('/admin/users', { params });
+    return res.data.users;
+  },
+  getUserDetail: async (id: string): Promise<AdminUserDetail> => {
+    const res = await api.get<{ success: boolean } & AdminUserDetail>(`/admin/users/${id}`);
+    return {
+      user: res.data.user,
+      sellerSide: res.data.sellerSide,
+      buyerSide: res.data.buyerSide,
+    };
+  },
+  toggleBan: async (id: string, isBanned?: boolean): Promise<{ success: boolean; message: string; user: User }> => {
+    const res = await api.patch<{ success: boolean; message: string; user: User }>(`/admin/users/${id}/ban`, {
+      isBanned,
+    });
+    return res.data;
+  },
+  updateRole: async (id: string, role: 'STUDENT' | 'ADMIN'): Promise<{ success: boolean; message: string; user: User }> => {
+    const res = await api.patch<{ success: boolean; message: string; user: User }>(`/admin/users/${id}/role`, {
+      role,
+    });
+    return res.data;
   },
 };
 

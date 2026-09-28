@@ -79,12 +79,16 @@ export class AuthController {
         },
       });
 
+      const ADMIN_EMAILS = ['admin_cpe@cmu.ac.th', 'wichai.t@cmu.ac.th', 'supaporn.k@cmu.ac.th'];
+      const isDefaultAdmin = ADMIN_EMAILS.includes(profile.email.toLowerCase()) || profile.studentId === 'ADMIN001';
+
       if (user) {
         user = await prisma.user.update({
           where: { id: user.id },
           data: {
             name: profile.name || user.name,
             email: profile.email || user.email,
+            ...(isDefaultAdmin && user.role !== 'ADMIN' ? { role: 'ADMIN' } : {}),
           },
         });
       } else {
@@ -93,6 +97,7 @@ export class AuthController {
             studentId: profile.studentId,
             email: profile.email,
             name: profile.name,
+            role: isDefaultAdmin ? 'ADMIN' : 'STUDENT',
           },
         });
       }
@@ -137,11 +142,12 @@ export class AuthController {
       return;
     }
 
-    const { studentId, name, email, contactInfo } = req.body;
+    const { studentId, name, email, contactInfo, role } = req.body;
 
     const targetStudentId = studentId || '650610001';
     const targetEmail = email || `student_${targetStudentId}@cmu.ac.th`;
     const targetName = name || `นักศึกษา มช. (${targetStudentId})`;
+    const targetRole = role || (targetStudentId === 'ADMIN001' || targetEmail.includes('admin') ? 'ADMIN' : undefined);
 
     try {
       let user = await prisma.user.findFirst({
@@ -157,6 +163,7 @@ export class AuthController {
             name: targetName,
             email: targetEmail,
             ...(contactInfo ? { contactInfo } : {}),
+            ...(targetRole ? { role: targetRole } : {}),
           },
         });
       } else {
@@ -166,6 +173,7 @@ export class AuthController {
             email: targetEmail,
             name: targetName,
             contactInfo: contactInfo || 'Line: @cmu_test | Tel: 081-234-5678',
+            role: targetRole || 'STUDENT',
           },
         });
       }

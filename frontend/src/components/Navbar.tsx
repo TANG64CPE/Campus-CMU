@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingBag, PlusCircle, User as UserIcon, LogOut, ChevronDown, Sparkles, Search } from 'lucide-react';
+import { ShoppingBag, PlusCircle, User as UserIcon, LogOut, ChevronDown, Sparkles, Search, Shield } from 'lucide-react';
 
 interface NavbarProps {
   currentView: string;
@@ -20,9 +20,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   // Mock accounts for quick local testing
   const mockStudents = [
-    { studentId: '650610001', name: 'สมชาย เชียงใหม่ (CPE)', email: 'somchai_cpe@cmu.ac.th' },
-    { studentId: '650610002', name: 'อภิญญา ภูพิงค์ (CS)', email: 'apinya_cs@cmu.ac.th' },
-    { studentId: '650610003', name: 'ธนากร ดอยสุเทพ (Arch)', email: 'thanakorn_arch@cmu.ac.th' },
+    { studentId: '650610001', name: 'สมชาย เชียงใหม่ (CPE)', email: 'somchai_cpe@cmu.ac.th', role: 'STUDENT' },
+    { studentId: '650610002', name: 'อภิญญา ภูพิงค์ (CS)', email: 'apinya_cs@cmu.ac.th', role: 'STUDENT' },
+    { studentId: '650610003', name: 'ธนากร ดอยสุเทพ (Arch)', email: 'thanakorn_arch@cmu.ac.th', role: 'STUDENT' },
+    { studentId: 'ADMIN001', name: 'อาจารย์ ผู้ดูแลระบบ (Admin CPE)', email: 'admin_cpe@cmu.ac.th', role: 'ADMIN' },
   ];
 
   return (
@@ -77,6 +78,21 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-2.5">
             {user ? (
               <>
+                {/* Admin System Button for Admins */}
+                {user.role === 'ADMIN' && (
+                  <button
+                    onClick={() => onNavigate('admin')}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill text-xs font-semibold tracking-[-0.15px] border transition-all ${
+                      currentView === 'admin'
+                        ? 'bg-purple-50 text-primary border-primary font-bold shadow-tinted-xs'
+                        : 'bg-canvas text-ink hover:text-primary hover:border-primary border-hairline'
+                    }`}
+                  >
+                    <Shield className="w-3.5 h-3.5 text-primary" />
+                    <span>ระบบ Admin</span>
+                  </button>
+                )}
+
                 {/* Sell Item Button — ClickUp Dark Pill CTA (#292d34, 20px radius) */}
                 <button
                   onClick={() => onNavigate('create')}
@@ -112,12 +128,29 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onClick={() => setShowUserMenu(false)}
                     >
                       <div className="px-4 py-2.5 border-b border-hairline">
-                        <p className="eyebrow-mono text-[10px] text-ink-tertiary">CMU ACCOUNT</p>
+                        <div className="flex items-center justify-between">
+                          <p className="eyebrow-mono text-[10px] text-ink-tertiary">CMU ACCOUNT</p>
+                          {user.role === 'ADMIN' && (
+                            <span className="eyebrow-mono text-[9px] font-bold text-primary bg-purple-50 px-1 rounded-xxs border border-purple-200">
+                              ADMIN
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs font-bold text-ink truncate mt-0.5">{user.name}</p>
                         <p className="text-[11px] text-brand-link font-mono truncate">{user.email}</p>
                       </div>
 
                       <div className="py-1">
+                        {user.role === 'ADMIN' && (
+                          <button
+                            onClick={() => onNavigate('admin')}
+                            className="w-full px-4 py-2 text-left text-xs font-semibold text-primary hover:bg-surface flex items-center gap-2"
+                          >
+                            <Shield className="w-3.5 h-3.5" />
+                            <span>ระบบจัดการผู้ใช้ (Admin)</span>
+                          </button>
+                        )}
+
                         <button
                           onClick={() => onNavigate('profile')}
                           className="w-full px-4 py-2 text-left text-xs font-medium text-ink hover:bg-surface flex items-center gap-2"
