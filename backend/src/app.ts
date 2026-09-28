@@ -34,6 +34,11 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Callback aliases for CPE OAuth allowed whitelist
+import { AuthController } from './controllers/auth.controller';
+app.get('/callback', AuthController.handleCmuCallback);
+app.get('/auth/callback', AuthController.handleCmuCallback);
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);

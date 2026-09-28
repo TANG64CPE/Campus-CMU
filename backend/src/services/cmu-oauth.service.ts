@@ -1,52 +1,51 @@
 import axios from 'axios';
+import jwt from 'jsonwebtoken';
 import { ENV } from '../config/env';
 
-export interface CmuBasicInfoResponse {
-  cmuitaccount_name: string;
-  cmuitaccount: string;
-  student_id?: string;
-  prename_TH?: string;
-  firstname_TH?: string;
-  lastname_TH?: string;
-  prename_EN?: string;
-  firstname_EN?: string;
-  lastname_EN?: string;
-  organization_name_TH?: string;
-  organization_name_EN?: string;
-  itaccounttype_id?: string;
-  itaccounttype_TH?: string;
+export interface CmuProfileResponse {
+  email: string;
+  name: string;
+  studentId: string;
+  raw?: any;
 }
 
 export class CmuOAuthService {
-  private static AUTH_URL = 'https://oauth.cmu.ac.th/v1/Authorize.aspx';
-  private static TOKEN_URL = 'https://oauth.cmu.ac.th/v1/GetToken.aspx';
-  private static BASIC_INFO_URL = 'https://misapi.cmu.ac.th/cmuitaccount/v1/api/basic-info';
+  private static AUTH_URL = 'https://oauth497.cpecmu.com/application/o/authorize/';
+  private static TOKEN_URL = 'https://oauth497.cpecmu.com/application/o/token/';
+  private static USERINFO_URL = 'https://oauth497.cpecmu.com/application/o/userinfo/';
 
   /**
-   * Generates authorization URL for CMU OAuth redirect
+   * Generates authorization URL for CPE OAuth redirect
    */
-  public static getAuthorizationUrl(): string {
+  public static getAuthorizationUrl(redirectUri?: string): string {
+    const targetRedirectUri = redirectUri || ENV.CMU_OAUTH_REDIRECT_URI || 'http://localhost:5173/api/auth/callback';
     const params = new URLSearchParams({
-      response_type: 'code',
       client_id: ENV.CMU_OAUTH_CLIENT_ID,
-      redirect_uri: ENV.CMU_OAUTH_REDIRECT_URI,
-      scope: 'cmuitaccount.basicinfo',
+      redirect_uri: targetRedirectUri,
+      response_type: 'code',
+      scope: 'openid profile email basic_info',
     });
     return `${this.AUTH_URL}?${params.toString()}`;
   }
 
   /**
-   * Exchanges authorization code for CMU access token
+   * Exchanges authorization code for CPE access token & id_token
    */
-  public static async exchangeCodeForToken(code: string): Promise<string> {
+  public static async exchangeCodeForToken(
+    code: string,
+    redirectUri?: string
+  ): Promise<{ accessToken: string; idToken?: string }> {
+    const targetRedirectUri = redirectUri || ENV.CMU_OAUTH_REDIRECT_URI || 'http://localhost:5173/api/auth/callback';
     const params = new URLSearchParams();
-    params.append('code', code);
-    params.append('redirect_uri', ENV.CMU_OAUTH_REDIRECT_URI);
+    params.append('grant_type', 'authorization_code');
     params.append('client_id', ENV.CMU_OAUTH_CLIENT_ID);
     params.append('client_secret', ENV.CMU_OAUTH_CLIENT_SECRET);
-    params.append('grant_type', 'authorization_code');
+    params.append('code', code);
+    params.append('redirect_uri', targetRedirectUri);
 
-    const response = await axios.post<{ access_token: string }>(
+    console.log(`[CPE OAuth] Exchanging code with token URL: ${this.TOKEN_URL}, redirect_uri: ${targetRedirectUri}`);
+
+    const response = await axios.post<{ access_token: string; id_token?: string }>(
       this.TOKEN_URL,
       params.toString(),
       {
@@ -58,23 +57,71 @@ export class CmuOAuthService {
     );
 
     if (!response.data.access_token) {
-      throw new Error('Failed to retrieve CMU access token');
+      throw new Error('Failed to retrieve CPE OAuth access token');
     }
 
-    return response.data.access_token;
+    return {
+      accessToken: response.data.access_token,
+      idToken: response.data.id_token,
+    };
   }
 
   /**
-   * Fetches CMU student basic profile using access token
+   * Fetches user profile from userinfo endpoint or decodes id_token
    */
-  public static async getStudentProfile(accessToken: string): Promise<CmuBasicInfoResponse> {
-    const response = await axios.get<CmuBasicInfoResponse>(this.BASIC_INFO_URL, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      timeout: 10000,
-    });
+  public static async getStudentProfile(
+    accessToken: string,
+    idToken?: string
+  ): Promise<CmuProfileResponse> {
+    let data: any = {};
 
-    return response.data;
+    try {
+      const response = await axios.get(this.USERINFO_URL, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        timeout: 10000,
+      });
+      data = response.data;
+      console.log('[CPE OAuth] Fetched userinfo data successfully:', JSON.stringify(data));
+    } catch (err: any) {
+      console.warn('[CPE OAuth] Userinfo endpoint call failed, falling back to id_token:', err.message);
+      if (idToken) {
+        data = jwt.decode(idToken) || {};
+        console.log('[CPE OAuth] Decoded id_token payload:', JSON.stringify(data));
+      }
+    }
+
+    // Extract email
+    const email =
+      data.email ||
+      (data.preferred_username && data.preferred_username.includes('@') ? data.preferred_username : '');
+
+    // Extract studentId: check student_id field, preferred_username, or from email if student
+    let studentId = data.student_id || data.studentId || '';
+    if (!studentId && data.preferred_username && /^\d+$/.test(data.preferred_username)) {
+      studentId = data.preferred_username;
+    }
+    if (!studentId && email) {
+      const prefix = email.split('@')[0];
+      if (/^\d+$/.test(prefix)) {
+        studentId = prefix;
+      } else {
+        studentId = prefix; // e.g. wichai.t or supaporn.k
+      }
+    }
+    if (!studentId) {
+      studentId = data.sub || `cmu_${Date.now()}`;
+    }
+
+    // Extract name
+    const name = data.name || data.given_name || data.preferred_username || email || 'CMU Student';
+
+    return {
+      email,
+      name,
+      studentId,
+      raw: data,
+    };
   }
 }

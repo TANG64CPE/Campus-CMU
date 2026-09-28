@@ -104,8 +104,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               <span className="text-base tracking-wide">Login with CMU Account</span>
             </button>
             <p className="text-[11px] text-slate-400">
-              เข้าสู่ระบบผ่าน CMU OAuth 2.0 (ยืนยันสถานะนักศึกษา มช.)
+              เข้าสู่ระบบผ่าน CPE CMU OAuth (ยืนยันสถานะนักศึกษา มช.)
             </p>
+
+            {/* CPE OAuth Credentials Info Box */}
+            <div className="p-3 bg-purple-50/80 border border-purple-200/90 rounded-2xl text-[11px] text-left text-slate-600 space-y-1">
+              <p className="font-semibold text-cmu-900 flex items-center gap-1">
+                <span>🎓 บัญชีสำหรับเข้าสู่ระบบ (CPE OAuth):</span>
+              </p>
+              <p className="text-slate-600">
+                • <strong>นักศึกษา:</strong> ใช้อีเมล มช. ของคุณเอง (เช่น <code className="text-cmu-700 font-mono">640610xxx@cmu.ac.th</code>)
+              </p>
+              <p className="text-slate-600">
+                • <strong>อาจารย์ทดสอบ:</strong> <code className="text-cmu-700 font-mono">wichai.t@cmu.ac.th</code> หรือ <code className="text-cmu-700 font-mono">supaporn.k@cmu.ac.th</code>
+              </p>
+              <p className="text-amber-800 font-medium pt-0.5">
+                🔑 รหัสผ่านเริ่มต้น: <code className="bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded font-mono font-bold">1234567890</code>
+              </p>
+            </div>
           </div>
 
           {/* Local Dev / Mock Account Selector */}
