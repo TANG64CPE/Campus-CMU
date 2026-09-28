@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingBag, PlusCircle, User as UserIcon, LogOut, ChevronDown, Sparkles, MapPin } from 'lucide-react';
+import { ShoppingBag, PlusCircle, User as UserIcon, LogOut, ChevronDown, Sparkles, Search } from 'lucide-react';
 
 interface NavbarProps {
   currentView: string;
@@ -18,7 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { user, logout, mockLogin } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  // Mock accounts for instant local testing
+  // Mock accounts for quick local testing
   const mockStudents = [
     { studentId: '650610001', name: 'สมชาย เชียงใหม่ (CPE)', email: 'somchai_cpe@cmu.ac.th' },
     { studentId: '650610002', name: 'อภิญญา ภูพิงค์ (CS)', email: 'apinya_cs@cmu.ac.th' },
@@ -26,47 +26,45 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16 gap-3">
-          {/* Brand Logo */}
+    <nav className="sticky top-0 z-40 bg-canvas/95 backdrop-blur-md border-b border-hairline transition-all">
+      <div className="max-w-[1160px] mx-auto px-4 sm:px-8">
+        <div className="flex items-center justify-between h-[60px] gap-4">
+          {/* Brand Wordmark & Logo */}
           <button
             onClick={() => onNavigate('marketplace')}
-            className="flex items-center gap-2.5 group text-left focus:outline-none"
+            className="flex items-center gap-3 group text-left focus:outline-none"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cmu-700 via-cmu-600 to-cmu-500 flex items-center justify-center text-white shadow-md shadow-cmu-600/20 group-hover:scale-105 transition-transform">
-              <ShoppingBag className="w-5 h-5" />
+            {/* ClickUp Brand Voltage Gradient Icon */}
+            <div className="w-9 h-9 rounded-pill bg-brand-gradient flex items-center justify-center text-white shadow-tinted-sm group-hover:scale-105 transition-transform duration-200">
+              <ShoppingBag className="w-4 h-4 stroke-[2.2]" />
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-cmu-700 to-cmu-500 bg-clip-text text-transparent">
-                  CampusMart
-                </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-purple-100 text-cmu-700 border border-purple-200">
-                  CMU
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 hidden sm:block">
-                ตลาดนัดนักศึกษามหาวิทยาลัยเชียงใหม่
-              </p>
+            <div className="flex items-center gap-2">
+              <span className="font-display font-extrabold text-[19px] tracking-tight text-ink group-hover:text-primary transition-colors">
+                Campus<span className="bg-brand-gradient bg-clip-text text-transparent">Mart</span>
+              </span>
+              {/* Sometype Mono Eyebrow Badge (4px radius) */}
+              <span className="eyebrow-mono bg-surface-soft text-ink-deep px-1.5 py-0.5 rounded-xxs border border-hairline font-mono text-[10px]">
+                CMU
+              </span>
             </div>
           </button>
 
-          {/* Quick Search on larger screens */}
+          {/* Quick Search on larger screens (ClickUp search input design) */}
           {currentView === 'marketplace' && (
             <div className="hidden md:flex flex-1 max-w-md mx-4">
               <div className="relative w-full">
+                <Search className="w-4 h-4 text-ink-tertiary absolute left-3.5 top-3" />
                 <input
                   type="text"
                   placeholder="ค้นหาหนังสือ, บอร์ดไมโครคอนโทรลเลอร์, อุปกรณ์ IT..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full bg-slate-100/80 border border-slate-200 rounded-full py-2 pl-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-cmu-500 focus:bg-white transition-all placeholder:text-slate-400"
+                  className="w-full bg-surface text-ink text-xs pl-10 pr-9 py-2 rounded-pill border border-hairline-strong focus:outline-none focus:border-primary focus:bg-canvas focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-ink-disabled font-sans"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => onSearchChange('')}
-                    className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-2.5 text-xs text-ink-tertiary hover:text-ink"
                   >
                     ✕
                   </button>
@@ -76,19 +74,19 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           {/* Right Action buttons */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2.5">
             {user ? (
               <>
-                {/* Sell Item Button */}
+                {/* Sell Item Button — ClickUp Dark Pill CTA (#292d34, 20px radius) */}
                 <button
                   onClick={() => onNavigate('create')}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all shadow-sm ${
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-pill text-xs font-semibold tracking-[-0.15px] transition-all shadow-tinted-xs ${
                     currentView === 'create'
-                      ? 'bg-cmu-700 text-white shadow-cmu-600/30'
-                      : 'bg-gradient-to-r from-cmu-600 to-cmu-700 hover:from-cmu-700 hover:to-cmu-800 text-white'
+                      ? 'bg-ink-deep text-canvas'
+                      : 'bg-ink hover:bg-ink-deep text-canvas'
                   }`}
                 >
-                  <PlusCircle className="w-4 h-4" />
+                  <PlusCircle className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">ลงขายสินค้า</span>
                 </button>
 
@@ -96,52 +94,51 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-2 rounded-xl border border-slate-200 hover:border-cmu-300 hover:bg-purple-50/50 transition-all text-sm font-medium text-slate-700"
+                    className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-pill border border-hairline hover:border-hairline-strong hover:bg-surface transition-all text-xs font-medium text-ink"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-cmu-100 text-cmu-700 flex items-center justify-center font-bold text-xs">
+                    <div className="w-7 h-7 rounded-full bg-surface-soft text-ink font-mono font-bold text-xs flex items-center justify-center border border-hairline">
                       {user.studentId.slice(-3)}
                     </div>
                     <div className="hidden sm:block text-left text-xs">
-                      <div className="font-semibold text-slate-800 line-clamp-1">{user.name}</div>
-                      <div className="text-slate-400 font-mono text-[10px]">{user.studentId}</div>
+                      <div className="font-semibold text-ink leading-tight line-clamp-1">{user.name}</div>
                     </div>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    <ChevronDown className="w-3.5 h-3.5 text-ink-tertiary" />
                   </button>
 
-                  {/* Dropdown Menu */}
+                  {/* Dropdown Menu (14px card-feature radius, hairline border, tinted shadow) */}
                   {showUserMenu && (
                     <div
-                      className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                      className="absolute right-0 mt-2 w-64 bg-canvas rounded-lg shadow-tinted-md border border-hairline py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
                       onClick={() => setShowUserMenu(false)}
                     >
-                      <div className="px-4 py-2 border-b border-slate-100">
-                        <p className="text-xs text-slate-400">เข้าสู่ระบบโดย CMU Account</p>
-                        <p className="text-sm font-semibold text-slate-800">{user.name}</p>
-                        <p className="text-xs text-cmu-600 font-mono">{user.email}</p>
+                      <div className="px-4 py-2.5 border-b border-hairline">
+                        <p className="eyebrow-mono text-[10px] text-ink-tertiary">CMU ACCOUNT</p>
+                        <p className="text-xs font-bold text-ink truncate mt-0.5">{user.name}</p>
+                        <p className="text-[11px] text-brand-link font-mono truncate">{user.email}</p>
                       </div>
 
                       <div className="py-1">
                         <button
                           onClick={() => onNavigate('profile')}
-                          className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                          className="w-full px-4 py-2 text-left text-xs font-medium text-ink hover:bg-surface flex items-center gap-2"
                         >
-                          <UserIcon className="w-4 h-4 text-cmu-600" />
+                          <UserIcon className="w-3.5 h-3.5 text-primary" />
                           <span>โปรไฟล์ & รายการของฉัน</span>
                         </button>
 
                         <button
                           onClick={() => onNavigate('marketplace')}
-                          className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                          className="w-full px-4 py-2 text-left text-xs font-medium text-ink hover:bg-surface flex items-center gap-2"
                         >
-                          <ShoppingBag className="w-4 h-4 text-cmu-600" />
+                          <ShoppingBag className="w-3.5 h-3.5 text-primary" />
                           <span>หน้าตลาดสินค้า (Feed)</span>
                         </button>
                       </div>
 
                       {/* Mock Student Quick Switcher */}
-                      <div className="border-t border-slate-100 pt-2 pb-1 px-3">
-                        <p className="text-[11px] font-semibold text-slate-400 px-1 mb-1.5 flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 text-amber-500" /> สลับบัญชีทดสอบ (Local Dev)
+                      <div className="border-t border-hairline pt-2 pb-1 px-3">
+                        <p className="eyebrow-mono text-[10px] text-ink-tertiary px-1 mb-1.5 flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 text-brand-orange" /> สลับบัญชีทดสอบ
                         </p>
                         {mockStudents.map((s) => (
                           <button
@@ -151,26 +148,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                               mockLogin(s);
                               setShowUserMenu(false);
                             }}
-                            className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between ${
+                            className={`w-full text-left text-xs px-2 py-1.5 rounded-sm transition-colors flex items-center justify-between ${
                               user.studentId === s.studentId
-                                ? 'bg-purple-50 text-cmu-700 font-bold'
-                                : 'text-slate-600 hover:bg-slate-100'
+                                ? 'bg-surface-soft text-primary font-bold'
+                                : 'text-ink-secondary hover:bg-surface'
                             }`}
                           >
                             <span className="truncate">{s.name}</span>
-                            <span className="text-[10px] text-slate-400 font-mono">
+                            <span className="text-[10px] text-ink-disabled font-mono">
                               {s.studentId.slice(-3)}
                             </span>
                           </button>
                         ))}
                       </div>
 
-                      <div className="border-t border-slate-100 pt-1 mt-1">
+                      <div className="border-t border-hairline pt-1 mt-1">
                         <button
                           onClick={logout}
-                          className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                          className="w-full px-4 py-2 text-left text-xs font-semibold text-accent-red hover:bg-red-50 flex items-center gap-2"
                         >
-                          <LogOut className="w-4 h-4" />
+                          <LogOut className="w-3.5 h-3.5" />
                           <span>ออกจากระบบ</span>
                         </button>
                       </div>
@@ -179,9 +176,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </>
             ) : (
+              /* Gradient Pill CTA for Log in */
               <button
                 onClick={() => onNavigate('login')}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-cmu-600 hover:bg-cmu-700 text-white shadow-md shadow-cmu-600/20 transition-all"
+                className="btn-gradient-pill px-4 py-2 text-xs font-semibold tracking-[-0.15px] shadow-tinted-sm"
               >
                 <span>เข้าสู่ระบบ CMU</span>
               </button>

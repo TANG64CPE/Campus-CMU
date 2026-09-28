@@ -4,7 +4,15 @@
 
 @layer base {
   body {
-    font-family: 'Prompt', 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', 'Prompt', system-ui, -apple-system, sans-serif;
+    color: #292d34;
+    background-color: #ffffff;
+    letter-spacing: -0.15px;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', 'Prompt', sans-serif;
+    font-weight: 700;
   }
 }
 
@@ -14,25 +22,106 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f8f9fa;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #d9d9d9;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #b4b4b4;
 }
 
-/* Glassmorphism utility */
-.glass {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+/* ClickUp Design System Button Utilities */
+.btn-primary-pill {
+  background-color: #292d34;
+  color: #ffffff;
+  border-radius: 20px;
+  font-family: 'Inter', 'Prompt', sans-serif;
+  font-weight: 600;
+  transition: all 0.25s cubic-bezier(0.5, 0, 0.5, 1);
+}
+.btn-primary-pill:hover {
+  background-color: #202020;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(18, 43, 165, 0.12);
 }
 
-.glass-dark {
-  background: rgba(43, 18, 61, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+.btn-gradient-pill {
+  background: linear-gradient(263deg, #fa12e3 -35%, #7612fa 41%, #12d0fa 135%);
+  color: #ffffff;
+  border-radius: 20px;
+  font-family: 'Inter', 'Prompt', sans-serif;
+  font-weight: 600;
+  transition: all 0.25s cubic-bezier(0.5, 0, 0.5, 1);
+}
+.btn-gradient-pill:hover {
+  background: linear-gradient(263deg, #fa12e3 -20%, #7612fa 50%, #12d0fa 145%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(118, 18, 250, 0.35);
+}
+
+.btn-secondary-sm {
+  background-color: #e9ebf0;
+  color: #202020;
+  border-radius: 9px;
+  border: 1px solid #e8e8e8;
+  font-family: 'Inter', 'Prompt', sans-serif;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.btn-secondary-sm:hover {
+  background-color: #d9d9d9;
+}
+
+/* ClickUp Tile & Feature Card */
+.card-tile {
+  background-color: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  transition: all 0.25s cubic-bezier(0.5, 0, 0.5, 1);
+}
+.card-tile:hover {
+  border-color: #d9d9d9;
+  box-shadow: 0 10px 25px rgba(18, 43, 165, 0.08);
+  transform: translateY(-2px);
+}
+
+.card-feature {
+  background-color: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
+  transition: all 0.25s cubic-bezier(0.5, 0, 0.5, 1);
+}
+.card-feature:hover {
+  border-color: #d9d9d9;
+  box-shadow: 0 20px 40px rgba(18, 43, 165, 0.09);
+  transform: translateY(-3px);
+}
+
+/* Eyebrow Mono Badge */
+.eyebrow-mono {
+  font-family: 'Sometype Mono', 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Text Input Styled */
+.input-field {
+  height: 44px;
+  background-color: #ffffff;
+  color: #292d34;
+  border: 1px solid #d9d9d9;
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-family: 'Inter', 'Prompt', sans-serif;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+.input-field:focus {
+  outline: none;
+  border: 2px solid #7612fa;
+  box-shadow: 0 0 0 3px rgba(118, 18, 250, 0.12);
 }

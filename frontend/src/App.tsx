@@ -55,8 +55,8 @@ const MainApp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Top Navbar */}
+    <div className="min-h-screen bg-canvas text-ink flex flex-col selection:bg-primary-soft/30 selection:text-ink-deep font-sans">
+      {/* Top Navbar (60px height, hairline border) */}
       <Navbar
         currentView={currentView}
         onNavigate={handleNavigate}
@@ -101,13 +101,33 @@ const MainApp: React.FC = () => {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400">
-        <div className="max-w-6xl mx-auto px-4">
-          <p className="font-semibold text-slate-600 mb-1">CampusMart © 2026 - Chiang Mai University</p>
-          <p>
-            ระบบตลาดนัดของใช้มือสองสำหรับนักศึกษา มช. | ชำระเงินหน้างาน ปลอดภัย 100% Local Environment
-          </p>
+      {/* Footer Region (ClickUp footer spec: canvas bg, 1px hairline, ink-secondary typography) */}
+      <footer className="bg-canvas border-t border-hairline py-10 mt-12">
+        <div className="max-w-[1160px] mx-auto px-4 sm:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-secondary">
+            <div className="flex items-center gap-3">
+              <span className="font-display font-extrabold text-base tracking-tight text-ink">
+                Campus<span className="bg-brand-gradient bg-clip-text text-transparent">Mart</span>
+              </span>
+              <span className="eyebrow-mono bg-surface-soft text-ink-deep px-2 py-0.5 rounded-xxs border border-hairline text-[10px]">
+                CMU CPE
+              </span>
+              <span className="text-ink-tertiary">|</span>
+              <span className="text-ink-tertiary">ตลาดนัดของใช้มือสองสำหรับนักศึกษา มหาวิทยาลัยเชียงใหม่</span>
+            </div>
+
+            <div className="flex items-center gap-4 text-xs">
+              <span className="hover:text-brand-link cursor-pointer transition-colors">
+                นโยบายความปลอดภัย
+              </span>
+              <span className="text-hairline-strong">•</span>
+              <span className="hover:text-brand-link cursor-pointer transition-colors">
+                จุดนัดรับใน มช.
+              </span>
+              <span className="text-hairline-strong">•</span>
+              <span className="font-mono text-ink-tertiary">© 2026 CampusMart CMU</span>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

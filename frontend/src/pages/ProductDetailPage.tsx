@@ -10,12 +10,13 @@ import {
   CheckCircle,
   AlertTriangle,
   UserCheck,
-  Phone,
-  MessageSquare,
   Mail,
   ShieldAlert,
   Trash2,
   Calendar,
+  MessageSquare,
+  Sparkles,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface ProductDetailPageProps {
@@ -210,22 +211,19 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12 text-center">
-        <div className="w-10 h-10 border-4 border-cmu-200 border-t-cmu-600 rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-slate-500 text-sm">กำลังโหลดข้อมูลสินค้า...</p>
+      <div className="max-w-[1000px] mx-auto px-4 py-16 text-center">
+        <div className="w-9 h-9 border-3 border-hairline-strong border-t-primary rounded-full animate-spin mx-auto mb-3" />
+        <p className="text-xs font-mono text-ink-tertiary">LOADING PRODUCT DATA...</p>
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12 text-center">
-        <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-        <h2 className="text-lg font-bold text-slate-800">ไม่พบสินค้านี้</h2>
-        <button
-          onClick={onBack}
-          className="mt-4 px-4 py-2 bg-cmu-600 text-white rounded-xl text-sm font-medium"
-        >
+      <div className="max-w-[1000px] mx-auto px-4 py-16 text-center">
+        <AlertTriangle className="w-10 h-10 text-brand-orange mx-auto mb-3" />
+        <h2 className="font-display text-lg font-bold text-ink">ไม่พบสินค้านี้</h2>
+        <button onClick={onBack} className="btn-secondary-sm mt-4 px-4 py-2 text-xs">
           กลับหน้าตลาด
         </button>
       </div>
@@ -237,35 +235,36 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const isCurrentUserTheSeller = isSeller || product.sellerId === user?.id;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-24">
+    <div className="max-w-[1000px] mx-auto px-4 sm:px-8 py-6 pb-24">
       {/* Back button */}
       <button
         onClick={onBack}
-        className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-cmu-600 mb-4 transition-colors"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-secondary hover:text-ink mb-5 transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-3.5 h-3.5" />
         <span>กลับไปหน้าตลาด</span>
       </button>
 
       {/* Notifications */}
       {errorMsg && (
-        <div className="mb-4 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-red-500" />
-          <div>{errorMsg}</div>
+        <div className="mb-4 p-4 rounded-lg bg-red-50/80 border border-accent-red/20 text-accent-red text-xs flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>{errorMsg}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-start gap-3">
-          <CheckCircle className="w-5 h-5 shrink-0 mt-0.5 text-emerald-600" />
-          <div>{successMsg}</div>
+        <div className="mb-4 p-4 rounded-lg bg-emerald-50/80 border border-accent-green/20 text-accent-green text-xs flex items-start gap-2.5">
+          <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>{successMsg}</span>
         </div>
       )}
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 sm:p-8">
-          {/* Big Product Image */}
-          <div className="relative aspect-square rounded-2xl bg-slate-100 overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner">
+      {/* Detail Container (ClickUp card-feature-panel: 25px/35px radius, 1px hairline border) */}
+      <div className="bg-canvas rounded-xl sm:rounded-xxl border border-hairline shadow-tinted-sm overflow-hidden p-6 sm:p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Big Product Image Frame */}
+          <div className="relative aspect-square rounded-lg sm:rounded-xl bg-surface overflow-hidden flex items-center justify-center border border-hairline">
             {product.imageUrl ? (
               <img
                 src={product.imageUrl}
@@ -273,16 +272,16 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="flex flex-col items-center justify-center p-8 text-center text-slate-400">
-                <Tag className="w-16 h-16 text-cmu-300 mb-2 stroke-[1.5]" />
-                <span className="text-sm font-medium">รูปภาพตัวอย่างสินค้า</span>
+              <div className="flex flex-col items-center justify-center p-8 text-center text-ink-disabled">
+                <Tag className="w-12 h-12 mb-2 stroke-[1.5]" />
+                <span className="text-xs font-mono">ภาพตัวอย่างสินค้า</span>
               </div>
             )}
 
             {/* Reserved Overlay Badge */}
             {isReserved && (
-              <div className="absolute top-4 right-4 z-10">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-500 text-white shadow-lg shadow-amber-500/30">
+              <div className="absolute top-3.5 right-3.5 z-10">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/95 backdrop-blur-sm text-brand-orange border border-brand-orange/30 shadow-tinted-xs">
                   <Clock className="w-3.5 h-3.5" />
                   ติดจองแล้ว
                 </span>
@@ -295,45 +294,45 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             <div>
               {/* Status pill & Meetup location */}
               <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-cmu-700 border border-purple-200">
-                  <MapPin className="w-3 h-3 text-cmu-500" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-soft text-ink-deep border border-hairline">
+                  <MapPin className="w-3 h-3 text-primary" />
                   {product.meetupLocation}
                 </span>
 
-                <span className="text-xs text-slate-400 flex items-center gap-1">
+                <span className="eyebrow-mono text-[11px] text-ink-tertiary flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   {new Date(product.createdAt).toLocaleDateString('th-TH')}
                 </span>
               </div>
 
-              {/* Title */}
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight mb-3">
+              {/* Title — Plus Jakarta Sans display typography */}
+              <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-ink leading-tight mb-3 tracking-[-0.91px]">
                 {product.title}
               </h1>
 
               {/* Price */}
-              <div className="flex items-baseline gap-1 text-3xl font-extrabold text-cmu-700 mb-6">
-                <span className="text-xl">฿</span>
+              <div className="flex items-baseline gap-1 font-display font-extrabold text-3xl sm:text-4xl text-ink-deep mb-5 tracking-tight">
+                <span className="text-xl font-semibold text-ink-tertiary">฿</span>
                 <span>{new Intl.NumberFormat('th-TH').format(product.price)}</span>
-                <span className="text-xs font-normal text-slate-400 ml-2">
+                <span className="text-xs font-normal text-ink-tertiary ml-2 font-sans">
                   (ชำระเงินสดหรือสแกนจ่ายหน้างาน)
                 </span>
               </div>
 
-              {/* Seller Summary Box */}
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-6 flex items-center justify-between">
+              {/* Seller Summary Box (ClickUp card-tile) */}
+              <div className="p-3.5 sm:p-4 bg-surface rounded-md border border-hairline mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-cmu-100 text-cmu-700 flex items-center justify-center font-bold text-sm">
+                  <div className="w-9 h-9 rounded-full bg-surface-soft text-ink font-mono font-bold text-xs flex items-center justify-center border border-hairline">
                     {product.seller.studentId?.slice(-3) || 'CMU'}
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400">ผู้ลงขายสินค้า</p>
-                    <p className="text-sm font-semibold text-slate-800">{product.seller.name}</p>
+                    <p className="eyebrow-mono text-[10px] text-ink-tertiary">ผู้ลงขายสินค้า</p>
+                    <p className="text-xs font-bold text-ink">{product.seller.name}</p>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xs font-mono text-slate-500">
+                  <span className="font-mono text-[11px] text-ink-secondary bg-canvas px-2 py-0.5 rounded-xxs border border-hairline">
                     {product.seller.studentId ? `รหัส ...${product.seller.studentId.slice(-3)}` : 'นักศึกษา มช.'}
                   </span>
                 </div>
@@ -343,21 +342,21 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             {/* ============================================================== */}
             {/* CORE BUSINESS STATES: STATE 1, STATE 2, STATE 3 & SELLER VIEW */}
             {/* ============================================================== */}
-            <div className="pt-4 border-t border-slate-100">
+            <div className="pt-5 border-t border-hairline">
               {/* CASE A: CURRENT USER IS THE SELLER */}
               {isCurrentUserTheSeller ? (
                 <div className="space-y-3">
-                  <div className="p-3.5 bg-purple-50 rounded-2xl border border-purple-200 text-xs text-cmu-900">
-                    <p className="font-semibold flex items-center gap-1.5">
-                      <UserCheck className="w-4 h-4 text-cmu-700" />
+                  <div className="p-3 bg-surface rounded-md border border-hairline text-xs text-ink">
+                    <p className="font-semibold flex items-center gap-1.5 text-primary">
+                      <UserCheck className="w-4 h-4" />
                       นี่คือสินค้าที่คุณลงขายเอง
                     </p>
                     {isReserved && activeReservation ? (
-                      <p className="mt-1 text-slate-600">
-                        มีนักศึกษาจองสินค้านี้แล้ว กรุณาติดต่อเพื่อส่งมอบและรับเงินหน้างาน
+                      <p className="mt-1 text-ink-secondary">
+                        มีนักศึกษาจองสินค้านี้แล้ว กรุณาติดต่อเพื่อนัดส่งมอบและรับเงินหน้างาน
                       </p>
                     ) : (
-                      <p className="mt-1 text-slate-600">
+                      <p className="mt-1 text-ink-secondary">
                         ยังไม่มีผู้จอง คุณสามารถลบหรือจัดการรายการสินค้านี้ได้
                       </p>
                     )}
@@ -369,9 +368,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                       <button
                         onClick={handleCompleteDeal}
                         disabled={actionLoading}
-                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all"
+                        className="w-full py-3.5 px-6 rounded-pill bg-accent-green hover:bg-green-700 text-white text-xs font-semibold shadow-tinted-xs flex items-center justify-center gap-2 transition-all"
                       >
-                        <CheckCircle className="w-4 h-4" />
+                        <CheckCircle2 className="w-4 h-4" />
                         <span>ยืนยันส่งมอบสินค้าและรับเงินสำเร็จ (ปิดการขาย)</span>
                       </button>
 
@@ -379,9 +378,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                       <button
                         onClick={handleReportGhost}
                         disabled={actionLoading}
-                        className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                        className="w-full py-2.5 bg-surface-soft hover:bg-red-50 text-accent-red border border-hairline hover:border-accent-red/30 rounded-sm text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
                       >
-                        <ShieldAlert className="w-4 h-4 text-red-600" />
+                        <ShieldAlert className="w-4 h-4 text-accent-red" />
                         <span>รายงานผู้ซื้อโดนเท / ไม่มาตามนัด (แบนบัญชีผู้ซื้อ)</span>
                       </button>
                     </div>
@@ -391,7 +390,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     <button
                       onClick={handleDeleteProduct}
                       disabled={actionLoading}
-                      className="w-full py-2.5 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-all"
+                      className="w-full py-2.5 bg-surface-soft hover:bg-red-50 text-ink-secondary hover:text-accent-red border border-hairline rounded-sm text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
                     >
                       <Trash2 className="w-4 h-4" />
                       <span>ลบรายการสินค้านี้</span>
@@ -404,55 +403,56 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   {/* STATE 1: ยังไม่จอง (isAvailable === true) */}
                   {!isReserved ? (
                     <div>
+                      {/* ClickUp Dominant CTA / Brand Gradient Pill CTA */}
                       <button
                         onClick={handleReserve}
                         disabled={actionLoading}
-                        className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-cmu-700 via-cmu-600 to-cmu-700 hover:from-cmu-800 hover:to-cmu-800 text-white font-bold text-base shadow-lg shadow-cmu-600/25 active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="btn-gradient-pill w-full h-[52px] px-6 text-sm font-semibold tracking-[-0.15px] flex items-center justify-center gap-2 shadow-tinted-md active:scale-[0.99] transition-all disabled:opacity-50"
                       >
-                        <Tag className="w-5 h-5" />
+                        <Tag className="w-4 h-4" />
                         <span>กดจองสินค้า (Reserve Product)</span>
                       </button>
-                      <p className="text-center text-xs text-slate-400 mt-2">
-                        กดจองเพื่อเปิดข้อมูลติดต่อเพื่อนัดรับและชำระเงินหน้างาน (ไม่มีตัดบัตร)
+                      <p className="text-center text-[11px] text-ink-tertiary mt-2">
+                        กดจองเพื่อเปิดข้อมูลติดต่อเพื่อนัดรับและชำระเงินหน้างาน (ไม่มีการตัดบัตร)
                       </p>
                     </div>
                   ) : isCurrentUserTheBuyer ? (
                     /* BUYER WHO HAS RESERVED THIS PRODUCT: STATE 2 vs STATE 3 */
                     <div className="space-y-4">
-                      {/* Revealed Contact Information Box */}
-                      <div className="p-4 bg-gradient-to-br from-purple-50 via-white to-purple-50/50 rounded-2xl border-2 border-purple-200/90 shadow-sm">
-                        <div className="flex items-center gap-2 text-cmu-800 font-bold text-sm mb-3">
-                          <UserCheck className="w-5 h-5 text-cmu-600" />
-                          <span>ข้อมูลติดต่อผู้ขาย (เพื่อนัดรับสินค้า)</span>
+                      {/* Revealed Contact Information Box (ClickUp surface card) */}
+                      <div className="p-4 sm:p-5 bg-surface rounded-lg border border-hairline shadow-tinted-xs">
+                        <div className="flex items-center gap-2 text-ink font-bold text-xs mb-3">
+                          <UserCheck className="w-4 h-4 text-primary" />
+                          <span className="eyebrow-mono">ข้อมูลติดต่อผู้ขาย (เพื่อนัดรับสินค้า)</span>
                         </div>
 
                         <div className="space-y-2 text-xs">
-                          <div className="flex items-center gap-2 text-slate-700">
-                            <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
-                            <span className="font-semibold text-slate-500">Contact / Line:</span>
-                            <span className="font-bold text-slate-900">
+                          <div className="flex items-center gap-2 text-ink">
+                            <MessageSquare className="w-4 h-4 text-accent-green shrink-0" />
+                            <span className="font-semibold text-ink-secondary">Contact / Line:</span>
+                            <span className="font-bold text-ink">
                               {product.seller.contactInfo ||
                                 revealedSellerContact?.contactInfo ||
                                 'ยังไม่ได้ระบุ Line ID (กรุณาใช้อีเมล มช.)'}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-2 text-slate-700">
-                            <Mail className="w-4 h-4 text-cmu-600 shrink-0" />
-                            <span className="font-semibold text-slate-500">CMU Mail:</span>
-                            <span className="font-mono text-slate-900">
+                          <div className="flex items-center gap-2 text-ink">
+                            <Mail className="w-4 h-4 text-primary shrink-0" />
+                            <span className="font-semibold text-ink-secondary">CMU Mail:</span>
+                            <span className="font-mono text-ink">
                               {revealedSellerContact?.email || `${product.seller.studentId}@cmu.ac.th`}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-2 text-slate-700">
-                            <MapPin className="w-4 h-4 text-cmu-600 shrink-0" />
-                            <span className="font-semibold text-slate-500">จุดนัดรับของ:</span>
-                            <span className="font-bold text-cmu-800">{product.meetupLocation}</span>
+                          <div className="flex items-center gap-2 text-ink">
+                            <MapPin className="w-4 h-4 text-primary shrink-0" />
+                            <span className="font-semibold text-ink-secondary">จุดนัดรับของ:</span>
+                            <span className="font-bold text-primary">{product.meetupLocation}</span>
                           </div>
                         </div>
 
-                        <div className="mt-3 pt-2.5 border-t border-purple-100 text-[11px] text-slate-500 flex items-center gap-1.5">
+                        <div className="mt-3 pt-2.5 border-t border-hairline text-[11px] text-ink-tertiary flex items-center gap-1.5">
                           <span>💡 แนะนำให้นัดเจอกันในเวลากลางวัน ณ จุดนัดรับในมหาวิทยาลัย</span>
                         </div>
                       </div>
@@ -463,28 +463,28 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                           <button
                             onClick={handleBuyerCancel}
                             disabled={actionLoading}
-                            className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold shadow-md shadow-red-600/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                            className="w-full py-3 px-6 rounded-pill bg-accent-red hover:bg-red-700 text-white text-xs font-semibold shadow-tinted-xs active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                           >
                             <span>ยกเลิกการจองสินค้า (Cancel Reservation)</span>
                           </button>
-                          <div className="flex items-center justify-between px-1 text-xs text-slate-500">
-                            <span className="flex items-center gap-1 text-amber-600 font-medium">
+                          <div className="flex items-center justify-between px-1 text-xs text-ink-secondary">
+                            <span className="flex items-center gap-1 text-brand-orange font-medium font-mono text-[11px]">
                               <Clock className="w-3.5 h-3.5" />
                               เวลายกเลิกคงเหลือ: {timeRemainingText}
                             </span>
-                            <span className="text-[11px] text-slate-400">(สิทธิ์ยกเลิกภายใน 3 ชม.)</span>
+                            <span className="text-[10px] text-ink-tertiary">(สิทธิ์ยกเลิกภายใน 3 ชม.)</span>
                           </div>
                         </div>
                       ) : (
                         /* STATE 3: จองแล้ว เกิน 3 ชม. (ซ่อนปุ่มยกเลิก พร้อมข้อความเตือน) */
-                        <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900">
+                        <div className="p-3.5 bg-amber-50/70 rounded-lg border border-amber-200/80 text-xs text-amber-900">
                           <div className="flex items-start gap-2">
-                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                            <AlertTriangle className="w-4 h-4 text-brand-orange shrink-0 mt-0.5" />
                             <div>
-                              <p className="font-bold text-amber-800">
+                              <p className="font-bold text-amber-900">
                                 หมดเวลายกเลิกการจองด้วยตนเอง (เกินกำหนด 3 ชั่วโมง)
                               </p>
-                              <p className="mt-0.5 text-amber-700 leading-relaxed">
+                              <p className="mt-0.5 text-amber-800 leading-relaxed text-[11px]">
                                 เพื่อป้องกันการกั๊กสินค้า หากติดธุระหรือไม่สะดวกรับของ
                                 กรุณาติดต่อผู้ขายโดยตรงผ่านช่องทางติดต่อด้านบนเพื่อแจ้งยกเลิก
                               </p>
@@ -495,10 +495,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     </div>
                   ) : (
                     /* Product reserved by another student */
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center text-xs text-slate-500">
-                      <Clock className="w-5 h-5 text-amber-500 mx-auto mb-1.5" />
-                      <p className="font-bold text-slate-700 text-sm">สินค้านี้มีนักศึกษาจองอยู่แล้ว</p>
-                      <p className="mt-0.5 text-slate-400">
+                    <div className="p-4 bg-surface rounded-lg border border-hairline text-center text-xs text-ink-secondary">
+                      <Clock className="w-5 h-5 text-brand-orange mx-auto mb-1.5" />
+                      <p className="font-bold text-ink text-sm">สินค้านี้มีนักศึกษาจองอยู่แล้ว</p>
+                      <p className="mt-0.5 text-ink-tertiary text-[11px]">
                         หากผู้ซื้อเดิมยกเลิกหรือไม่มีการส่งมอบภายใน 24 ชม. ระบบจะปล่อยสินค้ากลับมาให้จองใหม่อัตโนมัติ
                       </p>
                     </div>

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { productApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
-  Upload,
   MapPin,
   Tag,
   ArrowLeft,
@@ -10,6 +9,7 @@ import {
   AlertTriangle,
   Camera,
   X,
+  Sparkles,
 } from 'lucide-react';
 
 interface CreateProductPageProps {
@@ -88,28 +88,35 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 pb-20">
+    <div className="max-w-[720px] mx-auto px-4 sm:px-8 py-6 pb-24">
+      {/* Back button */}
       <button
         onClick={onCancel}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-cmu-600 mb-4 transition-colors"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-secondary hover:text-ink mb-5 transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-3.5 h-3.5" />
         <span>ยกเลิกและย้อนกลับ</span>
       </button>
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8">
-        <div className="mb-6 pb-4 border-b border-slate-100">
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-            ลงขายสินค้ามือสอง (CMU Campus)
+      {/* Main Form Container (ClickUp card-feature-panel: 25px/35px radius, 1px hairline) */}
+      <div className="bg-canvas rounded-xl sm:rounded-xxl border border-hairline shadow-tinted-sm p-6 sm:p-8">
+        <div className="mb-6 pb-4 border-b border-hairline">
+          <div className="inline-block mb-1.5">
+            <span className="eyebrow-mono bg-surface-soft text-ink-deep px-2 py-0.5 rounded-xxs border border-hairline text-[10px]">
+              NEW LISTING • CMU CAMPUS
+            </span>
+          </div>
+          <h1 className="font-display font-extrabold text-2xl text-ink">
+            ลงขายสินค้ามือสอง
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            ระบุรายละเอียดสินค้าและจุดนัดรับภายในมหาวิทยาลัยเชียงใหม่
+          <p className="text-xs text-ink-secondary mt-1">
+            ระบุรายละเอียดสินค้าและจุดนัดรับส่งมอบตัวต่อตัวในมหาวิทยาลัยเชียงใหม่
           </p>
         </div>
 
         {errorMsg && (
-          <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
+          <div className="mb-5 p-3.5 rounded-lg bg-red-50/80 border border-accent-red/20 text-accent-red text-xs flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
@@ -117,31 +124,31 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Image Upload Box */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-              รูปภาพสินค้า (จัดเก็บในเครื่อง Server)
+            <label className="eyebrow-mono block text-xs text-ink-secondary mb-2">
+              รูปภาพสินค้า
             </label>
 
             {imagePreview ? (
-              <div className="relative aspect-[16/9] sm:aspect-[2/1] rounded-2xl bg-slate-100 overflow-hidden border-2 border-dashed border-cmu-300">
+              <div className="relative aspect-[16/9] sm:aspect-[2/1] rounded-lg bg-surface overflow-hidden border border-hairline">
                 <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={removeImage}
-                  className="absolute top-3 right-3 p-1.5 rounded-full bg-slate-900/70 text-white hover:bg-slate-900 transition-colors shadow-md"
+                  className="absolute top-3 right-3 p-1.5 rounded-full bg-ink/80 text-canvas hover:bg-ink transition-colors shadow-tinted-xs"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center aspect-[16/9] sm:aspect-[2/1] rounded-2xl border-2 border-dashed border-slate-300 hover:border-cmu-500 bg-slate-50/50 hover:bg-purple-50/30 cursor-pointer transition-all p-6 text-center group">
-                <div className="w-12 h-12 rounded-2xl bg-purple-100/70 text-cmu-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <Camera className="w-6 h-6" />
+              <label className="flex flex-col items-center justify-center aspect-[16/9] sm:aspect-[2/1] rounded-lg border-2 border-dashed border-hairline-strong hover:border-primary bg-surface/40 hover:bg-surface cursor-pointer transition-all p-6 text-center group">
+                <div className="w-11 h-11 rounded-full bg-surface-soft border border-hairline text-ink-secondary flex items-center justify-center mb-2.5 group-hover:scale-105 group-hover:text-primary transition-all">
+                  <Camera className="w-5 h-5" />
                 </div>
-                <span className="text-sm font-semibold text-slate-700">
+                <span className="text-xs font-semibold text-ink">
                   คลิกเพื่ออัปโหลดรูปภาพสินค้า
                 </span>
-                <span className="text-xs text-slate-400 mt-1">
-                  รองรับ JPG, PNG, WEBP ขนาดไม่เกิน 5MB
+                <span className="text-[11px] font-mono text-ink-tertiary mt-1">
+                  JPG, PNG, WEBP (MAX 5MB)
                 </span>
                 <input
                   type="file"
@@ -153,10 +160,10 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
             )}
           </div>
 
-          {/* Product Title */}
+          {/* Product Title (ClickUp 44px text input) */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              ชื่อสินค้า / รุ่น / สภาพ <span className="text-red-500">*</span>
+            <label className="eyebrow-mono block text-xs text-ink-secondary mb-1.5">
+              ชื่อสินค้า / รุ่น / สภาพ <span className="text-accent-red">*</span>
             </label>
             <input
               type="text"
@@ -164,17 +171,17 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
               placeholder="เช่น บอร์ด ESP32 พินครบ, หนังสือแคลคูลัส 1 มีจดโน้ต, Apple Pencil 2"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full text-sm px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-cmu-500 bg-slate-50/30"
+              className="w-full input-field"
             />
           </div>
 
           {/* Price */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              ราคา (บาท ฿) <span className="text-red-500">*</span>
+            <label className="eyebrow-mono block text-xs text-ink-secondary mb-1.5">
+              ราคา (บาท ฿) <span className="text-accent-red">*</span>
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-3 text-slate-400 font-bold text-sm">฿</span>
+              <span className="absolute left-3.5 top-3 text-ink-tertiary font-bold text-sm">฿</span>
               <input
                 type="number"
                 required
@@ -183,28 +190,28 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
                 placeholder="เช่น 150"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full text-sm pl-9 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-cmu-500 bg-slate-50/30"
+                className="w-full input-field pl-8"
               />
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              * ชำระเงินสดหรือโอนหน้างานโดยตรงระหว่างนักศึกษา (ไม่มีหักเปอร์เซ็นต์)
+            <p className="text-[11px] text-ink-tertiary mt-1">
+              * ชำระเงินสดหรือโอนหน้างานโดยตรงระหว่างนักศึกษา (ไม่มีการหักเปอร์เซ็นต์)
             </p>
           </div>
 
           {/* Meetup Location */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              จุดนัดรับของภายใน มช. <span className="text-red-500">*</span>
+            <label className="eyebrow-mono block text-xs text-ink-secondary mb-1.5">
+              จุดนัดรับของภายใน มช. <span className="text-accent-red">*</span>
             </label>
             <div className="relative mb-2.5">
-              <MapPin className="w-4 h-4 text-cmu-500 absolute left-3.5 top-3.5" />
+              <MapPin className="w-4 h-4 text-primary absolute left-3.5 top-3.5" />
               <input
                 type="text"
                 required
                 placeholder="ระบุจุดนัดรับ หรือเลือกจากจุดยอดนิยมด้านล่าง"
                 value={meetupLocation}
                 onChange={(e) => setMeetupLocation(e.target.value)}
-                className="w-full text-sm pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-cmu-500 bg-slate-50/30"
+                className="w-full input-field pl-10"
               />
             </div>
 
@@ -215,10 +222,10 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
                   key={loc}
                   type="button"
                   onClick={() => setMeetupLocation(loc)}
-                  className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
+                  className={`text-[11px] px-2.5 py-1 rounded-sm border transition-all ${
                     meetupLocation === loc
-                      ? 'bg-cmu-600 text-white border-cmu-600 font-medium'
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-cmu-400'
+                      ? 'bg-ink text-canvas border-ink font-semibold'
+                      : 'bg-surface text-ink-secondary border-hairline hover:border-hairline-strong hover:text-ink'
                   }`}
                 >
                   {loc}
@@ -227,19 +234,19 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          {/* Submit Actions: ClickUp Dark Pill CTA vs Secondary */}
+          <div className="pt-5 border-t border-hairline flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onCancel}
-              className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium"
+              className="btn-secondary-sm px-5 py-2.5 text-xs"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cmu-600 to-cmu-700 hover:from-cmu-700 hover:to-cmu-800 text-white text-sm font-bold shadow-md shadow-cmu-600/20 disabled:opacity-50 transition-all flex items-center gap-2"
+              className="btn-primary-pill h-[48px] px-6 text-xs font-semibold flex items-center gap-2 disabled:opacity-50"
             >
               {loading ? (
                 <span>กำลังบันทึก...</span>
