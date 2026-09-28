@@ -1,10 +1,10 @@
-# CampusMart (CMU Campus Marketplace) 🟣🟡
+# CampusMart (CMU Campus Marketplace) 
 
-> ระบบเว็บแอปพลิเคชันตลาดนัดออนไลน์สำหรับนักศึกษามหาวิทยาลัยเชียงใหม่ (CMU) ซื้อขายของมือสอง (เช่น หนังสือเรียน, อุปกรณ์ IT, บอร์ดไมโครคอนโทรลเลอร์) ระบบเน้นการนัดรับภายในมหาวิทยาลัยและชำระเงินหน้างาน (ไม่มีการตัดบัตรเครดิต) ออกแบบให้ทำงานแบบ **100% Local Environment**
+> ระบบเว็บแอปพลิเคชันตลาดนัดออนไลน์สำหรับนักศึกษามหาวิทยาลัยเชียงใหม่ (CMU) สำหรับซื้อขายสินค้ามือสอง เช่น หนังสือเรียน อุปกรณ์ IT และบอร์ดไมโครคอนโทรลเลอร์ ระบบออกแบบมาให้เหมาะกับการซื้อขายภายในมหาวิทยาลัย โดยเน้นการนัดรับสินค้าในพื้นที่มหาวิทยาลัยและชำระเงินกันโดยตรง ณ จุดนัดรับ โดยไม่มีการตัดบัตรเครดิตหรือการชำระเงินออนไลน์ โปรเจกต์นี้ออกแบบให้สามารถทำงานได้ใน 100% Local Environment โดยไม่จำเป็นต้องพึ่งพา Cloud Service สำหรับการทำงานหลักของระบบ
 
 ---
 
-## 🛠️ Tech Stack & Infrastructure
+##  Tech Stack & Infrastructure
 
 - **Frontend:** React 18 + Vite + TypeScript + Tailwind CSS (v3.4, Mobile-First UI) + Lucide Icons
 - **Backend:** Node.js + Express.js + TypeScript
@@ -16,7 +16,7 @@
 
 ---
 
-## 🗄️ โครงสร้างฐานข้อมูล (Prisma Schema)
+##  Database Structure (Prisma Schema)
 
 ```prisma
 model User {
@@ -57,7 +57,7 @@ model Reservation {
 
 ---
 
-## ⚙️ Core Features & Business Logic
+##  Core Features & Business Logic
 
 ### 1. Authentication (CMU OAuth + JWT)
 - **Login Flow:** Frontend มีปุ่ม **"Login with CMU Account"** เพียงปุ่มเดียว ยิงไปที่ Backend `GET /api/auth/cmu`
@@ -84,7 +84,7 @@ model Reservation {
 
 ---
 
-## 🚀 วิธีการรันโปรเจกต์ (Quick Start)
+##  วิธีการรันโปรเจกต์ (Quick Start)
 
 ### วิธีที่ 1: รันด้วย Docker Compose (แนะนำสำหรับ Production / Full Local)
 
@@ -123,10 +123,17 @@ npm run dev              # เปิดแอปที่ http://localhost:5173
 
 ---
 
-## 🧪 การทดสอบ (Testing)
+##  การทดสอบ (Testing)
 
 ### 1. Unit & Integration Tests (Vitest)
-ทดสอบกฎธุรกิจ (Business Rules: 3-Hour Cancel Rule, 24-Hour Auto-Cancel, Anti-Ghosting Ban):
+ใช้ Vitest สำหรับทดสอบ Business Logic ที่สำคัญ เช่น
+
+กฎการยกเลิกภายใน 3 ชั่วโมง
+การยกเลิกอัตโนมัติหลัง 24 ชั่วโมง
+การจัดการกรณีผู้ซื้อไม่มาตามนัด
+การระงับบัญชีผู้ซื้อ
+
+สามารถรัน Test ได้ด้วย
 ```bash
 cd backend
 npm test
@@ -140,7 +147,7 @@ npx playwright test
 
 ---
 
-## 📁 โครงสร้างโปรเจกต์ (Project Structure)
+##  โครงสร้างโปรเจกต์ (Project Structure)
 
 ```text
 Project Campus/
