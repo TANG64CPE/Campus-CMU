@@ -58,7 +58,7 @@ const MainApp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-canvas text-ink flex flex-col selection:bg-primary-soft/30 selection:text-ink-deep font-sans">
+    <div className="min-h-screen bg-canvas text-ink flex flex-col selection:bg-primary/10 selection:text-ink-deep font-sans">
       {/* Top Navbar (60px height, hairline border) */}
       <Navbar
         currentView={currentView}
@@ -111,12 +111,12 @@ const MainApp: React.FC = () => {
         )}
       </main>
 
-      {/* Footer Region (ClickUp footer spec: canvas bg, 1px hairline, ink-secondary typography) */}
+      {/* Footer Region — design.md footer-region: canvas bg, 1px hairline, ink-secondary body-sm */}
       <footer className="bg-canvas border-t border-hairline py-10 mt-12">
-        <div className="max-w-[1160px] mx-auto px-4 sm:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-secondary">
+        <div className="max-w-clickup mx-auto px-4 sm:px-[40px]">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-body-sm text-ink-secondary">
             <div className="flex items-center gap-3">
-              <span className="font-display font-extrabold text-base tracking-tight text-ink">
+              <span className="font-display font-extrabold text-heading-sm tracking-tight-sm text-ink">
                 Campus<span className="bg-brand-gradient bg-clip-text text-transparent">Mart</span>
               </span>
               <span className="eyebrow-mono bg-surface-soft text-ink-deep px-2 py-0.5 rounded-xxs border border-hairline text-[10px]">
@@ -126,12 +126,12 @@ const MainApp: React.FC = () => {
               <span className="text-ink-tertiary">ตลาดนัดของใช้มือสองสำหรับนักศึกษา มหาวิทยาลัยเชียงใหม่</span>
             </div>
 
-            <div className="flex items-center gap-4 text-xs">
-              <span className="hover:text-brand-link cursor-pointer transition-colors">
+            <div className="flex items-center gap-4 text-body-sm">
+              <span className="hover:text-brand-link cursor-pointer transition-colors duration-clickup ease-clickup">
                 นโยบายความปลอดภัย
               </span>
               <span className="text-hairline-strong">•</span>
-              <span className="hover:text-brand-link cursor-pointer transition-colors">
+              <span className="hover:text-brand-link cursor-pointer transition-colors duration-clickup ease-clickup">
                 จุดนัดรับใน มช.
               </span>
               <span className="text-hairline-strong">•</span>

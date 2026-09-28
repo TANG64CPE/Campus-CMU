@@ -2,126 +2,336 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ================================================================
+   ClickUp Design System — CSS Custom Properties
+   Reference: design.md (ClickUp neon-purple gradient-as-brand)
+   Thai Font: Kanit as fallback for Plus Jakarta Sans and Inter
+   ================================================================ */
+
 @layer base {
-  body {
-    font-family: 'Inter', 'Kanit', system-ui, -apple-system, sans-serif;
-    color: #292d34;
-    background-color: #ffffff;
-    letter-spacing: -0.15px;
+  :root {
+    /* ── Colors ─────────────────────────────────────── */
+    --color-primary: #7612fa;
+    --color-primary-deep: #4a2fff;
+    --color-primary-soft: #b38cff;
+    --color-brand-link: #7b68ee;
+    --color-brand-pink: #fa24ce;
+    --color-brand-orange: #f76808;
+    --color-accent-blue: #0091ff;
+    --color-accent-green: #078d3b;
+    --color-accent-red: #f0382d;
+    --color-canvas: #ffffff;
+    --color-surface: #f8f9fa;
+    --color-surface-soft: #e9ebf0;
+    --color-hairline: #e8e8e8;
+    --color-hairline-strong: #d9d9d9;
+    --color-ink: #292d34;
+    --color-ink-deep: #202020;
+    --color-ink-darkest: #090c1d;
+    --color-ink-secondary: #646464;
+    --color-ink-tertiary: #838383;
+    --color-ink-disabled: #b4b4b4;
+    --color-shadow-indigo: #122ba5;
+    --color-shadow-navy: #1b1754;
+
+    /* ── Gradient ────────────────────────────────────── */
+    --gradient-brand: linear-gradient(263deg, #fa12e3 -35%, #7612fa 41%, #12d0fa 135%);
+    --gradient-brand-hover: linear-gradient(263deg, #fa12e3 -20%, #7612fa 50%, #12d0fa 145%);
+
+    /* ── Typography ──────────────────────────────────── */
+    --font-display: 'Plus Jakarta Sans', 'Kanit', sans-serif;
+    --font-sans: 'Inter', 'Kanit', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Sometype Mono', 'JetBrains Mono', monospace;
+
+    /* ── Spacing (10px base) ─────────────────────────── */
+    --space-xxs: 4px;
+    --space-xs: 8px;
+    --space-sm: 12px;
+    --space-md: 20px;
+    --space-lg: 24px;
+    --space-xl: 40px;
+    --space-xxl: 60px;
+    --space-section: 100px;
+    --space-hero: 150px;
+
+    /* ── Radii ────────────────────────────────────────── */
+    --radius-xxs: 4px;
+    --radius-sm: 9px;
+    --radius-md: 12px;
+    --radius-lg: 14px;
+    --radius-pill: 20px;
+    --radius-xl: 25px;
+    --radius-xxl: 35px;
+    --radius-full: 9999px;
+
+    /* ── Shadows (tinted indigo, NOT gray) ────────────── */
+    --shadow-xs: 0 4px 12px rgba(18, 43, 165, 0.05);
+    --shadow-sm: 0 10px 25px rgba(18, 43, 165, 0.08);
+    --shadow-md: 0 20px 60px rgba(18, 43, 165, 0.12);
+    --shadow-lg: 0 16px 78px rgba(18, 43, 165, 0.16);
+    --shadow-xl: 0 34px 54px rgba(18, 43, 165, 0.22);
+
+    /* ── Transition (ClickUp easing) ─────────────────── */
+    --ease-clickup: cubic-bezier(0.5, 0, 0.5, 1);
+    --transition-short: 0.25s var(--ease-clickup);
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif;
-    font-weight: 700;
+  /* ── Base Typography ─────────────────────────────── */
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background-color: var(--color-canvas);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.375;
+    letter-spacing: -0.32px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Display headlines — Plus Jakarta Sans (Kanit fallback for Thai) */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  h1 { font-size: 48px; line-height: 1.25; letter-spacing: -1.68px; font-weight: 650; }
+  h2 { font-size: 40px; line-height: 1.2; letter-spacing: -1.6px; font-weight: 650; }
+  h3 { font-size: 34px; line-height: 1.2; letter-spacing: -1.36px; font-weight: 650; }
+  h4 { font-size: 26px; line-height: 1.25; letter-spacing: -0.91px; font-weight: 650; }
+  h5 { font-size: 18px; line-height: 1.33; letter-spacing: -0.54px; font-weight: 650; }
+  h6 { font-size: 16px; line-height: 1.375; letter-spacing: -0.32px; font-weight: 600; }
 }
 
-/* Custom scrollbars */
+/* ── Custom Scrollbars ──────────────────────────────── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f8f9fa;
+  background: var(--color-surface);
 }
 ::-webkit-scrollbar-thumb {
-  background: #d9d9d9;
-  border-radius: 9999px;
+  background: var(--color-hairline-strong);
+  border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #b4b4b4;
+  background: var(--color-ink-disabled);
 }
 
-/* ClickUp Design System Button Utilities */
+/* ================================================================
+   COMPONENT UTILITY CLASSES — Following design.md component specs
+   ================================================================ */
+
+/* ── Button: Primary Dark Pill CTA ───────────────────
+   design.md: button-primary
+   bg: ink (#292d34), text: canvas, body-lg (Inter 18px/650),
+   radius: pill (20px), padding: 14px 20px, height: 52px
+   ────────────────────────────────────────────────── */
 .btn-primary-pill {
-  background-color: #292d34;
-  color: #ffffff;
-  border-radius: 20px;
-  font-family: 'Inter', 'Kanit', sans-serif;
+  background-color: var(--color-ink);
+  color: var(--color-canvas);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
   font-weight: 600;
-  transition: all 0.25s cubic-bezier(0.5, 0, 0.5, 1);
+  letter-spacing: -0.15px;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-short);
 }
 .btn-primary-pill:hover {
-  background-color: #202020;
+  background-color: var(--color-ink-deep);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(18, 43, 165, 0.12);
+  box-shadow: var(--shadow-xs);
+}
+.btn-primary-pill:active {
+  transform: scale(0.98);
 }
 
+/* ── Button: Gradient Pill CTA ───────────────────────
+   design.md: button-gradient
+   bg: brand gradient (263deg sweep), text: canvas, body-lg,
+   radius: pill (20px), padding: 14px 20px, height: 52px
+   ────────────────────────────────────────────────── */
 .btn-gradient-pill {
-  background: linear-gradient(263deg, #fa12e3 -35%, #7612fa 41%, #12d0fa 135%);
-  color: #ffffff;
-  border-radius: 20px;
-  font-family: 'Inter', 'Kanit', sans-serif;
+  background: var(--gradient-brand);
+  color: var(--color-canvas);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
   font-weight: 600;
-  transition: all 0.25s cubic-bezier(0.5, 0, 0.5, 1);
+  letter-spacing: -0.15px;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-short);
 }
 .btn-gradient-pill:hover {
-  background: linear-gradient(263deg, #fa12e3 -20%, #7612fa 50%, #12d0fa 145%);
+  background: var(--gradient-brand-hover);
   transform: translateY(-1px);
   box-shadow: 0 8px 24px rgba(118, 18, 250, 0.35);
 }
+.btn-gradient-pill:active {
+  transform: scale(0.98);
+}
 
+/* ── Button: Secondary ───────────────────────────────
+   design.md: button-secondary
+   bg: surface-soft (#e9ebf0), text: ink-deep, button-md,
+   radius: sm (9px), padding: 10px 16px, border: 1px hairline
+   ────────────────────────────────────────────────── */
 .btn-secondary-sm {
-  background-color: #e9ebf0;
-  color: #202020;
-  border-radius: 9px;
-  border: 1px solid #e8e8e8;
-  font-family: 'Inter', 'Kanit', sans-serif;
+  background-color: var(--color-surface-soft);
+  color: var(--color-ink-deep);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-hairline);
+  font-family: var(--font-sans);
   font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.15px;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 .btn-secondary-sm:hover {
-  background-color: #d9d9d9;
+  background-color: var(--color-hairline-strong);
+  border-color: var(--color-hairline-strong);
 }
 
-/* ClickUp Tile & Feature Card */
+/* ── Card: Tile (app-grid) ───────────────────────────
+   design.md: card-tile
+   bg: canvas, border: 1px hairline, radius: md (12px), padding: 20px
+   ────────────────────────────────────────────────── */
 .card-tile {
-  background-color: #ffffff;
-  border: 1px solid #e8e8e8;
-  border-radius: 12px;
-  transition: all 0.25s cubic-bezier(0.5, 0, 0.5, 1);
+  background-color: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-short);
 }
 .card-tile:hover {
-  border-color: #d9d9d9;
-  box-shadow: 0 10px 25px rgba(18, 43, 165, 0.08);
+  border-color: var(--color-hairline-strong);
+  box-shadow: var(--shadow-sm);
   transform: translateY(-2px);
 }
 
+/* ── Card: Feature ───────────────────────────────────
+   design.md: card-feature
+   bg: canvas, border: 1px hairline, radius: lg (14px), padding: 24px
+   ────────────────────────────────────────────────── */
 .card-feature {
-  background-color: #ffffff;
-  border: 1px solid #e8e8e8;
-  border-radius: 14px;
-  transition: all 0.25s cubic-bezier(0.5, 0, 0.5, 1);
+  background-color: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-short);
 }
 .card-feature:hover {
-  border-color: #d9d9d9;
-  box-shadow: 0 20px 40px rgba(18, 43, 165, 0.09);
+  border-color: var(--color-hairline-strong);
+  box-shadow: var(--shadow-md);
   transform: translateY(-3px);
 }
 
-/* Eyebrow Mono Badge */
+/* ── Card: Feature Panel ─────────────────────────────
+   design.md: card-feature-panel
+   bg: canvas, border: 1px hairline, radius: xxl (35px), padding: 40px
+   ────────────────────────────────────────────────── */
+.card-feature-panel {
+  background-color: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-xxl);
+  transition: all var(--transition-short);
+}
+
+/* ── Card: Section ───────────────────────────────────
+   design.md: card-section
+   bg: surface (#f8f9fa), radius: xl (25px), padding: 60px
+   ────────────────────────────────────────────────── */
+.card-section {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-xl);
+}
+
+/* ── Eyebrow Mono Badge ──────────────────────────────
+   design.md: badge-accent / eyebrow-mono
+   Sometype Mono 14px / 500 / uppercase / 0 tracking
+   ────────────────────────────────────────────────── */
 .eyebrow-mono {
-  font-family: 'Sometype Mono', 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+  line-height: 1.29;
 }
 
-/* Text Input Styled */
+/* ── Text Input ──────────────────────────────────────
+   design.md: text-input
+   bg: canvas, text: ink, body-md, radius: sm (9px),
+   padding: 10px 16px, border: 1px hairline-strong, height: 44px
+   Focus: border 2px primary (#7612fa)
+   ────────────────────────────────────────────────── */
 .input-field {
   height: 44px;
-  background-color: #ffffff;
-  color: #292d34;
-  border: 1px solid #d9d9d9;
-  border-radius: 9px;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-sm);
   padding: 10px 16px;
-  font-family: 'Inter', 'Kanit', sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.15px;
+  line-height: 1.43;
   transition: all 0.2s ease;
+}
+.input-field::placeholder {
+  color: var(--color-ink-disabled);
 }
 .input-field:focus {
   outline: none;
-  border: 2px solid #7612fa;
+  border: 2px solid var(--color-primary);
   box-shadow: 0 0 0 3px rgba(118, 18, 250, 0.12);
+}
+
+/* ── Badge: Pill ─────────────────────────────────────
+   design.md: badge-pill
+   bg: surface-soft, text: ink-secondary, caption (12px/400),
+   radius: full, padding: 4px 10px
+   ────────────────────────────────────────────────── */
+.badge-pill {
+  background-color: var(--color-surface-soft);
+  color: var(--color-ink-secondary);
+  font-size: 12px;
+  font-weight: 400;
+  border-radius: var(--radius-full);
+  padding: 4px 10px;
+  line-height: 1.5;
+  letter-spacing: -0.12px;
+}
+
+/* ── CTA Banner Light ────────────────────────────────
+   design.md: cta-banner-light
+   bg: surface, radius: xxl (35px), padding: 60px
+   ────────────────────────────────────────────────── */
+.cta-banner-light {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-xxl);
+  padding: 60px;
+}
+
+/* ── Loading Spinner ─────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ── Smooth Page Transitions ─────────────────────────── */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.page-transition-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s var(--ease-clickup), transform 0.3s var(--ease-clickup);
 }

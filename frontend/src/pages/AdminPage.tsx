@@ -158,7 +158,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
   };
 
   return (
-    <div className="max-w-[1160px] mx-auto px-4 sm:px-8 py-6 pb-24">
+    <div className="max-w-clickup mx-auto px-4 sm:px-[40px] py-6 pb-24">
       {/* Header Area */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline">
         <div>
@@ -168,10 +168,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
               ADMINISTRATION SYSTEM • ACCOUNT MANAGEMENT
             </span>
           </div>
-          <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-ink tracking-tight">
+          <h1 className="font-display font-extrabold text-2xl sm:text-heading-md text-ink tracking-tight-sm">
             ระบบจัดการบัญชีผู้ใช้งาน (Admin)
           </h1>
-          <p className="text-xs text-ink-secondary mt-1">
+          <p className="text-body-sm text-ink-secondary mt-1">
             ตรวจสอบและจัดการบัญชีผู้ใช้ ดูสถิติทั้งฝั่งผู้ขาย (ลงขายอะไรบ้าง) และฝั่งผู้ซื้อ (กดจองอะไรบ้าง)
           </p>
         </div>
@@ -179,13 +179,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
         <div className="flex items-center gap-2">
           <button
             onClick={loadData}
-            className="btn-secondary-sm px-3 py-1.5 text-xs flex items-center gap-1.5"
+            className="btn-secondary-sm px-3 py-1.5 text-button-md flex items-center gap-1.5"
             title="รีเฟรชข้อมูล"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span className="font-mono text-[11px]">REFRESH</span>
           </button>
-          <button onClick={onNavigateHome} className="btn-secondary-sm px-3.5 py-1.5 text-xs">
+          <button onClick={onNavigateHome} className="btn-secondary-sm px-3.5 py-1.5 text-button-md">
             กลับหน้าตลาด
           </button>
         </div>
@@ -286,7 +286,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
             placeholder="ค้นหาตามชื่อ, รหัสนักศึกษา, อีเมล..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full input-field pl-10 pr-9 text-xs"
+            className="w-full input-field pl-10 pr-9 text-body-sm"
           />
           {searchQuery && (
             <button
@@ -299,10 +299,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
         </div>
 
         {/* Filter Pills (ClickUp segment pill tabs) */}
-        <div className="inline-flex p-1 bg-surface-soft rounded-pill border border-hairline text-xs font-medium text-ink-secondary overflow-x-auto">
+        <div className="inline-flex p-1 bg-surface-soft rounded-pill border border-hairline text-body-sm font-medium text-ink-secondary overflow-x-auto">
           <button
             onClick={() => setActiveSideFilter('all')}
-            className={`px-3 py-1 rounded-pill transition-all whitespace-nowrap ${
+            className={`px-3 py-1 rounded-pill transition-all duration-clickup ease-clickup whitespace-nowrap ${
               activeSideFilter === 'all'
                 ? 'bg-canvas text-ink font-semibold shadow-tinted-xs border border-hairline'
                 : 'hover:text-ink'
@@ -312,7 +312,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
           </button>
           <button
             onClick={() => setActiveSideFilter('sellers')}
-            className={`px-3 py-1 rounded-pill transition-all whitespace-nowrap ${
+            className={`px-3 py-1 rounded-pill transition-all duration-clickup ease-clickup whitespace-nowrap ${
               activeSideFilter === 'sellers'
                 ? 'bg-canvas text-primary font-semibold shadow-tinted-xs border border-hairline'
                 : 'hover:text-ink'
@@ -322,7 +322,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
           </button>
           <button
             onClick={() => setActiveSideFilter('buyers')}
-            className={`px-3 py-1 rounded-pill transition-all whitespace-nowrap ${
+            className={`px-3 py-1 rounded-pill transition-all duration-clickup ease-clickup whitespace-nowrap ${
               activeSideFilter === 'buyers'
                 ? 'bg-canvas text-brand-orange font-semibold shadow-tinted-xs border border-hairline'
                 : 'hover:text-ink'
@@ -332,7 +332,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
           </button>
           <button
             onClick={() => setActiveSideFilter('banned')}
-            className={`px-3 py-1 rounded-pill transition-all whitespace-nowrap ${
+            className={`px-3 py-1 rounded-pill transition-all duration-clickup ease-clickup whitespace-nowrap ${
               activeSideFilter === 'banned'
                 ? 'bg-canvas text-accent-red font-semibold shadow-tinted-xs border border-hairline'
                 : 'hover:text-ink'

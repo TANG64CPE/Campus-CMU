@@ -14,7 +14,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) =>
   return (
     <div
       onClick={onClick}
-      className="group bg-canvas rounded-lg border border-hairline hover:border-hairline-strong hover:shadow-tinted-md hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col"
+      className="group card-feature p-0 overflow-hidden flex flex-col cursor-pointer"
     >
       {/* Product Image Frame */}
       <div className="relative aspect-[4/3] bg-surface overflow-hidden border-b border-hairline">
@@ -22,7 +22,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) =>
           <img
             src={product.imageUrl}
             alt={product.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[250ms] ease-clickup"
             onError={(e) => {
               (e.target as HTMLElement).style.display = 'none';
             }}
@@ -30,11 +30,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) =>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-surface p-4 text-center">
             <Tag className="w-8 h-8 text-ink-disabled mb-2 stroke-[1.5]" />
-            <span className="text-xs font-mono text-ink-tertiary">ภาพตัวอย่างสินค้า</span>
+            <span className="text-caption font-mono text-ink-tertiary">ภาพตัวอย่างสินค้า</span>
           </div>
         )}
 
-        {/* Status Badge: ClickUp Eyebrow Badge Style */}
+        {/* Status Badge: ClickUp badge-pill style */}
         {!product.isAvailable ? (
           <div className="absolute top-2.5 right-2.5 z-10">
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/95 backdrop-blur-sm text-brand-orange border border-brand-orange/30 shadow-tinted-xs">
@@ -52,24 +52,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) =>
         )}
       </div>
 
-      {/* Card Content Area */}
-      <div className="p-4 flex-1 flex flex-col justify-between">
+      {/* Card Content — 24px padding per card-feature spec */}
+      <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
-          {/* Price — Plus Jakarta Sans display typography */}
-          <div className="flex items-baseline gap-1 font-display font-extrabold text-[20px] text-ink-deep mb-1 tracking-tight">
+          {/* Price — Plus Jakarta Sans display-md tracking */}
+          <div className="flex items-baseline gap-1 font-display font-extrabold text-[20px] text-ink-deep mb-1.5 tracking-tight-sm">
             <span className="text-sm font-semibold text-ink-tertiary">฿</span>
             <span>{formattedPrice}</span>
           </div>
 
-          {/* Title — Graphite Ink text */}
-          <h3 className="font-semibold text-ink text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+          {/* Title — Graphite Ink body-sm */}
+          <h3 className="font-sans font-semibold text-ink text-body-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors duration-[250ms] ease-clickup">
             {product.title}
           </h3>
         </div>
 
         {/* Footer Meta: Location & Seller with Sometype Mono Student ID */}
-        <div className="mt-3 pt-3 border-t border-hairline flex flex-col gap-1.5 text-xs text-ink-secondary">
-          <div className="flex items-center gap-1.5 text-ink-secondary font-medium">
+        <div className="mt-3 pt-3 border-t border-hairline flex flex-col gap-1.5">
+          <div className="flex items-center gap-1.5 text-ink-secondary font-medium text-caption">
             <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
             <span className="truncate">{product.meetupLocation}</span>
           </div>

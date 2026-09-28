@@ -59,28 +59,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        {/* Main Card (ClickUp card-feature-panel: 35px radius, 1px hairline, tinted shadow) */}
-        <div className="bg-canvas rounded-xxl border border-hairline shadow-tinted-md overflow-hidden p-8 sm:p-10 text-center relative">
+        {/* Main Card — design.md card-feature-panel: xxl (35px) radius, 1px hairline, tinted shadow */}
+        <div className="card-feature-panel shadow-tinted-md overflow-hidden p-8 sm:p-10 text-center relative">
           {/* Decorative ambient background glow */}
           <div className="absolute -top-16 -right-16 w-44 h-44 bg-gradient-to-br from-primary-soft/15 via-brand-link/10 to-transparent rounded-full blur-2xl pointer-events-none" />
 
-          {/* Logo Badge (ClickUp 20px pill with brand gradient) */}
+          {/* Logo Badge — pill (20px) radius with brand gradient */}
           <div className="relative z-10 inline-flex items-center justify-center w-14 h-14 rounded-pill bg-brand-gradient text-white shadow-tinted-sm mb-5">
             <ShoppingBag className="w-7 h-7 stroke-[2.2]" />
           </div>
 
           <div className="relative z-10">
-            {/* Eyebrow badge */}
+            {/* Eyebrow badge — Sometype Mono, xxs (4px) radius */}
             <div className="inline-block mb-2">
               <span className="eyebrow-mono bg-surface-soft text-ink-deep px-2.5 py-1 rounded-xxs border border-hairline text-[10px]">
                 CMU CPE OAUTH AUTHENTICATION
               </span>
             </div>
 
-            <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-ink tracking-tight">
+            <h1 className="font-display font-extrabold text-2xl sm:text-heading-md text-ink tracking-tight-sm">
               Campus<span className="bg-brand-gradient bg-clip-text text-transparent">Mart</span>
             </h1>
-            <p className="text-xs text-ink-secondary mt-1.5 font-medium">
+            <p className="text-body-sm text-ink-secondary mt-1.5 font-medium">
               ตลาดนัดซื้อขายของมือสองสำหรับนักศึกษา มช.
             </p>
             <p className="text-[11px] text-ink-tertiary mt-0.5">
@@ -88,7 +88,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </p>
           </div>
 
-          {/* Feature Highlights (ClickUp card-tile row) */}
+          {/* Feature Highlights — card-tile row, md (12px) radius */}
           <div className="relative z-10 grid grid-cols-3 gap-2 my-6 p-2.5 bg-surface rounded-md border border-hairline text-[11px] text-ink-secondary">
             <div className="flex flex-col items-center text-center gap-1 p-1">
               <ShieldCheck className="w-4 h-4 text-accent-green" />
@@ -104,14 +104,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          {/* Core Login Button: "Login with CMU Account" (ClickUp Brand Gradient CTA: 20px pill, 52px height) */}
+          {/* Core Login Button — design.md button-gradient: 52px height, pill (20px), brand gradient */}
           <div className="relative z-10 space-y-3">
             <button
               onClick={loginWithCmu}
               disabled={loading}
-              className="btn-gradient-pill w-full h-[52px] px-6 text-sm font-semibold tracking-[-0.15px] flex items-center justify-center gap-2.5 shadow-tinted-md active:scale-[0.98] transition-all disabled:opacity-50"
+              className="btn-gradient-pill w-full h-[52px] px-6 text-body-lg font-semibold tracking-tight-body-sm flex items-center justify-center gap-2.5 shadow-tinted-md active:scale-[0.98] transition-all duration-clickup ease-clickup disabled:opacity-50"
             >
-              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center font-bold text-xs">
+              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center font-bold text-caption">
                 M
               </div>
               <span>Login with CMU Account</span>
@@ -120,7 +120,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               เข้าสู่ระบบผ่าน CPE CMU OAuth (ยืนยันสถานะนักศึกษา มช.)
             </p>
 
-            {/* CPE OAuth Credentials Info Box */}
+            {/* CPE OAuth Credentials Info Box — card-tile styling */}
             <div className="p-3 bg-surface rounded-md border border-hairline text-[11px] text-left text-ink space-y-1">
               <p className="font-semibold text-ink flex items-center gap-1 text-[11px]">
                 <Key className="w-3 h-3 text-primary" />
@@ -143,7 +143,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             <button
               type="button"
               onClick={() => setShowDevOptions(!showDevOptions)}
-              className="text-xs text-primary hover:text-primary-deep font-semibold inline-flex items-center gap-1.5 transition-colors"
+              className="text-body-sm text-primary hover:text-primary-deep font-semibold inline-flex items-center gap-1.5 transition-colors duration-clickup ease-clickup"
             >
               <Sparkles className="w-3.5 h-3.5 text-brand-orange" />
               <span>โหมดทดสอบในเครื่อง (Local Mock CMU Account)</span>
@@ -161,10 +161,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                       key={p.studentId}
                       type="button"
                       onClick={() => handleSelectMock(p)}
-                      className="w-full text-left p-2.5 bg-canvas rounded-sm border border-hairline hover:border-primary hover:shadow-tinted-xs transition-all flex flex-col group"
+                      className="w-full text-left p-2.5 bg-canvas rounded-sm border border-hairline hover:border-primary hover:shadow-tinted-xs transition-all duration-clickup ease-clickup flex flex-col group"
                     >
                       <div className="flex items-center justify-between w-full">
-                        <span className="font-semibold text-xs text-ink group-hover:text-primary transition-colors">
+                        <span className="font-semibold text-body-sm text-ink group-hover:text-primary transition-colors">
                           {p.name}
                         </span>
                         <span className="font-mono text-[10px] text-ink-tertiary bg-surface-soft px-1.5 py-0.5 rounded-xxs border border-hairline">
@@ -186,11 +186,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                       placeholder="เช่น 650610999"
                       value={customStudentId}
                       onChange={(e) => setCustomStudentId(e.target.value)}
-                      className="flex-1 input-field h-[38px] text-xs px-3"
+                      className="flex-1 input-field h-[38px] text-body-sm px-3"
                     />
                     <button
                       type="submit"
-                      className="btn-primary-pill h-[38px] px-3.5 text-xs"
+                      className="btn-primary-pill h-[38px] px-3.5 text-button-md"
                     >
                       เข้าสู่ระบบ
                     </button>

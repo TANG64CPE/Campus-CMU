@@ -27,20 +27,24 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <nav className="sticky top-0 z-40 bg-canvas/95 backdrop-blur-md border-b border-hairline transition-all">
-      <div className="max-w-[1160px] mx-auto px-4 sm:px-8">
+    /* ── Top Nav (design.md: top-nav) ───────────────────
+       bg: canvas, text: ink, body-md, height: 60px, padding: 0 40px
+       Sticky on scroll with subtle resting-state hairline
+       ────────────────────────────────────────────────── */
+    <nav className="sticky top-0 z-40 bg-canvas/95 backdrop-blur-md border-b border-hairline" style={{ height: '60px' }}>
+      <div className="max-w-clickup mx-auto px-4 sm:px-[40px]">
         <div className="flex items-center justify-between h-[60px] gap-4">
           {/* Brand Wordmark & Logo */}
           <button
             onClick={() => onNavigate('marketplace')}
             className="flex items-center gap-3 group text-left focus:outline-none"
           >
-            {/* ClickUp Brand Voltage Gradient Icon */}
-            <div className="w-9 h-9 rounded-pill bg-brand-gradient flex items-center justify-center text-white shadow-tinted-sm group-hover:scale-105 transition-transform duration-200">
+            {/* ClickUp Brand Voltage Gradient Icon — pill (20px) radius */}
+            <div className="w-9 h-9 rounded-pill bg-brand-gradient flex items-center justify-center text-white shadow-tinted-sm group-hover:scale-105 transition-transform duration-clickup ease-clickup">
               <ShoppingBag className="w-4 h-4 stroke-[2.2]" />
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-display font-extrabold text-[19px] tracking-tight text-ink group-hover:text-primary transition-colors">
+              <span className="font-display font-extrabold text-[19px] tracking-tight-sm text-ink group-hover:text-primary transition-colors duration-clickup ease-clickup">
                 Campus<span className="bg-brand-gradient bg-clip-text text-transparent">Mart</span>
               </span>
               {/* Sometype Mono Eyebrow Badge (4px radius) */}
@@ -50,7 +54,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </button>
 
-          {/* Quick Search on larger screens (ClickUp search input design) */}
+          {/* Quick Search — ClickUp text-input design (9px radius, 44px height) */}
           {currentView === 'marketplace' && (
             <div className="hidden md:flex flex-1 max-w-md mx-4">
               <div className="relative w-full">
@@ -60,12 +64,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   placeholder="ค้นหาหนังสือ, บอร์ดไมโครคอนโทรลเลอร์, อุปกรณ์ IT..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full bg-surface text-ink text-xs pl-10 pr-9 py-2 rounded-pill border border-hairline-strong focus:outline-none focus:border-primary focus:bg-canvas focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-ink-disabled font-sans"
+                  className="w-full bg-surface text-ink text-body-sm pl-10 pr-9 py-2 rounded-pill border border-hairline-strong focus:outline-none focus:border-primary focus:bg-canvas focus:ring-2 focus:ring-primary/10 transition-all duration-clickup ease-clickup placeholder:text-ink-disabled font-sans"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => onSearchChange('')}
-                    className="absolute right-3 top-2.5 text-xs text-ink-tertiary hover:text-ink"
+                    className="absolute right-3 top-2.5 text-caption text-ink-tertiary hover:text-ink transition-colors"
                   >
                     ✕
                   </button>
@@ -82,7 +86,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {user.role === 'ADMIN' && (
                   <button
                     onClick={() => onNavigate('admin')}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill text-xs font-semibold tracking-[-0.15px] border transition-all ${
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill text-button-md border transition-all duration-clickup ease-clickup ${
                       currentView === 'admin'
                         ? 'bg-purple-50 text-primary border-primary font-bold shadow-tinted-xs'
                         : 'bg-canvas text-ink hover:text-primary hover:border-primary border-hairline'
@@ -96,7 +100,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {/* Sell Item Button — ClickUp Dark Pill CTA (#292d34, 20px radius) */}
                 <button
                   onClick={() => onNavigate('create')}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-pill text-xs font-semibold tracking-[-0.15px] transition-all shadow-tinted-xs ${
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-pill text-button-md transition-all duration-clickup ease-clickup shadow-tinted-xs ${
                     currentView === 'create'
                       ? 'bg-ink-deep text-canvas'
                       : 'bg-ink hover:bg-ink-deep text-canvas'
@@ -110,13 +114,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-pill border border-hairline hover:border-hairline-strong hover:bg-surface transition-all text-xs font-medium text-ink"
+                    className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-pill border border-hairline hover:border-hairline-strong hover:bg-surface transition-all duration-clickup ease-clickup text-body-sm font-medium text-ink"
                   >
-                    <div className="w-7 h-7 rounded-full bg-surface-soft text-ink font-mono font-bold text-xs flex items-center justify-center border border-hairline">
+                    <div className="w-7 h-7 rounded-full bg-surface-soft text-ink font-mono font-bold text-caption flex items-center justify-center border border-hairline">
                       {user.studentId.slice(-3)}
                     </div>
-                    <div className="hidden sm:block text-left text-xs">
-                      <div className="font-semibold text-ink leading-tight line-clamp-1">{user.name}</div>
+                    <div className="hidden sm:block text-left">
+                      <div className="font-semibold text-ink leading-tight line-clamp-1 text-body-sm">{user.name}</div>
                     </div>
                     <ChevronDown className="w-3.5 h-3.5 text-ink-tertiary" />
                   </button>
@@ -136,7 +140,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                             </span>
                           )}
                         </div>
-                        <p className="text-xs font-bold text-ink truncate mt-0.5">{user.name}</p>
+                        <p className="text-body-sm font-bold text-ink truncate mt-0.5">{user.name}</p>
                         <p className="text-[11px] text-brand-link font-mono truncate">{user.email}</p>
                       </div>
 
@@ -144,7 +148,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         {user.role === 'ADMIN' && (
                           <button
                             onClick={() => onNavigate('admin')}
-                            className="w-full px-4 py-2 text-left text-xs font-semibold text-primary hover:bg-surface flex items-center gap-2"
+                            className="w-full px-4 py-2 text-left text-body-sm font-semibold text-primary hover:bg-surface flex items-center gap-2 transition-colors"
                           >
                             <Shield className="w-3.5 h-3.5" />
                             <span>ระบบจัดการผู้ใช้ (Admin)</span>
@@ -153,7 +157,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                         <button
                           onClick={() => onNavigate('profile')}
-                          className="w-full px-4 py-2 text-left text-xs font-medium text-ink hover:bg-surface flex items-center gap-2"
+                          className="w-full px-4 py-2 text-left text-body-sm font-medium text-ink hover:bg-surface flex items-center gap-2 transition-colors"
                         >
                           <UserIcon className="w-3.5 h-3.5 text-primary" />
                           <span>โปรไฟล์ & รายการของฉัน</span>
@@ -161,7 +165,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                         <button
                           onClick={() => onNavigate('marketplace')}
-                          className="w-full px-4 py-2 text-left text-xs font-medium text-ink hover:bg-surface flex items-center gap-2"
+                          className="w-full px-4 py-2 text-left text-body-sm font-medium text-ink hover:bg-surface flex items-center gap-2 transition-colors"
                         >
                           <ShoppingBag className="w-3.5 h-3.5 text-primary" />
                           <span>หน้าตลาดสินค้า (Feed)</span>
@@ -181,7 +185,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                               mockLogin(s);
                               setShowUserMenu(false);
                             }}
-                            className={`w-full text-left text-xs px-2 py-1.5 rounded-sm transition-colors flex items-center justify-between ${
+                            className={`w-full text-left text-body-sm px-2 py-1.5 rounded-sm transition-colors duration-clickup ease-clickup flex items-center justify-between ${
                               user.studentId === s.studentId
                                 ? 'bg-surface-soft text-primary font-bold'
                                 : 'text-ink-secondary hover:bg-surface'
@@ -198,7 +202,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <div className="border-t border-hairline pt-1 mt-1">
                         <button
                           onClick={logout}
-                          className="w-full px-4 py-2 text-left text-xs font-semibold text-accent-red hover:bg-red-50 flex items-center gap-2"
+                          className="w-full px-4 py-2 text-left text-body-sm font-semibold text-accent-red hover:bg-red-50 flex items-center gap-2 transition-colors"
                         >
                           <LogOut className="w-3.5 h-3.5" />
                           <span>ออกจากระบบ</span>
@@ -212,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               /* Gradient Pill CTA for Log in */
               <button
                 onClick={() => onNavigate('login')}
-                className="btn-gradient-pill px-4 py-2 text-xs font-semibold tracking-[-0.15px] shadow-tinted-sm"
+                className="btn-gradient-pill px-4 py-2 text-button-md shadow-tinted-sm"
               >
                 <span>เข้าสู่ระบบ CMU</span>
               </button>

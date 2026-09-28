@@ -211,19 +211,19 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   if (loading) {
     return (
-      <div className="max-w-[1000px] mx-auto px-4 py-16 text-center">
+      <div className="max-w-clickup mx-auto px-4 py-16 text-center">
         <div className="w-9 h-9 border-3 border-hairline-strong border-t-primary rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-xs font-mono text-ink-tertiary">LOADING PRODUCT DATA...</p>
+        <p className="text-caption font-mono text-ink-tertiary">LOADING PRODUCT DATA...</p>
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="max-w-[1000px] mx-auto px-4 py-16 text-center">
+      <div className="max-w-clickup mx-auto px-4 py-16 text-center">
         <AlertTriangle className="w-10 h-10 text-brand-orange mx-auto mb-3" />
-        <h2 className="font-display text-lg font-bold text-ink">ไม่พบสินค้านี้</h2>
-        <button onClick={onBack} className="btn-secondary-sm mt-4 px-4 py-2 text-xs">
+        <h2 className="font-display text-heading-sm font-bold text-ink">ไม่พบสินค้านี้</h2>
+        <button onClick={onBack} className="btn-secondary-sm mt-4 px-4 py-2 text-button-md">
           กลับหน้าตลาด
         </button>
       </div>
@@ -235,11 +235,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const isCurrentUserTheSeller = isSeller || product.sellerId === user?.id;
 
   return (
-    <div className="max-w-[1000px] mx-auto px-4 sm:px-8 py-6 pb-24">
+    <div className="max-w-clickup mx-auto px-4 sm:px-[40px] py-6 pb-24">
       {/* Back button */}
       <button
         onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-secondary hover:text-ink mb-5 transition-colors"
+        className="inline-flex items-center gap-1.5 text-body-sm font-medium text-ink-secondary hover:text-ink mb-5 transition-colors duration-clickup ease-clickup"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>กลับไปหน้าตลาด</span>
@@ -247,21 +247,21 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
       {/* Notifications */}
       {errorMsg && (
-        <div className="mb-4 p-4 rounded-lg bg-red-50/80 border border-accent-red/20 text-accent-red text-xs flex items-start gap-2.5">
+        <div className="mb-4 p-4 rounded-lg bg-red-50/80 border border-accent-red/20 text-accent-red text-body-sm flex items-start gap-2.5">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-4 p-4 rounded-lg bg-emerald-50/80 border border-accent-green/20 text-accent-green text-xs flex items-start gap-2.5">
+        <div className="mb-4 p-4 rounded-lg bg-emerald-50/80 border border-accent-green/20 text-accent-green text-body-sm flex items-start gap-2.5">
           <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>{successMsg}</span>
         </div>
       )}
 
-      {/* Detail Container (ClickUp card-feature-panel: 25px/35px radius, 1px hairline border) */}
-      <div className="bg-canvas rounded-xl sm:rounded-xxl border border-hairline shadow-tinted-sm overflow-hidden p-6 sm:p-8">
+      {/* Detail Container — design.md card-feature-panel: xxl (35px) radius, 1px hairline */}
+      <div className="card-feature-panel sm:rounded-xxl shadow-tinted-sm overflow-hidden p-6 sm:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Big Product Image Frame */}
           <div className="relative aspect-square rounded-lg sm:rounded-xl bg-surface overflow-hidden flex items-center justify-center border border-hairline">
@@ -305,16 +305,16 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 </span>
               </div>
 
-              {/* Title — Plus Jakarta Sans display typography */}
-              <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-ink leading-tight mb-3 tracking-[-0.91px]">
+              {/* Title — Plus Jakarta Sans heading-md (26px / 650 / -0.91px) */}
+              <h1 className="font-display font-extrabold text-2xl sm:text-heading-md text-ink leading-tight mb-3 tracking-tight-sm">
                 {product.title}
               </h1>
 
               {/* Price */}
-              <div className="flex items-baseline gap-1 font-display font-extrabold text-3xl sm:text-4xl text-ink-deep mb-5 tracking-tight">
+              <div className="flex items-baseline gap-1 font-display font-extrabold text-3xl sm:text-display-md text-ink-deep mb-5 tracking-tight-md">
                 <span className="text-xl font-semibold text-ink-tertiary">฿</span>
                 <span>{new Intl.NumberFormat('th-TH').format(product.price)}</span>
-                <span className="text-xs font-normal text-ink-tertiary ml-2 font-sans">
+                <span className="text-body-sm font-normal text-ink-tertiary ml-2 font-sans">
                   (ชำระเงินสดหรือสแกนจ่ายหน้างาน)
                 </span>
               </div>
@@ -346,7 +346,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               {/* CASE A: CURRENT USER IS THE SELLER */}
               {isCurrentUserTheSeller ? (
                 <div className="space-y-3">
-                  <div className="p-3 bg-surface rounded-md border border-hairline text-xs text-ink">
+                  <div className="p-3 bg-surface rounded-md border border-hairline text-body-sm text-ink">
                     <p className="font-semibold flex items-center gap-1.5 text-primary">
                       <UserCheck className="w-4 h-4" />
                       นี่คือสินค้าที่คุณลงขายเอง
@@ -368,7 +368,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                       <button
                         onClick={handleCompleteDeal}
                         disabled={actionLoading}
-                        className="w-full py-3.5 px-6 rounded-pill bg-accent-green hover:bg-green-700 text-white text-xs font-semibold shadow-tinted-xs flex items-center justify-center gap-2 transition-all"
+                        className="w-full py-3.5 px-6 rounded-pill bg-accent-green hover:bg-green-700 text-white text-button-md shadow-tinted-xs flex items-center justify-center gap-2 transition-all duration-clickup ease-clickup"
                       >
                         <CheckCircle2 className="w-4 h-4" />
                         <span>ยืนยันส่งมอบสินค้าและรับเงินสำเร็จ (ปิดการขาย)</span>
@@ -378,7 +378,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                       <button
                         onClick={handleReportGhost}
                         disabled={actionLoading}
-                        className="w-full py-2.5 bg-surface-soft hover:bg-red-50 text-accent-red border border-hairline hover:border-accent-red/30 rounded-sm text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                        className="w-full py-2.5 bg-surface-soft hover:bg-red-50 text-accent-red border border-hairline hover:border-accent-red/30 rounded-sm text-button-md flex items-center justify-center gap-1.5 transition-all duration-clickup ease-clickup"
                       >
                         <ShieldAlert className="w-4 h-4 text-accent-red" />
                         <span>รายงานผู้ซื้อโดนเท / ไม่มาตามนัด (แบนบัญชีผู้ซื้อ)</span>
@@ -390,7 +390,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     <button
                       onClick={handleDeleteProduct}
                       disabled={actionLoading}
-                      className="w-full py-2.5 bg-surface-soft hover:bg-red-50 text-ink-secondary hover:text-accent-red border border-hairline rounded-sm text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                      className="w-full py-2.5 bg-surface-soft hover:bg-red-50 text-ink-secondary hover:text-accent-red border border-hairline rounded-sm text-button-md flex items-center justify-center gap-1.5 transition-all duration-clickup ease-clickup"
                     >
                       <Trash2 className="w-4 h-4" />
                       <span>ลบรายการสินค้านี้</span>
@@ -407,7 +407,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                       <button
                         onClick={handleReserve}
                         disabled={actionLoading}
-                        className="btn-gradient-pill w-full h-[52px] px-6 text-sm font-semibold tracking-[-0.15px] flex items-center justify-center gap-2 shadow-tinted-md active:scale-[0.99] transition-all disabled:opacity-50"
+                        className="btn-gradient-pill w-full h-[52px] px-6 text-body-lg font-semibold tracking-tight-body-sm flex items-center justify-center gap-2 shadow-tinted-md active:scale-[0.99] transition-all duration-clickup ease-clickup disabled:opacity-50"
                       >
                         <Tag className="w-4 h-4" />
                         <span>กดจองสินค้า (Reserve Product)</span>
@@ -421,12 +421,12 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     <div className="space-y-4">
                       {/* Revealed Contact Information Box (ClickUp surface card) */}
                       <div className="p-4 sm:p-5 bg-surface rounded-lg border border-hairline shadow-tinted-xs">
-                        <div className="flex items-center gap-2 text-ink font-bold text-xs mb-3">
+                        <div className="flex items-center gap-2 text-ink font-bold text-body-sm mb-3">
                           <UserCheck className="w-4 h-4 text-primary" />
                           <span className="eyebrow-mono">ข้อมูลติดต่อผู้ขาย (เพื่อนัดรับสินค้า)</span>
                         </div>
 
-                        <div className="space-y-2 text-xs">
+                        <div className="space-y-2 text-body-sm">
                           <div className="flex items-center gap-2 text-ink">
                             <MessageSquare className="w-4 h-4 text-accent-green shrink-0" />
                             <span className="font-semibold text-ink-secondary">Contact / Line:</span>
@@ -463,11 +463,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                           <button
                             onClick={handleBuyerCancel}
                             disabled={actionLoading}
-                            className="w-full py-3 px-6 rounded-pill bg-accent-red hover:bg-red-700 text-white text-xs font-semibold shadow-tinted-xs active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                            className="w-full py-3 px-6 rounded-pill bg-accent-red hover:bg-red-700 text-white text-button-md shadow-tinted-xs active:scale-[0.99] transition-all duration-clickup ease-clickup flex items-center justify-center gap-2"
                           >
                             <span>ยกเลิกการจองสินค้า (Cancel Reservation)</span>
                           </button>
-                          <div className="flex items-center justify-between px-1 text-xs text-ink-secondary">
+                          <div className="flex items-center justify-between px-1 text-body-sm text-ink-secondary">
                             <span className="flex items-center gap-1 text-brand-orange font-medium font-mono text-[11px]">
                               <Clock className="w-3.5 h-3.5" />
                               เวลายกเลิกคงเหลือ: {timeRemainingText}
@@ -477,7 +477,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         </div>
                       ) : (
                         /* STATE 3: จองแล้ว เกิน 3 ชม. (ซ่อนปุ่มยกเลิก พร้อมข้อความเตือน) */
-                        <div className="p-3.5 bg-amber-50/70 rounded-lg border border-amber-200/80 text-xs text-amber-900">
+                        <div className="p-3.5 bg-amber-50/70 rounded-lg border border-amber-200/80 text-body-sm text-amber-900">
                           <div className="flex items-start gap-2">
                             <AlertTriangle className="w-4 h-4 text-brand-orange shrink-0 mt-0.5" />
                             <div>
@@ -495,9 +495,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     </div>
                   ) : (
                     /* Product reserved by another student */
-                    <div className="p-4 bg-surface rounded-lg border border-hairline text-center text-xs text-ink-secondary">
+                    <div className="p-4 bg-surface rounded-lg border border-hairline text-center text-body-sm text-ink-secondary">
                       <Clock className="w-5 h-5 text-brand-orange mx-auto mb-1.5" />
-                      <p className="font-bold text-ink text-sm">สินค้านี้มีนักศึกษาจองอยู่แล้ว</p>
+                      <p className="font-bold text-ink text-heading-sm">สินค้านี้มีนักศึกษาจองอยู่แล้ว</p>
                       <p className="mt-0.5 text-ink-tertiary text-[11px]">
                         หากผู้ซื้อเดิมยกเลิกหรือไม่มีการส่งมอบภายใน 24 ชม. ระบบจะปล่อยสินค้ากลับมาให้จองใหม่อัตโนมัติ
                       </p>
