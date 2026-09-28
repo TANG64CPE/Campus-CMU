@@ -51,8 +51,8 @@ export default {
         },
       },
       fontFamily: {
-        display: ['Plus Jakarta Sans', 'Prompt', 'sans-serif'],
-        sans: ['Inter', 'Prompt', 'system-ui', 'sans-serif'],
+        display: ['Plus Jakarta Sans', 'Kanit', 'sans-serif'],
+        sans: ['Inter', 'Kanit', 'system-ui', 'sans-serif'],
         mono: ['Sometype Mono', 'JetBrains Mono', 'monospace'],
       },
       borderRadius: {
