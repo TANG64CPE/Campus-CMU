@@ -3,10 +3,26 @@ export interface User {
   studentId: string;
   email: string;
   name: string;
+  phone?: string | null;
+  lineId?: string | null;
+  facebook?: string | null;
+  instagram?: string | null;
+  meetingNote?: string | null;
   contactInfo: string | null;
+  hasCompletedContact?: boolean;
   role?: 'STUDENT' | 'ADMIN';
   isBanned: boolean;
   createdAt: string;
+}
+
+export function isContactComplete(user?: User | null): boolean {
+  if (!user) return false;
+  if (user.hasCompletedContact !== undefined) return Boolean(user.hasCompletedContact);
+  const phone = user.phone?.trim();
+  const lineId = user.lineId?.trim();
+  const facebook = user.facebook?.trim();
+  const instagram = user.instagram?.trim();
+  return Boolean(phone && (lineId || facebook || instagram));
 }
 
 export interface Product {
@@ -21,8 +37,13 @@ export interface Product {
     id: string;
     name: string;
     studentId: string;
-    contactInfo?: string | null;
     email?: string;
+    phone?: string | null;
+    lineId?: string | null;
+    facebook?: string | null;
+    instagram?: string | null;
+    meetingNote?: string | null;
+    contactInfo?: string | null;
   };
   createdAt: string;
   reservations?: Reservation[];
@@ -42,6 +63,11 @@ export interface SellerContact {
   name: string;
   studentId: string;
   email: string;
+  phone?: string | null;
+  lineId?: string | null;
+  facebook?: string | null;
+  instagram?: string | null;
+  meetingNote?: string | null;
   contactInfo: string;
   meetupLocation: string;
 }

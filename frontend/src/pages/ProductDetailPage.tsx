@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Product, Reservation, SellerContact } from '../types';
+import { Product, Reservation, SellerContact, isContactComplete } from '../types';
 import { productApi, reservationApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -17,18 +17,23 @@ import {
   MessageSquare,
   Sparkles,
   CheckCircle2,
+  Phone,
+  Globe,
+  Camera,
 } from 'lucide-react';
 
 interface ProductDetailPageProps {
   productId: string;
   onBack: () => void;
   onNavigateToLogin: () => void;
+  onNavigateToProfile?: () => void;
 }
 
 export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   productId,
   onBack,
   onNavigateToLogin,
+  onNavigateToProfile,
 }) => {
   const { user } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
@@ -109,6 +114,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
     if (user.isBanned) {
       setErrorMsg('บัญชีของคุณถูกระงับการใช้งานเนื่องจากมีประวัติผิดนัด/โดนเท');
+      return;
+    }
+
+    if (!isContactComplete(user)) {
+      setErrorMsg('กรุณากรอกข้อมูลติดต่อในหน้าโปรไฟล์ให้ครบถ้วนก่อนกดจองสินค้า (จำเป็นต้องมีเบอร์โทร และ Line/Facebook/Instagram อย่างน้อย 1 ช่อง)');
       return;
     }
 
@@ -403,14 +413,43 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   {/* STATE 1: ยังไม่จอง (isAvailable === true) */}
                   {!isReserved ? (
                     <div>
+                      {/* Warning if user has not completed contact info */}
+                      {user && !isContactComplete(user) && (
+                        <div className="mb-4 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-ink shadow-tinted-xs">
+                          <div className="flex items-center gap-2 text-brand-orange font-bold text-body-sm">
+                            <AlertTriangle className="w-4 h-4 shrink-0" />
+                            <span>จำเป็นต้องระบุข้อมูลติดต่อก่อนกดจองสินค้า</span>
+                          </div>
+                          <p className="text-caption text-ink-secondary mt-1">
+                            ตามระเบียบของระบบ คุณจำเป็นต้องระบุเบอร์โทรศัพท์และ Social Media ในหน้าโปรไฟล์ก่อน จึงจะสามารถกดจองสินค้าได้
+                          </p>
+                          {onNavigateToProfile && (
+                            <button
+                              onClick={onNavigateToProfile}
+                              className="mt-2 text-caption font-bold text-primary underline hover:text-primary-deep flex items-center gap-1"
+                            >
+                              ไปที่หน้าโปรไฟล์เพื่อกรอกข้อมูลติดต่อ →
+                            </button>
+                          )}
+                        </div>
+                      )}
+
                       {/* ClickUp Dominant CTA / Brand Gradient Pill CTA */}
                       <button
                         onClick={handleReserve}
-                        disabled={actionLoading}
-                        className="btn-gradient-pill w-full h-[52px] px-6 text-body-lg font-semibold tracking-tight-body-sm flex items-center justify-center gap-2 shadow-tinted-md active:scale-[0.99] transition-all duration-clickup ease-clickup disabled:opacity-50"
+                        disabled={actionLoading || (user ? !isContactComplete(user) : false)}
+                        className={`w-full h-[52px] px-6 text-body-lg font-semibold tracking-tight-body-sm flex items-center justify-center gap-2 shadow-tinted-md active:scale-[0.99] transition-all duration-clickup ease-clickup ${
+                          user && !isContactComplete(user)
+                            ? 'bg-surface-soft text-ink-tertiary cursor-not-allowed border border-hairline'
+                            : 'btn-gradient-pill disabled:opacity-50'
+                        }`}
                       >
                         <Tag className="w-4 h-4" />
-                        <span>กดจองสินค้า (Reserve Product)</span>
+                        <span>
+                          {user && !isContactComplete(user)
+                            ? 'กรุณากรอกข้อมูลติดต่อในโปรไฟล์ก่อนกดจอง'
+                            : 'กดจองสินค้า (Reserve Product)'}
+                        </span>
                       </button>
                       <p className="text-center text-[11px] text-ink-tertiary mt-2">
                         กดจองเพื่อเปิดข้อมูลติดต่อเพื่อนัดรับและชำระเงินหน้างาน (ไม่มีการตัดบัตร)
@@ -420,34 +459,97 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     /* BUYER WHO HAS RESERVED THIS PRODUCT: STATE 2 vs STATE 3 */
                     <div className="space-y-4">
                       {/* Revealed Contact Information Box (ClickUp surface card) */}
-                      <div className="p-4 sm:p-5 bg-surface rounded-lg border border-hairline shadow-tinted-xs">
-                        <div className="flex items-center gap-2 text-ink font-bold text-body-sm mb-3">
+                      <div className="p-4 sm:p-5 bg-surface rounded-xl border border-hairline shadow-tinted-xs">
+                        <div className="flex items-center gap-2 text-ink font-bold text-body-sm mb-3 pb-2 border-b border-hairline">
                           <UserCheck className="w-4 h-4 text-primary" />
-                          <span className="eyebrow-mono">ข้อมูลติดต่อผู้ขาย (เพื่อนัดรับสินค้า)</span>
+                          <span className="eyebrow-mono text-primary font-bold">ข้อมูลติดต่อผู้ขาย (เพื่อนัดรับสินค้า)</span>
                         </div>
 
-                        <div className="space-y-2 text-body-sm">
-                          <div className="flex items-center gap-2 text-ink">
-                            <MessageSquare className="w-4 h-4 text-accent-green shrink-0" />
-                            <span className="font-semibold text-ink-secondary">Contact / Line:</span>
-                            <span className="font-bold text-ink">
-                              {product.seller.contactInfo ||
-                                revealedSellerContact?.contactInfo ||
-                                'ยังไม่ได้ระบุ Line ID (กรุณาใช้อีเมล มช.)'}
-                            </span>
-                          </div>
+                        <div className="space-y-2.5 text-body-sm">
+                          {/* Phone */}
+                          {(product.seller.phone || revealedSellerContact?.phone) && (
+                            <div className="flex items-center gap-2.5 text-ink">
+                              <Phone className="w-4 h-4 text-primary shrink-0" />
+                              <span className="font-semibold text-ink-secondary text-caption">เบอร์โทรติดต่อ:</span>
+                              <a
+                                href={`tel:${product.seller.phone || revealedSellerContact?.phone}`}
+                                className="font-bold text-primary hover:underline font-mono"
+                              >
+                                {product.seller.phone || revealedSellerContact?.phone}
+                              </a>
+                            </div>
+                          )}
 
-                          <div className="flex items-center gap-2 text-ink">
+                          {/* Line ID */}
+                          {(product.seller.lineId || revealedSellerContact?.lineId) && (
+                            <div className="flex items-center gap-2.5 text-ink">
+                              <MessageSquare className="w-4 h-4 text-accent-green shrink-0" />
+                              <span className="font-semibold text-ink-secondary text-caption">Line ID:</span>
+                              <span className="font-bold text-ink">
+                                {product.seller.lineId || revealedSellerContact?.lineId}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Facebook */}
+                          {(product.seller.facebook || revealedSellerContact?.facebook) && (
+                            <div className="flex items-center gap-2.5 text-ink">
+                              <Globe className="w-4 h-4 text-accent-blue shrink-0" />
+                              <span className="font-semibold text-ink-secondary text-caption">Facebook:</span>
+                              <span className="font-bold text-ink">
+                                {product.seller.facebook || revealedSellerContact?.facebook}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Instagram */}
+                          {(product.seller.instagram || revealedSellerContact?.instagram) && (
+                            <div className="flex items-center gap-2.5 text-ink">
+                              <Camera className="w-4 h-4 text-brand-pink shrink-0" />
+                              <span className="font-semibold text-ink-secondary text-caption">Instagram:</span>
+                              <span className="font-bold text-ink font-mono">
+                                {product.seller.instagram || revealedSellerContact?.instagram}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Fallback combined contactInfo if individual fields empty */}
+                          {!product.seller.phone && !revealedSellerContact?.phone && !product.seller.lineId && (
+                            <div className="flex items-center gap-2 text-ink">
+                              <MessageSquare className="w-4 h-4 text-accent-green shrink-0" />
+                              <span className="font-semibold text-ink-secondary">ช่องทางติดต่อ:</span>
+                              <span className="font-bold text-ink">
+                                {product.seller.contactInfo || revealedSellerContact?.contactInfo || 'ยังไม่ได้ระบุ'}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Meetup Notes */}
+                          {(product.seller.meetingNote || revealedSellerContact?.meetingNote) && (
+                            <div className="p-2.5 rounded-lg bg-surface-soft border border-hairline text-caption text-ink">
+                              <div className="font-semibold text-ink-secondary mb-0.5 flex items-center gap-1">
+                                <MapPin className="w-3.5 h-3.5 text-primary" />
+                                <span>จุดนัดพบที่ผู้ขายสะดวก / ข้อมูลเพิ่มเติม:</span>
+                              </div>
+                              <p className="font-medium text-ink">
+                                {product.seller.meetingNote || revealedSellerContact?.meetingNote}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* CMU Mail */}
+                          <div className="flex items-center gap-2.5 text-ink pt-1 border-t border-hairline/60">
                             <Mail className="w-4 h-4 text-primary shrink-0" />
-                            <span className="font-semibold text-ink-secondary">CMU Mail:</span>
-                            <span className="font-mono text-ink">
+                            <span className="font-semibold text-ink-secondary text-caption">CMU Mail:</span>
+                            <span className="font-mono text-caption text-ink">
                               {revealedSellerContact?.email || `${product.seller.studentId}@cmu.ac.th`}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-2 text-ink">
+                          {/* Item Meetup Location */}
+                          <div className="flex items-center gap-2.5 text-ink">
                             <MapPin className="w-4 h-4 text-primary shrink-0" />
-                            <span className="font-semibold text-ink-secondary">จุดนัดรับของ:</span>
+                            <span className="font-semibold text-ink-secondary text-caption">จุดนัดรับสินค้านี้:</span>
                             <span className="font-bold text-primary">{product.meetupLocation}</span>
                           </div>
                         </div>

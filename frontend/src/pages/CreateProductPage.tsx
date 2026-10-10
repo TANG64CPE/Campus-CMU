@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { productApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { isContactComplete } from '../types';
 import {
   MapPin,
   Tag,
@@ -15,9 +16,10 @@ import {
 interface CreateProductPageProps {
   onSuccess: (productId: string) => void;
   onCancel: () => void;
+  onNavigateToProfile?: () => void;
 }
 
-export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess, onCancel }) => {
+export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess, onCancel, onNavigateToProfile }) => {
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
@@ -86,6 +88,37 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
       setLoading(false);
     }
   };
+
+  // Block listing if contact info is incomplete
+  if (user && !isContactComplete(user)) {
+    return (
+      <div className="max-w-[620px] mx-auto px-4 py-16 text-center">
+        <div className="w-16 h-16 rounded-full bg-amber-50 text-brand-orange border border-amber-200 flex items-center justify-center mx-auto mb-4 shadow-tinted-xs">
+          <AlertTriangle className="w-8 h-8" />
+        </div>
+        <h2 className="font-display font-extrabold text-heading-md text-ink mb-2">
+          จำเป็นต้องระบุข้อมูลติดต่อก่อนลงขายสินค้า
+        </h2>
+        <p className="text-body-sm text-ink-secondary mb-6 leading-relaxed max-w-md mx-auto">
+          ตามระเบียบของระบบ เพื่อให้ผู้ซื้อสามารถติดต่อนัดรับของและชำระเงินกับคุณได้ กรุณาระบุ <strong>เบอร์โทรศัพท์</strong> และ <strong>Social Media (Line/Facebook/Instagram อย่างน้อย 1 ช่อง)</strong> ในหน้าโปรไฟล์ให้ครบถ้วนก่อนลงขายสินค้า
+        </p>
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={onCancel}
+            className="btn-secondary-sm px-5 py-2.5 text-button-md"
+          >
+            ย้อนกลับ
+          </button>
+          <button
+            onClick={onNavigateToProfile}
+            className="btn-gradient-pill px-6 py-2.5 text-button-md shadow-tinted-sm"
+          >
+            ไปที่หน้าโปรไฟล์เพื่อกรอกข้อมูล →
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[720px] mx-auto px-4 sm:px-8 py-6 pb-24">

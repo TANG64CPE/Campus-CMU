@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { userApi, reservationApi, productApi } from '../services/api';
-import { Product, Reservation } from '../types';
+import { Product, Reservation, isContactComplete } from '../types';
 import {
   User as UserIcon,
   ShoppingBag,
   Clock,
   CheckCircle,
   AlertCircle,
+  AlertTriangle,
   Save,
   Trash2,
   ExternalLink,
@@ -15,6 +16,12 @@ import {
   ShieldCheck,
   Ban,
   Tag,
+  Phone,
+  Globe,
+  Camera,
+  MapPin,
+  Info,
+  Sparkles,
 } from 'lucide-react';
 
 interface ProfilePageProps {
@@ -24,9 +31,17 @@ interface ProfilePageProps {
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNavigateToFeed }) => {
   const { user, refreshUser } = useAuth();
-  const [contactInfo, setContactInfo] = useState(user?.contactInfo || '');
+
+  // Contact Info Form State
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [lineId, setLineId] = useState(user?.lineId || '');
+  const [facebook, setFacebook] = useState(user?.facebook || '');
+  const [instagram, setInstagram] = useState(user?.instagram || '');
+  const [meetingNote, setMeetingNote] = useState(user?.meetingNote || '');
+
   const [savingContact, setSavingContact] = useState(false);
   const [contactSuccess, setContactSuccess] = useState(false);
+  const [contactError, setContactError] = useState<string | null>(null);
 
   // Tabs: 'listings' | 'reservations'
   const [activeTab, setActiveTab] = useState<'listings' | 'reservations'>('listings');
@@ -51,23 +66,52 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
   };
 
   useEffect(() => {
-    if (user?.contactInfo) {
-      setContactInfo(user.contactInfo);
+    if (user) {
+      setPhone(user.phone || '');
+      setLineId(user.lineId || '');
+      setFacebook(user.facebook || '');
+      setInstagram(user.instagram || '');
+      setMeetingNote(user.meetingNote || '');
     }
     loadData();
   }, [user]);
 
+  // Client-side validations
+  const isPhoneFilled = phone.trim().length > 0;
+  const isSocialFilled = lineId.trim().length > 0 || facebook.trim().length > 0 || instagram.trim().length > 0;
+  const isProfileComplete = isContactComplete(user);
+
   const handleSaveContact = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSavingContact(true);
+    setContactError(null);
     setContactSuccess(false);
+
+    // Validation 1: Phone is mandatory
+    if (!phone.trim()) {
+      setContactError('กรุณากรอกเบอร์โทรติดต่อ (*จำเป็นต้องมี)');
+      return;
+    }
+
+    // Validation 2: At least 1 social media field
+    if (!lineId.trim() && !facebook.trim() && !instagram.trim()) {
+      setContactError('กรุณากรอกช่องทาง Social Media อย่างน้อย 1 ช่อง (Line, Facebook หรือ Instagram)');
+      return;
+    }
+
+    setSavingContact(true);
     try {
-      await userApi.updateProfile(contactInfo);
+      await userApi.updateProfile({
+        phone: phone.trim(),
+        lineId: lineId.trim() || undefined,
+        facebook: facebook.trim() || undefined,
+        instagram: instagram.trim() || undefined,
+        meetingNote: meetingNote.trim() || undefined,
+      });
       await refreshUser();
       setContactSuccess(true);
-      setTimeout(() => setContactSuccess(false), 3000);
-    } catch (err) {
-      alert('ไม่สามารถบันทึกข้อมูลติดต่อได้');
+      setTimeout(() => setContactSuccess(false), 4000);
+    } catch (err: any) {
+      setContactError(err.response?.data?.message || 'ไม่สามารถบันทึกข้อมูลติดต่อได้');
     } finally {
       setSavingContact(false);
     }
@@ -110,7 +154,27 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
 
   return (
     <div className="max-w-clickup mx-auto px-4 sm:px-[40px] py-6 pb-24">
-      {/* Student Profile Overview Card — design.md card-section: surface bg, xl (25px) radius */}
+      {/* Profile Contact Status Alert Banner (if incomplete) */}
+      {!isProfileComplete && (
+        <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200/80 shadow-tinted-xs flex items-start gap-3.5">
+          <div className="w-8 h-8 rounded-full bg-amber-100 text-brand-orange flex items-center justify-center shrink-0 mt-0.5">
+            <AlertTriangle className="w-4 h-4" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-ink text-body-sm flex items-center gap-1.5">
+              ข้อมูลติดต่อจำเป็นยังไม่ครบถ้วน
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200/70 text-brand-orange">
+                ยังไม่เปิดสิทธิ์การจอง/ลงขาย
+              </span>
+            </h3>
+            <p className="text-caption text-ink-secondary mt-1 leading-relaxed">
+              ตามระเบียบของระบบตลาดนัด CMU นักศึกษาต้องระบุ <strong>เบอร์โทรติดต่อ</strong> และ <strong>ช่องทาง Social Media (Line, Facebook หรือ Instagram) อย่างน้อย 1 ช่อง</strong> ในแบบฟอร์มด้านล่าง จึงจะสามารถเริ่มกดจองสินค้าหรือลงประกาศขายได้
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Student Profile Card — ClickUp card-section */}
       <div className="card-section p-6 sm:p-8 mb-8 shadow-tinted-xs">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-hairline">
           <div className="flex items-center gap-4">
@@ -136,41 +200,183 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
               </p>
             </div>
           </div>
+
+          {/* Contact Completion Badge */}
+          <div>
+            {isProfileComplete ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-caption font-bold bg-emerald-50 text-accent-green border border-emerald-200">
+                <CheckCircle className="w-4 h-4" />
+                <span>ข้อมูลติดต่อครบถ้วน (พร้อมจอง & ขาย)</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-caption font-bold bg-amber-50 text-brand-orange border border-amber-200">
+                <AlertCircle className="w-4 h-4" />
+                <span>ข้อมูลติดต่อยังไม่สมบูรณ์</span>
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Form: Contact Info (Line ID, Phone Number) */}
+        {/* Form: Mandatory Contact Info (Phone, Social Media, Meetup Notes) */}
         <form onSubmit={handleSaveContact} className="mt-6">
-          <label className="eyebrow-mono block text-caption text-ink-secondary mb-2">
-            ข้อมูลติดต่อสำหรับผู้ซื้อเมื่อมีการจอง (Contact Info)
-          </label>
-          <div className="flex flex-col sm:flex-row gap-2.5">
-            <div className="relative flex-1">
-              <MessageSquare className="w-4 h-4 text-ink-tertiary absolute left-3.5 top-3.5" />
-              <input
-                type="text"
-                placeholder="เช่น Line ID: @cmu_student หรือ เบอร์โทร: 081-xxx-xxxx"
-                value={contactInfo}
-                onChange={(e) => setContactInfo(e.target.value)}
-                className="w-full input-field pl-10"
-              />
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="font-display font-bold text-body-lg text-ink">
+                ข้อมูลติดต่อสำหรับนัดรับสินค้า (Contact Info)
+              </h2>
+              <p className="text-caption text-ink-secondary mt-0.5">
+                ข้อมูลนี้จะเปิดเผยเฉพาะกับผู้ซื้อหรือผู้ขายเมื่อมีรายการจองสินค้าเกิดขึ้นเท่านั้น
+              </p>
             </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* Field 1: Phone Number (Mandatory) */}
+            <div className="p-4 rounded-xl bg-surface border border-hairline">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-body-sm font-bold text-ink flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-primary" />
+                  <span>เบอร์โทรศัพท์สำหรับติดต่อนัดรับ</span>
+                  <span className="text-accent-red font-bold">* จำเป็นต้องมี</span>
+                </label>
+                {isPhoneFilled ? (
+                  <span className="text-[11px] font-bold text-accent-green flex items-center gap-1">
+                    <CheckCircle className="w-3.5 h-3.5" /> ระบุแล้ว
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-semibold text-accent-red">
+                    * กรุณาระบุ
+                  </span>
+                )}
+              </div>
+              <input
+                type="tel"
+                placeholder="เช่น 081-234-5678 หรือ 089-xxx-xxxx"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className={`w-full input-field ${!isPhoneFilled ? 'border-amber-300 focus:border-primary' : ''}`}
+              />
+              <p className="text-[11px] text-ink-tertiary mt-1.5">
+                เบอร์โทรสำหรับโทรยืนยันเวลานัดรับสินค้าหน้างานในมหาวิทยาลัย
+              </p>
+            </div>
+
+            {/* Field 2: Social Media (At least 1 required: Facebook, Line, Instagram) */}
+            <div className="p-4 rounded-xl bg-surface border border-hairline">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-body-sm font-bold text-ink flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-primary" />
+                  <span>ช่องทางโซเชียลมีเดีย</span>
+                  <span className="text-accent-red font-bold">* จำเป็นต้องมีอย่างน้อย 1 ช่อง</span>
+                </label>
+                {isSocialFilled ? (
+                  <span className="text-[11px] font-bold text-accent-green flex items-center gap-1">
+                    <CheckCircle className="w-3.5 h-3.5" /> ระบุแล้วอย่างน้อย 1 ช่อง
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-semibold text-accent-red">
+                    * ต้องมีอย่างน้อย 1 ช่อง
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Line ID */}
+                <div>
+                  <label className="text-caption font-semibold text-ink-secondary mb-1 flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-accent-green" />
+                    <span>Line ID</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="เช่น @somchai หรือ somchai_cpe"
+                    value={lineId}
+                    onChange={(e) => setLineId(e.target.value)}
+                    className="w-full input-field"
+                  />
+                </div>
+
+                {/* Facebook */}
+                <div>
+                  <label className="text-caption font-semibold text-ink-secondary mb-1 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-accent-blue" />
+                    <span>Facebook (ชื่อหรือลิงก์)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="เช่น Somchai Chiangmai หรือ fb.com/..."
+                    value={facebook}
+                    onChange={(e) => setFacebook(e.target.value)}
+                    className="w-full input-field"
+                  />
+                </div>
+
+                {/* Instagram */}
+                <div>
+                  <label className="text-caption font-semibold text-ink-secondary mb-1 flex items-center gap-1.5">
+                    <Camera className="w-3.5 h-3.5 text-brand-pink" />
+                    <span>Instagram (@username)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="เช่น @somchai.cmu"
+                    value={instagram}
+                    onChange={(e) => setInstagram(e.target.value)}
+                    className="w-full input-field"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-ink-tertiary mt-2">
+                เลือกกรอก Line, Facebook หรือ Instagram ช่องทางใดช่องทางหนึ่ง (หรือกรอกทั้งหมดเพื่อความสะดวกรวดเร็วในการติดต่อ)
+              </p>
+            </div>
+
+            {/* Field 3: General Info / Preferred Meetup Places */}
+            <div className="p-4 rounded-xl bg-surface border border-hairline">
+              <label className="text-body-sm font-bold text-ink mb-2 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-primary" />
+                <span>ข้อมูลทั่วไป / สถานที่หรือจุดที่ต้องการจะพบเจอได้</span>
+                <span className="text-caption text-ink-tertiary font-normal">(ช่วยให้คู่ค้าสะดวกนัดหมาย)</span>
+              </label>
+              <textarea
+                rows={2}
+                placeholder="เช่น สะดวกนัดรับที่หอสมุดกลาง มช., ตึก 30 ปี คณะวิศวะ, หรือโรงอาหารอ่างแก้ว ช่วงเที่ยงหรือหลัง 16:30 น."
+                value={meetingNote}
+                onChange={(e) => setMeetingNote(e.target.value)}
+                className="w-full input-field py-2.5 resize-none"
+              />
+              <p className="text-[11px] text-ink-tertiary mt-1.5">
+                ระบุบริเวณ จุดสังเกต หรือช่วงเวลาประจำที่คุณสะดวกนัดเจอบนพื้นที่มหาวิทยาลัยเชียงใหม่
+              </p>
+            </div>
+          </div>
+
+          {/* Error & Success Feedback */}
+          {contactError && (
+            <div className="mt-3 p-3 rounded-lg bg-red-50 border border-red-200 text-caption text-accent-red flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{contactError}</span>
+            </div>
+          )}
+
+          {contactSuccess && (
+            <div className="mt-3 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-caption text-accent-green font-semibold flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 shrink-0" />
+              <span>บันทึกข้อมูลติดต่อเรียบร้อยแล้ว! บัญชีของคุณพร้อมสำหรับการกดจองและลงขายสินค้าแล้ว</span>
+            </div>
+          )}
+
+          {/* Save Button */}
+          <div className="mt-5 flex items-center justify-end">
             <button
               type="submit"
               disabled={savingContact}
-              className="btn-primary-pill h-[44px] px-5 text-button-md flex items-center justify-center gap-1.5 transition-all duration-clickup ease-clickup"
+              className="btn-gradient-pill px-6 py-2.5 text-button-md flex items-center gap-2 shadow-tinted-xs transition-all duration-clickup ease-clickup disabled:opacity-50"
             >
-              <Save className="w-3.5 h-3.5" />
-              <span>{savingContact ? 'กำลังบันทึก...' : 'บันทึกข้อมูลติดต่อ'}</span>
+              <Save className="w-4 h-4" />
+              <span>{savingContact ? 'กำลังบันทึกข้อมูล...' : 'บันทึกข้อมูลติดต่อ'}</span>
             </button>
           </div>
-          {contactSuccess && (
-            <p className="text-xs text-accent-green font-medium mt-2 flex items-center gap-1">
-              <CheckCircle className="w-3.5 h-3.5" /> บันทึกข้อมูลติดต่อเรียบร้อยแล้ว
-            </p>
-          )}
-          <p className="text-[11px] text-ink-tertiary mt-1.5">
-            * ข้อมูลนี้จะเปิดเผยเฉพาะกับผู้ซื้อที่กดจองสินค้าของคุณแล้วเท่านั้น
-          </p>
         </form>
       </div>
 
@@ -252,31 +458,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-0 border-hairline">
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-hairline">
                       <button
                         onClick={() => handleToggleStatus(p.id)}
-                        className={`btn-secondary-sm px-3 py-1.5 text-xs ${
-                          p.isAvailable
-                            ? 'text-brand-orange hover:border-brand-orange/40'
-                            : 'text-accent-green hover:border-accent-green/40'
-                        }`}
+                        className="btn-secondary-sm text-xs px-3 py-1.5"
                       >
-                        {p.isAvailable ? 'สลับเป็นติดจอง' : 'สลับเป็นพร้อมขาย'}
+                        {p.isAvailable ? 'พักการขาย' : 'เปิดขายต่อ'}
                       </button>
-
-                      <button
-                        onClick={() => onSelectProduct(p.id)}
-                        className="btn-secondary-sm px-3 py-1.5 text-xs flex items-center gap-1"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>ดูสินค้า</span>
-                      </button>
-
                       <button
                         onClick={() => handleDeleteProduct(p.id)}
-                        className="p-1.5 rounded-sm text-ink-tertiary hover:text-accent-red hover:bg-red-50 transition-colors"
-                        title="ลบสินค้า"
+                        className="p-2 text-ink-secondary hover:text-accent-red hover:bg-red-50 rounded-md transition-colors"
+                        title="ลบสินค้านี้"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -286,15 +478,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
               })}
             </div>
           ) : (
-            <div className="text-center py-12 bg-canvas rounded-xl border border-hairline p-6">
-              <ShoppingBag className="w-10 h-10 text-ink-disabled mx-auto mb-2" />
-              <p className="text-xs font-semibold text-ink">คุณยังไม่ได้ลงขายสินค้าใดๆ</p>
-              <button
-                onClick={onNavigateToFeed}
-                className="btn-secondary-sm mt-3 px-4 py-2 text-button-md"
-              >
-                ไปเลือกดูตลาด
-              </button>
+            <div className="text-center py-12 bg-surface rounded-xl border border-hairline">
+              <ShoppingBag className="w-10 h-10 text-ink-tertiary mx-auto mb-2 opacity-50" />
+              <p className="text-body-sm text-ink-secondary">คุณยังไม่มีรายการสินค้าที่ลงขาย</p>
             </div>
           )}
         </div>
@@ -310,10 +496,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
           ) : myReservations.length > 0 ? (
             <div className="space-y-3">
               {myReservations.map((r) => {
+                const isPending = r.status === 'PENDING';
+                const isCompleted = r.status === 'COMPLETED';
+                const isCancelled = r.status === 'CANCELLED';
+
                 return (
                   <div
                     key={r.id}
-                    className="p-4 sm:p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong hover:shadow-tinted-xs transition-all duration-clickup ease-clickup flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                    className="p-4 sm:p-5 bg-canvas rounded-lg border border-hairline hover:shadow-tinted-xs transition-all duration-clickup ease-clickup flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                   >
                     <div
                       className="flex items-center gap-4 cursor-pointer flex-1"
@@ -321,13 +511,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
                     >
                       <div className="w-16 h-16 rounded-md bg-surface overflow-hidden shrink-0 flex items-center justify-center border border-hairline">
                         {r.product?.imageUrl ? (
-                          <img
-                            src={r.product.imageUrl}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
+                          <img src={r.product.imageUrl} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <Clock className="w-6 h-6 text-ink-disabled" />
+                          <Tag className="w-6 h-6 text-ink-disabled" />
                         )}
                       </div>
 
@@ -335,42 +521,37 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
                         <div className="flex items-center gap-2 mb-1">
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              r.status === 'PENDING'
+                              isPending
                                 ? 'bg-amber-50 text-brand-orange border border-amber-200'
-                                : r.status === 'COMPLETED'
+                                : isCompleted
                                 ? 'bg-emerald-50 text-accent-green border border-emerald-200'
-                                : 'bg-surface-soft text-ink-secondary border border-hairline'
+                                : 'bg-surface-soft text-ink-tertiary border border-hairline'
                             }`}
                           >
-                            {r.status === 'PENDING'
-                              ? 'รอส่งมอบหน้างาน'
-                              : r.status === 'COMPLETED'
-                              ? 'ซื้อขายสำเร็จ'
-                              : 'ยกเลิกแล้ว'}
+                            {isPending && 'กำลังรอนัดรับสินค้า (PENDING)'}
+                            {isCompleted && 'รับของสำเร็จ (COMPLETED)'}
+                            {isCancelled && 'ยกเลิกแล้ว (CANCELLED)'}
                           </span>
-
-                          <span className="eyebrow-mono text-[10px] text-ink-tertiary">
-                            จองเมื่อ: {new Date(r.createdAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+                          <span className="text-xs text-ink-tertiary">
+                            จองเมื่อ: {new Date(r.createdAt).toLocaleDateString('th-TH')}
                           </span>
                         </div>
-
                         <h4 className="font-semibold text-ink text-sm hover:text-primary transition-colors">
-                          {r.product?.title || 'สินค้าในระบบ'}
+                          {r.product?.title || 'สินค้าไม่ระบุ'}
                         </h4>
-
                         <p className="font-display font-extrabold text-sm text-ink-deep mt-0.5">
-                          ฿{r.product ? new Intl.NumberFormat('th-TH').format(r.product.price) : 0}
+                          ฿{r.product ? new Intl.NumberFormat('th-TH').format(r.product.price) : '0'}
                         </p>
                       </div>
                     </div>
 
-                    <div className="w-full sm:w-auto flex justify-end">
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-hairline">
                       <button
                         onClick={() => onSelectProduct(r.productId)}
-                        className="btn-primary-pill px-4 py-2 text-button-md flex items-center gap-1.5"
+                        className="btn-secondary-sm text-xs px-3 py-1.5 flex items-center gap-1"
                       >
+                        <span>ดูรายละเอียด & ข้อมูลติดต่อ</span>
                         <ExternalLink className="w-3.5 h-3.5" />
-                        <span>ดูข้อมูลนัดรับ & ผู้ขาย</span>
                       </button>
                     </div>
                   </div>
@@ -378,15 +559,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
               })}
             </div>
           ) : (
-            <div className="text-center py-12 bg-canvas rounded-xl border border-hairline p-6">
-              <Clock className="w-10 h-10 text-ink-disabled mx-auto mb-2" />
-              <p className="text-body-sm font-semibold text-ink">คุณยังไม่มีรายการจองสินค้า</p>
-              <button
-                onClick={onNavigateToFeed}
-                className="btn-secondary-sm mt-3 px-4 py-2 text-button-md"
-              >
-                ไปเลือกดูสินค้าในตลาด
-              </button>
+            <div className="text-center py-12 bg-surface rounded-xl border border-hairline">
+              <Clock className="w-10 h-10 text-ink-tertiary mx-auto mb-2 opacity-50" />
+              <p className="text-body-sm text-ink-secondary">คุณยังไม่มีรายการที่กดจองไว้</p>
             </div>
           )}
         </div>

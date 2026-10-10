@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
+import { isProfileContactComplete } from '../utils/userValidation';
 
 export class ReservationController {
   /**
@@ -10,6 +11,17 @@ export class ReservationController {
   public static async createReservation(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const user = req.user!;
+
+      // Enforce mandatory profile contact info before reserving products
+      if (!isProfileContactComplete(user)) {
+        res.status(403).json({
+          success: false,
+          message: 'กรุณากรอกข้อมูลติดต่อในหน้าโปรไฟล์ให้ครบถ้วนก่อนกดจองสินค้า (จำเป็นต้องมีเบอร์โทร และ Line/Facebook/Instagram อย่างน้อย 1 ช่อง)',
+          requiresContactInfo: true,
+        });
+        return;
+      }
+
       const { productId } = req.body;
 
       if (!productId) {
@@ -92,6 +104,11 @@ export class ReservationController {
                     name: true,
                     studentId: true,
                     contactInfo: true,
+                    phone: true,
+                    lineId: true,
+                    facebook: true,
+                    instagram: true,
+                    meetingNote: true,
                     email: true,
                   },
                 },
@@ -112,6 +129,11 @@ export class ReservationController {
           name: result.product.seller.name,
           studentId: result.product.seller.studentId,
           email: result.product.seller.email,
+          phone: result.product.seller.phone,
+          lineId: result.product.seller.lineId,
+          facebook: result.product.seller.facebook,
+          instagram: result.product.seller.instagram,
+          meetingNote: result.product.seller.meetingNote,
           contactInfo: result.product.seller.contactInfo || 'Not specified (contact via CMU email)',
           meetupLocation: result.product.meetupLocation,
         },

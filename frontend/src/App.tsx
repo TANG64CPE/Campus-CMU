@@ -7,6 +7,8 @@ import { CreateProductPage } from './pages/CreateProductPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { LoginPage } from './pages/LoginPage';
 import { AdminPage } from './pages/AdminPage';
+import { isContactComplete } from './types';
+import { AlertTriangle } from 'lucide-react';
 
 const MainApp: React.FC = () => {
   const { user, refreshUser } = useAuth();
@@ -32,6 +34,8 @@ const MainApp: React.FC = () => {
     } else if (view === 'create') {
       if (!user) {
         setCurrentView('login');
+      } else if (!isContactComplete(user)) {
+        setCurrentView('profile');
       } else {
         setCurrentView('create');
       }
@@ -67,6 +71,29 @@ const MainApp: React.FC = () => {
         onSearchChange={setSearchQuery}
       />
 
+      {/* Global Incomplete Contact Warning Banner */}
+      {user && !isContactComplete(user) && currentView !== 'profile' && (
+        <div className="bg-amber-50 border-b border-amber-200/80 px-4 py-2.5 text-caption sm:text-body-sm text-ink shadow-tinted-xs">
+          <div className="max-w-clickup mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-brand-orange shrink-0" />
+              <span>
+                <strong>ข้อมูลติดต่อยังไม่สมบูรณ์:</strong> กรุณาระบุเบอร์โทรศัพท์และ Social Media ในหน้าโปรไฟล์เพื่อเปิดใช้งานการกดจองและลงขายสินค้า
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setCurrentView('profile');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="btn-primary-pill text-xs px-3.5 py-1 whitespace-nowrap shrink-0 shadow-tinted-xs"
+            >
+              กรอกข้อมูลติดต่อในโปรไฟล์ →
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main Content Area */}
       <main className="flex-1">
         {currentView === 'marketplace' && (
@@ -82,6 +109,7 @@ const MainApp: React.FC = () => {
             productId={selectedProductId}
             onBack={() => setCurrentView('marketplace')}
             onNavigateToLogin={() => setCurrentView('login')}
+            onNavigateToProfile={() => setCurrentView('profile')}
           />
         )}
 
@@ -89,6 +117,7 @@ const MainApp: React.FC = () => {
           <CreateProductPage
             onSuccess={(newId) => handleSelectProduct(newId)}
             onCancel={() => setCurrentView('marketplace')}
+            onNavigateToProfile={() => setCurrentView('profile')}
           />
         )}
 

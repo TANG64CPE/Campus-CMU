@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import fs from 'fs';
 import path from 'path';
+import { isProfileContactComplete } from '../utils/userValidation';
 
 export class ProductController {
   /**
@@ -12,6 +13,20 @@ export class ProductController {
   public static async createProduct(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const user = req.user!;
+
+      // Enforce mandatory profile contact info before listing products
+      if (!isProfileContactComplete(user)) {
+        if (req.file) {
+          fs.unlinkSync(req.file.path);
+        }
+        res.status(403).json({
+          success: false,
+          message: 'กรุณากรอกข้อมูลติดต่อในหน้าโปรไฟล์ให้ครบถ้วนก่อนลงขายสินค้า (จำเป็นต้องมีเบอร์โทร และ Line/Facebook/Instagram อย่างน้อย 1 ช่อง)',
+          requiresContactInfo: true,
+        });
+        return;
+      }
+
       const { title, price, meetupLocation } = req.body;
 
       if (!title || !price || !meetupLocation) {
@@ -153,6 +168,12 @@ export class ProductController {
               id: true,
               name: true,
               studentId: true,
+              email: true,
+              phone: true,
+              lineId: true,
+              facebook: true,
+              instagram: true,
+              meetingNote: true,
               contactInfo: true,
             },
           },
@@ -163,6 +184,12 @@ export class ProductController {
                   id: true,
                   name: true,
                   studentId: true,
+                  email: true,
+                  phone: true,
+                  lineId: true,
+                  facebook: true,
+                  instagram: true,
+                  meetingNote: true,
                   contactInfo: true,
                 },
               },
@@ -198,7 +225,13 @@ export class ProductController {
         id: product.seller.id,
         name: product.seller.name,
         studentId: product.seller.studentId,
+        email: canViewSellerContact ? product.seller.email : undefined,
         contactInfo: canViewSellerContact ? product.seller.contactInfo : null,
+        phone: canViewSellerContact ? product.seller.phone : null,
+        lineId: canViewSellerContact ? product.seller.lineId : null,
+        facebook: canViewSellerContact ? product.seller.facebook : null,
+        instagram: canViewSellerContact ? product.seller.instagram : null,
+        meetingNote: canViewSellerContact ? product.seller.meetingNote : null,
       };
 
       res.json({

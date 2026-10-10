@@ -107,8 +107,14 @@ export const userApi = {
     }>('/users/profile');
     return res.data.user;
   },
-  updateProfile: async (contactInfo: string): Promise<User> => {
-    const res = await api.patch<{ success: boolean; user: User }>('/users/profile', { contactInfo });
+  updateProfile: async (data: {
+    phone: string;
+    lineId?: string;
+    facebook?: string;
+    instagram?: string;
+    meetingNote?: string;
+  }): Promise<User> => {
+    const res = await api.patch<{ success: boolean; user: User }>('/users/profile', data);
     return res.data.user;
   },
   getMyProducts: async (): Promise<Product[]> => {

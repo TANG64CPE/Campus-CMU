@@ -13,7 +13,12 @@ model User {
   studentId    String        @unique
   email        String        @unique
   name         String
-  contactInfo  String?       // เช่น Line ID, เบอร์โทร (อัปเดตภายหลังในหน้า Profile)
+  phone        String?       // เบอร์โทรติดต่อ (*จำเป็นต้องมี)
+  lineId       String?       // Line ID (*จำเป็นต้องมีอย่างน้อย 1 ช่องใน Social Media)
+  facebook     String?       // Facebook Profile / Name
+  instagram    String?       // Instagram Handle
+  meetingNote  String?       // ข้อมูลทั่วไป / สถานที่หรือจุดนัดพบที่สะดวก
+  contactInfo  String?       // รวมข้อความสรุปช่องทางติดต่อ (สำหรับแสดงผลแบบย่อ)
   role         String        @default("STUDENT") // "STUDENT" | "ADMIN"
   isBanned     Boolean       @default(false)
   createdAt    DateTime      @default(now())

@@ -4,6 +4,7 @@ import { ENV } from '../config/env';
 import { prisma } from '../lib/prisma';
 import { CmuOAuthService } from '../services/cmu-oauth.service';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
+import { isProfileContactComplete } from '../utils/userValidation';
 
 export class AuthController {
   /**
@@ -200,7 +201,10 @@ export class AuthController {
       res.json({
         success: true,
         message: 'Mock login successful',
-        user,
+        user: {
+          ...user,
+          hasCompletedContact: isProfileContactComplete(user),
+        },
         token,
       });
     } catch (error: any) {
@@ -219,7 +223,10 @@ export class AuthController {
 
     res.json({
       success: true,
-      user: req.user,
+      user: {
+        ...req.user,
+        hasCompletedContact: isProfileContactComplete(req.user),
+      },
     });
   }
 
