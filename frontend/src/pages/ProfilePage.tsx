@@ -313,7 +313,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
             <div className="p-4 rounded-xl bg-surface border border-hairline">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-body-sm font-bold text-ink flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-primary" />
                   <span>เบอร์โทรศัพท์สำหรับติดต่อนัดรับ</span>
                   <span className="text-accent-red font-bold">* จำเป็นต้องมี</span>
                 </label>
@@ -357,7 +356,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
             <div className="p-4 rounded-xl bg-surface border border-hairline">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-body-sm font-bold text-ink flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-primary" />
                   <span>ช่องทางโซเชียลมีเดีย</span>
                   <span className="text-accent-red font-bold">* จำเป็นต้องมีอย่างน้อย 1 ช่อง</span>
                 </label>
@@ -426,7 +424,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
             {/* Field 3: General Info / Preferred Meetup Places */}
             <div className="p-4 rounded-xl bg-surface border border-hairline">
               <label className="text-body-sm font-bold text-ink mb-2 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-primary" />
                 <span>ข้อมูลทั่วไป / สถานที่หรือจุดที่ต้องการจะพบเจอได้</span>
                 <span className="text-caption text-ink-tertiary font-normal">(ช่วยให้คู่ค้าสะดวกนัดหมาย)</span>
               </label>
