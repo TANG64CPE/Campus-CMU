@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { userApi, reservationApi, productApi } from '../services/api';
-import { Product, Reservation, isContactComplete } from '../types';
+import { Product, Reservation, isContactComplete, isValidThaiMobileNumber } from '../types';
 import {
   User as UserIcon,
   ShoppingBag,
@@ -22,6 +22,7 @@ import {
   MapPin,
   Info,
   Sparkles,
+  ArrowLeft,
 } from 'lucide-react';
 
 interface ProfilePageProps {
@@ -33,7 +34,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
   const { user, refreshUser } = useAuth();
 
   // Contact Info Form State
-  const [phone, setPhone] = useState(user?.phone || '');
+  const [phone, setPhone] = useState((user?.phone || '').replace(/\D/g, '').slice(0, 10));
   const [lineId, setLineId] = useState(user?.lineId || '');
   const [facebook, setFacebook] = useState(user?.facebook || '');
   const [instagram, setInstagram] = useState(user?.instagram || '');
@@ -42,6 +43,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
   const [savingContact, setSavingContact] = useState(false);
   const [contactSuccess, setContactSuccess] = useState(false);
   const [contactError, setContactError] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const avatarInputRef = React.useRef<HTMLInputElement>(null);
 
   // Tabs: 'listings' | 'reservations'
   const [activeTab, setActiveTab] = useState<'listings' | 'reservations'>('listings');
@@ -67,7 +71,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
 
   useEffect(() => {
     if (user) {
-      setPhone(user.phone || '');
+      setPhone((user.phone || '').replace(/\D/g, '').slice(0, 10));
       setLineId(user.lineId || '');
       setFacebook(user.facebook || '');
       setInstagram(user.instagram || '');
@@ -77,7 +81,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
   }, [user]);
 
   // Client-side validations
-  const isPhoneFilled = phone.trim().length > 0;
+  const isPhoneFilled = isValidThaiMobileNumber(phone);
   const isSocialFilled = lineId.trim().length > 0 || facebook.trim().length > 0 || instagram.trim().length > 0;
   const isProfileComplete = isContactComplete(user);
 
@@ -89,6 +93,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
     // Validation 1: Phone is mandatory
     if (!phone.trim()) {
       setContactError('กรุณากรอกเบอร์โทรติดต่อ (*จำเป็นต้องมี)');
+      return;
+    }
+
+    if (!isValidThaiMobileNumber(phone)) {
+      setContactError('กรุณากรอกเบอร์มือถือไทย 10 หลัก โดยขึ้นต้นด้วย 06, 08 หรือ 09');
       return;
     }
 
@@ -114,6 +123,32 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
       setContactError(err.response?.data?.message || 'ไม่สามารถบันทึกข้อมูลติดต่อได้');
     } finally {
       setSavingContact(false);
+    }
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const image = e.target.files?.[0];
+    e.target.value = '';
+    if (!image) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(image.type)) {
+      setAvatarError('รองรับไฟล์รูปภาพ JPG, PNG, WEBP หรือ GIF เท่านั้น');
+      return;
+    }
+    if (image.size > 5 * 1024 * 1024) {
+      setAvatarError('รูปโปรไฟล์ต้องมีขนาดไม่เกิน 5 MB');
+      return;
+    }
+
+    setAvatarError(null);
+    setAvatarUploading(true);
+    try {
+      await userApi.uploadAvatar(image);
+      await refreshUser();
+    } catch (err: any) {
+      setAvatarError(err.response?.data?.message || 'ไม่สามารถอัปโหลดรูปโปรไฟล์ได้');
+    } finally {
+      setAvatarUploading(false);
     }
   };
 
@@ -154,6 +189,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
 
   return (
     <div className="max-w-clickup mx-auto px-4 sm:px-[40px] py-6 pb-24">
+      <div className="mb-5">
+        <button
+          type="button"
+          onClick={onNavigateToFeed}
+          className="inline-flex items-center gap-2 text-body-sm font-semibold text-ink-secondary hover:text-ink transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>กลับไปหน้า Feed</span>
+        </button>
+      </div>
+
       {/* Profile Contact Status Alert Banner (if incomplete) */}
       {!isProfileComplete && (
         <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200/80 shadow-tinted-xs flex items-start gap-3.5">
@@ -174,13 +220,39 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
         </div>
       )}
 
-      {/* Student Profile Card — ClickUp card-section */}
+      {/* Student profile panel */}
       <div className="card-section p-6 sm:p-8 mb-8 shadow-tinted-xs">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-hairline">
           <div className="flex items-center gap-4">
-            {/* ClickUp Avatar chip */}
-            <div className="w-14 h-14 rounded-full bg-surface-soft border border-hairline text-ink font-mono font-bold text-lg flex items-center justify-center shadow-tinted-xs">
-              {user.studentId.slice(-3)}
+            <div className="relative shrink-0">
+              <div className="w-16 h-16 rounded-full bg-white border border-hairline text-ink font-bold text-2xl flex items-center justify-center shadow-tinted-xs overflow-hidden">
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={`รูปโปรไฟล์ ${user.name}`} className="w-full h-full object-cover" />
+                ) : (
+                  user.name.trim().charAt(0).toLocaleUpperCase() || '?'
+                )}
+              </div>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarUploading}
+                aria-label="อัปโหลดรูปโปรไฟล์"
+                title={avatarUploading ? 'กำลังอัปโหลดรูป...' : 'เปลี่ยนรูปโปรไฟล์'}
+                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border border-hairline shadow-tinted-xs flex items-center justify-center text-ink hover:bg-surface-soft disabled:opacity-60"
+              >
+                {avatarUploading ? (
+                  <span className="w-3 h-3 rounded-full border-2 border-hairline-strong border-t-primary animate-spin" />
+                ) : (
+                  <Camera className="w-3.5 h-3.5" />
+                )}
+              </button>
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -196,7 +268,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
                 )}
               </div>
               <p className="text-caption text-ink-secondary font-mono mt-0.5">
-                รหัสนักศึกษา: {user.studentId} • {user.email}
+                {user.email}
               </p>
             </div>
           </div>
@@ -216,6 +288,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
             )}
           </div>
         </div>
+
+        {avatarError && (
+          <p role="alert" className="mt-3 text-caption font-medium text-accent-red">
+            {avatarError}
+          </p>
+        )}
 
         {/* Form: Mandatory Contact Info (Phone, Social Media, Meetup Notes) */}
         <form onSubmit={handleSaveContact} className="mt-6">
@@ -243,6 +321,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
                   <span className="text-[11px] font-bold text-accent-green flex items-center gap-1">
                     <CheckCircle className="w-3.5 h-3.5" /> ระบุแล้ว
                   </span>
+                ) : phone ? (
+                  <span className="text-[11px] font-semibold text-accent-red">
+                    รูปแบบไม่ถูกต้อง
+                  </span>
                 ) : (
                   <span className="text-[11px] font-semibold text-accent-red">
                     * กรุณาระบุ
@@ -251,13 +333,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
               </div>
               <input
                 type="tel"
-                placeholder="เช่น 081-234-5678 หรือ 089-xxx-xxxx"
+                inputMode="numeric"
+                autoComplete="tel-national"
+                pattern="0[689][0-9]{8}"
+                maxLength={10}
+                aria-invalid={phone.length > 0 && !isPhoneFilled}
+                placeholder="กรอกเบอร์มือถือ 10 หลัก เช่น 0812345678"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className={`w-full input-field ${!isPhoneFilled ? 'border-amber-300 focus:border-primary' : ''}`}
+                onChange={(e) => {
+                  setPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
+                  setContactError(null);
+                }}
+                className="w-full input-field"
               />
-              <p className="text-[11px] text-ink-tertiary mt-1.5">
-                เบอร์โทรสำหรับโทรยืนยันเวลานัดรับสินค้าหน้างานในมหาวิทยาลัย
+              <p className={`text-[11px] mt-1.5 ${phone.length > 0 && !isPhoneFilled ? 'text-accent-red' : 'text-ink-tertiary'}`}>
+                {phone.length > 0 && !isPhoneFilled
+                  ? 'กรอกตัวเลข 10 หลักและใช้เบอร์มือถือที่ขึ้นต้นด้วย 06, 08 หรือ 09'
+                  : 'เบอร์โทรสำหรับโทรยืนยันเวลานัดรับสินค้าหน้างานในมหาวิทยาลัย'}
               </p>
             </div>
 
@@ -380,7 +472,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
         </form>
       </div>
 
-      {/* Tabs (ClickUp Modern Segment Tabs) */}
+      {/* Listings and reservations tabs */}
       <div className="flex border-b border-hairline mb-6">
         <button
           onClick={() => setActiveTab('listings')}

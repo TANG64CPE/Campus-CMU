@@ -117,6 +117,12 @@ export const userApi = {
     const res = await api.patch<{ success: boolean; user: User }>('/users/profile', data);
     return res.data.user;
   },
+  uploadAvatar: async (image: File): Promise<User> => {
+    const formData = new FormData();
+    formData.append('image', image);
+    const res = await api.patch<{ success: boolean; user: User }>('/users/profile/avatar', formData);
+    return res.data.user;
+  },
   getMyProducts: async (): Promise<Product[]> => {
     const res = await api.get<{ success: boolean; products: Product[] }>('/users/my-products');
     return res.data.products;

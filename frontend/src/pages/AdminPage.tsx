@@ -209,7 +209,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
         </div>
       )}
 
-      {/* KPI Overview Cards (ClickUp Workspace Tile Spec: 12px radius, hairline border) */}
+      {/* KPI overview cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
         <div className="card-tile p-4 sm:p-5 flex flex-col justify-between">
           <div className="flex items-center justify-between">
@@ -298,7 +298,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
           )}
         </div>
 
-        {/* Filter Pills (ClickUp segment pill tabs) */}
+        {/* Filter controls */}
         <div className="inline-flex p-1 bg-surface-soft rounded-pill border border-hairline text-body-sm font-medium text-ink-secondary overflow-x-auto">
           <button
             onClick={() => setActiveSideFilter('all')}
@@ -343,7 +343,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
         </div>
       </div>
 
-      {/* Users List Table (ClickUp card-feature layout) */}
+      {/* Users list */}
       <div className="bg-canvas rounded-lg border border-hairline overflow-hidden shadow-tinted-xs">
         {loading ? (
           <div className="py-16 text-center">

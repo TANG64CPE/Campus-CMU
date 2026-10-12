@@ -11,6 +11,15 @@ export interface ContactData {
   contactInfo?: string | null;
 }
 
+export function isValidThaiMobileNumber(phone?: string | null): boolean {
+  const normalizedPhone = phone?.trim().replace(/[-\s]/g, '');
+  return Boolean(
+    normalizedPhone &&
+    /^0[689]\d{8}$/.test(normalizedPhone) &&
+    !/^([0-9])\1{9}$/.test(normalizedPhone)
+  );
+}
+
 /**
  * Checks whether a user has satisfied mandatory profile contact requirements:
  * 1. Must have a valid phone number (Required)
@@ -24,7 +33,7 @@ export function isProfileContactComplete(user?: ContactData | null): boolean {
   const facebook = user.facebook?.trim();
   const instagram = user.instagram?.trim();
 
-  const hasPhone = Boolean(phone && phone.length > 0);
+  const hasPhone = isValidThaiMobileNumber(phone);
   const hasSocial = Boolean(
     (lineId && lineId.length > 0) ||
     (facebook && facebook.length > 0) ||

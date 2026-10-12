@@ -1,9 +1,44 @@
 import { Response } from 'express';
+import fs from 'fs';
+import path from 'path';
 import { prisma } from '../lib/prisma';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
-import { isProfileContactComplete, formatContactSummary } from '../utils/userValidation';
+import { isProfileContactComplete, formatContactSummary, isValidThaiMobileNumber } from '../utils/userValidation';
 
 export class UserController {
+  /**
+   * PATCH /api/users/profile/avatar
+   * Upload and persist the authenticated user's profile image.
+   */
+  public static async uploadAvatar(req: AuthenticatedRequest, res: Response): Promise<void> {
+    if (!req.file) {
+      res.status(400).json({ success: false, message: 'กรุณาเลือกรูปโปรไฟล์ก่อนอัปโหลด' });
+      return;
+    }
+
+    try {
+      const user = req.user!;
+      const avatarUrl = `/uploads/${req.file.filename}`;
+      const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: { avatarUrl },
+      });
+
+      if (user.avatarUrl?.startsWith('/uploads/avatar-')) {
+        const oldAvatarPath = path.resolve(__dirname, '../../', user.avatarUrl.replace(/^\//, ''));
+        const uploadDirectory = path.resolve(__dirname, '../../uploads');
+        if (oldAvatarPath.startsWith(`${uploadDirectory}${path.sep}`)) {
+          void fs.promises.unlink(oldAvatarPath).catch(() => undefined);
+        }
+      }
+
+      res.json({ success: true, user: updatedUser });
+    } catch (error: any) {
+      await fs.promises.unlink(req.file.path).catch(() => undefined);
+      res.status(500).json({ success: false, message: error.message || 'ไม่สามารถบันทึกรูปโปรไฟล์ได้' });
+    }
+  }
+
   /**
    * GET /api/users/profile
    * Return logged-in user profile with statistics
@@ -61,6 +96,14 @@ export class UserController {
         res.status(400).json({
           success: false,
           message: 'กรุณากรอกเบอร์โทรติดต่อ (*จำเป็นต้องมี)',
+        });
+        return;
+      }
+
+      if (!isValidThaiMobileNumber(trimmedPhone)) {
+        res.status(400).json({
+          success: false,
+          message: 'กรุณากรอกเบอร์มือถือไทย 10 หลัก โดยขึ้นต้นด้วย 06, 08 หรือ 09',
         });
         return;
       }

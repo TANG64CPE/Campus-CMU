@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { MarketplacePage } from './pages/MarketplacePage';
@@ -10,80 +10,150 @@ import { AdminPage } from './pages/AdminPage';
 import { isContactComplete } from './types';
 import { AlertTriangle } from 'lucide-react';
 
+type AppView = 'marketplace' | 'detail' | 'create' | 'profile' | 'login' | 'admin';
+
+const readRoute = (): { view: AppView; productId: string | null } => {
+  const productMatch = window.location.pathname.match(/^\/products\/([^/]+)\/?$/);
+  if (productMatch) {
+    return { view: 'detail', productId: decodeURIComponent(productMatch[1]) };
+  }
+
+  const route = window.location.pathname.replace(/^\/+|\/+$/g, '');
+  const views: Record<string, AppView> = {
+    create: 'create',
+    profile: 'profile',
+    login: 'login',
+    admin: 'admin',
+  };
+  return { view: views[route] || 'marketplace', productId: null };
+};
+
+const pathForView = (view: AppView, productId?: string): string => {
+  if (view === 'detail' && productId) return `/products/${encodeURIComponent(productId)}`;
+  return view === 'marketplace' ? '/' : `/${view}`;
+};
+
 const MainApp: React.FC = () => {
   const { user, refreshUser } = useAuth();
-  const [currentView, setCurrentView] = useState<'marketplace' | 'detail' | 'create' | 'profile' | 'login' | 'admin'>('marketplace');
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [initialRoute] = useState(readRoute);
+  const [currentView, setCurrentView] = useState<AppView>(initialRoute.view);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(initialRoute.productId);
   const [searchQuery, setSearchQuery] = useState('');
+  const currentViewRef = useRef<AppView>(initialRoute.view);
+  const marketplaceScrollY = useRef(0);
+  const restoreMarketplaceScroll = useRef(false);
+
+  const setRoute = useCallback((view: AppView, productId?: string, replace = false) => {
+    if (view === 'detail' && currentViewRef.current === 'marketplace') {
+      marketplaceScrollY.current = window.scrollY;
+    }
+    const path = pathForView(view, productId);
+    if (replace) {
+      window.history.replaceState({ view, productId }, '', path);
+    } else if (window.location.pathname !== path) {
+      window.history.pushState({ view, productId }, '', path);
+    }
+    currentViewRef.current = view;
+    setCurrentView(view);
+    setSelectedProductId(view === 'detail' ? productId || null : null);
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const route = readRoute();
+      if (currentViewRef.current === 'detail' && route.view === 'marketplace') {
+        restoreMarketplaceScroll.current = true;
+      }
+      currentViewRef.current = route.view;
+      setCurrentView(route.view);
+      setSelectedProductId(route.productId);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Handle URL callback from CMU OAuth
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('login') === 'success') {
       refreshUser();
-      // Clean URL query
-      window.history.replaceState({}, document.title, window.location.pathname);
-      setCurrentView('marketplace');
+      setRoute('marketplace', undefined, true);
     }
-  }, [refreshUser]);
+  }, [refreshUser, setRoute]);
+
+  const restoreMarketplacePosition = useCallback(() => {
+    if (!restoreMarketplaceScroll.current) return;
+    restoreMarketplaceScroll.current = false;
+
+    const root = document.documentElement;
+    const previousScrollBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = 'auto';
+    window.scrollTo(0, marketplaceScrollY.current);
+    window.requestAnimationFrame(() => {
+      root.style.scrollBehavior = previousScrollBehavior;
+    });
+  }, []);
 
   const handleNavigate = (view: string, productId?: string) => {
+    const shouldRestoreMarketplace = currentViewRef.current === 'detail' && view === 'marketplace';
+    if (shouldRestoreMarketplace) restoreMarketplaceScroll.current = true;
+
     if (view === 'detail' && productId) {
-      setSelectedProductId(productId);
-      setCurrentView('detail');
+      setRoute('detail', productId);
     } else if (view === 'create') {
       if (!user) {
-        setCurrentView('login');
+        setRoute('login');
       } else if (!isContactComplete(user)) {
-        setCurrentView('profile');
+        setRoute('profile');
       } else {
-        setCurrentView('create');
+        setRoute('create');
       }
     } else if (view === 'profile') {
       if (!user) {
-        setCurrentView('login');
+        setRoute('login');
       } else {
-        setCurrentView('profile');
+        setRoute('profile');
       }
     } else if (view === 'admin') {
-      setCurrentView('admin');
+      setRoute('admin');
     } else if (view === 'login') {
-      setCurrentView('login');
+      setRoute('login');
     } else {
-      setCurrentView('marketplace');
+      setRoute('marketplace');
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!shouldRestoreMarketplace) window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSelectProduct = (id: string) => {
-    setSelectedProductId(id);
-    setCurrentView('detail');
+    setRoute('detail', id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <div className="min-h-screen bg-canvas text-ink flex flex-col selection:bg-primary/10 selection:text-ink-deep font-sans">
-      {/* Top Navbar (60px height, hairline border) */}
-      <Navbar
-        currentView={currentView}
-        onNavigate={handleNavigate}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
+      {/* Keep the login screen focused on its authentication card. */}
+      {currentView !== 'login' && (
+        <Navbar
+          currentView={currentView}
+          onNavigate={handleNavigate}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+      )}
 
       {/* Global Incomplete Contact Warning Banner */}
       {user && !isContactComplete(user) && currentView !== 'profile' && (
-        <div className="bg-amber-50 border-b border-amber-200/80 px-4 py-2.5 text-caption sm:text-body-sm text-ink shadow-tinted-xs">
+        <div className="bg-surface-soft border-b border-hairline px-4 py-2.5 text-caption sm:text-body-sm text-ink">
           <div className="max-w-clickup mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-brand-orange shrink-0" />
+              <AlertTriangle className="w-4 h-4 text-ink-secondary shrink-0" />
               <span>
                 <strong>ข้อมูลติดต่อยังไม่สมบูรณ์:</strong> กรุณาระบุเบอร์โทรศัพท์และ Social Media ในหน้าโปรไฟล์เพื่อเปิดใช้งานการกดจองและลงขายสินค้า
               </span>
             </div>
             <button
               onClick={() => {
-                setCurrentView('profile');
+                handleNavigate('profile');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="btn-primary-pill text-xs px-3.5 py-1 whitespace-nowrap shrink-0 shadow-tinted-xs"
@@ -101,70 +171,66 @@ const MainApp: React.FC = () => {
             onSelectProduct={handleSelectProduct}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            onProductsLoaded={restoreMarketplacePosition}
           />
         )}
 
         {currentView === 'detail' && selectedProductId && (
           <ProductDetailPage
             productId={selectedProductId}
-            onBack={() => setCurrentView('marketplace')}
-            onNavigateToLogin={() => setCurrentView('login')}
-            onNavigateToProfile={() => setCurrentView('profile')}
+            onBack={() => handleNavigate('marketplace')}
+            onNavigateToLogin={() => handleNavigate('login')}
+            onNavigateToProfile={() => handleNavigate('profile')}
           />
         )}
 
         {currentView === 'create' && (
           <CreateProductPage
             onSuccess={(newId) => handleSelectProduct(newId)}
-            onCancel={() => setCurrentView('marketplace')}
-            onNavigateToProfile={() => setCurrentView('profile')}
+            onCancel={() => handleNavigate('marketplace')}
+            onNavigateToProfile={() => handleNavigate('profile')}
           />
         )}
 
         {currentView === 'profile' && (
           <ProfilePage
             onSelectProduct={handleSelectProduct}
-            onNavigateToFeed={() => setCurrentView('marketplace')}
+            onNavigateToFeed={() => handleNavigate('marketplace')}
           />
         )}
 
         {currentView === 'admin' && (
           <AdminPage
-            onNavigateHome={() => setCurrentView('marketplace')}
+            onNavigateHome={() => handleNavigate('marketplace')}
             onSelectProduct={handleSelectProduct}
           />
         )}
 
         {currentView === 'login' && (
-          <LoginPage onLoginSuccess={() => setCurrentView('marketplace')} />
+          <LoginPage onLoginSuccess={() => handleNavigate('marketplace')} />
         )}
       </main>
 
-      {/* Footer Region — design.md footer-region: canvas bg, 1px hairline, ink-secondary body-sm */}
-      <footer className="bg-canvas border-t border-hairline py-10 mt-12">
+      <footer className="bg-black text-white py-10 mt-12">
         <div className="max-w-clickup mx-auto px-4 sm:px-[40px]">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-body-sm text-ink-secondary">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-body-sm text-white/70">
             <div className="flex items-center gap-3">
-              <span className="font-display font-extrabold text-heading-sm tracking-tight-sm text-ink">
-                Campus<span className="bg-brand-gradient bg-clip-text text-transparent">Mart</span>
+              <span className="font-display font-bold text-heading-sm tracking-tight-sm text-white">
+                CampusMart
               </span>
-              <span className="eyebrow-mono bg-surface-soft text-ink-deep px-2 py-0.5 rounded-xxs border border-hairline text-[10px]">
-                CMU CPE
-              </span>
-              <span className="text-ink-tertiary">|</span>
-              <span className="text-ink-tertiary">ตลาดนัดของใช้มือสองสำหรับนักศึกษา มหาวิทยาลัยเชียงใหม่</span>
+              <span className="text-white/65">ตลาดนัดของใช้มือสองสำหรับนักศึกษา มหาวิทยาลัยเชียงใหม่</span>
             </div>
 
             <div className="flex items-center gap-4 text-body-sm">
-              <span className="hover:text-brand-link cursor-pointer transition-colors duration-clickup ease-clickup">
+              <span className="hover:text-white cursor-pointer transition-colors duration-clickup ease-clickup">
                 นโยบายความปลอดภัย
               </span>
-              <span className="text-hairline-strong">•</span>
-              <span className="hover:text-brand-link cursor-pointer transition-colors duration-clickup ease-clickup">
+              <span className="text-white/35">•</span>
+              <span className="hover:text-white cursor-pointer transition-colors duration-clickup ease-clickup">
                 จุดนัดรับใน มช.
               </span>
-              <span className="text-hairline-strong">•</span>
-              <span className="font-mono text-ink-tertiary">© 2026 CampusMart CMU</span>
+              <span className="text-white/35">•</span>
+              <span className="text-white/50">© 2026 CampusMart</span>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ export interface User {
   studentId: string;
   email: string;
   name: string;
+  avatarUrl?: string | null;
   phone?: string | null;
   lineId?: string | null;
   facebook?: string | null;
@@ -15,14 +16,22 @@ export interface User {
   createdAt: string;
 }
 
+export function isValidThaiMobileNumber(phone?: string | null): boolean {
+  const normalizedPhone = phone?.trim().replace(/[-\s]/g, '');
+  return Boolean(
+    normalizedPhone &&
+    /^0[689]\d{8}$/.test(normalizedPhone) &&
+    !/^([0-9])\1{9}$/.test(normalizedPhone)
+  );
+}
+
 export function isContactComplete(user?: User | null): boolean {
   if (!user) return false;
-  if (user.hasCompletedContact !== undefined) return Boolean(user.hasCompletedContact);
   const phone = user.phone?.trim();
   const lineId = user.lineId?.trim();
   const facebook = user.facebook?.trim();
   const instagram = user.instagram?.trim();
-  return Boolean(phone && (lineId || facebook || instagram));
+  return Boolean(isValidThaiMobileNumber(phone) && (lineId || facebook || instagram));
 }
 
 export interface Product {

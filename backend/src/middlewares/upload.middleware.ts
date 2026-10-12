@@ -8,19 +8,6 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Multer disk storage configuration
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (_req, file, cb) => {
-    // Generate clean unique filename: timestamp-random.ext
-    const ext = path.extname(file.originalname).toLowerCase();
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `product-${uniqueSuffix}${ext}`);
-  },
-});
-
 // Allowed file types: JPEG, PNG, WEBP, GIF
 const fileFilter = (
   _req: any,
@@ -35,10 +22,22 @@ const fileFilter = (
   }
 };
 
-export const upload = multer({
-  storage,
+const createImageUploader = (prefix: 'product' | 'avatar') => multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      cb(null, uploadDir);
+    },
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase();
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      cb(null, `${prefix}-${uniqueSuffix}${ext}`);
+    },
+  }),
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB max
   },
   fileFilter,
 });
+
+export const upload = createImageUploader('product');
+export const avatarUpload = createImageUploader('avatar');

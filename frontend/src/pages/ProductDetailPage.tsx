@@ -20,7 +20,10 @@ import {
   Phone,
   Globe,
   Camera,
+  Share2,
+  X,
 } from 'lucide-react';
+import { ProductImage } from '../components/ProductImage';
 
 interface ProductDetailPageProps {
   productId: string;
@@ -45,13 +48,15 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [revealedSellerContact, setRevealedSellerContact] = useState<SellerContact | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
 
   // Time state for 3-Hour window
   const [timeRemainingText, setTimeRemainingText] = useState<string>('');
   const [isWithin3Hours, setIsWithin3Hours] = useState<boolean>(true);
 
-  const loadProduct = async () => {
-    setLoading(true);
+  const loadProduct = async (showPageLoader = false) => {
+    if (showPageLoader) setLoading(true);
     setErrorMsg(null);
     try {
       const data = await productApi.getProductById(productId);
@@ -67,13 +72,23 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     } catch (err: any) {
       setErrorMsg(err.response?.data?.message || 'ไม่สามารถโหลดข้อมูลสินค้าได้');
     } finally {
-      setLoading(false);
+      if (showPageLoader) setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadProduct();
+    loadProduct(true);
   }, [productId]);
+
+  const handleCopyProductLink = async () => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/products/${encodeURIComponent(productId)}`);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      setErrorMsg('คัดลอกลิงก์ไม่ได้ กรุณาคัดลอกจากแถบที่อยู่ของเบราว์เซอร์');
+    }
+  };
 
   // Recalculate 3-hour remaining timer
   const check3HourWindow = (createdAtString: string) => {
@@ -139,21 +154,23 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   };
 
   // Handle Buyer Cancel Reservation (< 3 hours)
-  const handleBuyerCancel = async () => {
+  const handleBuyerCancel = () => {
+    if (!activeReservation || actionLoading) return;
+    setShowCancelConfirmation(true);
+  };
+
+  const confirmBuyerCancel = async () => {
     if (!activeReservation) return;
-
-    if (!confirm('ยืนยันที่จะยกเลิกการจองสินค้านี้หรือไม่? สินค้าจะกลับไปเป็นสถานะพร้อมขายทันที')) {
-      return;
-    }
-
     setActionLoading(true);
     setErrorMsg(null);
     try {
       await reservationApi.cancelReservation(activeReservation.id);
       setSuccessMsg('ยกเลิกการจองเรียบร้อยแล้ว สินค้าเปิดให้คนอื่นจองได้อีกครั้ง');
       setRevealedSellerContact(null);
+      setShowCancelConfirmation(false);
       await loadProduct();
     } catch (err: any) {
+      setShowCancelConfirmation(false);
       setErrorMsg(err.response?.data?.message || 'ไม่สามารถยกเลิกการจองได้');
     } finally {
       setActionLoading(false);
@@ -247,13 +264,24 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   return (
     <div className="max-w-clickup mx-auto px-4 sm:px-[40px] py-6 pb-24">
       {/* Back button */}
-      <button
-        onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-body-sm font-medium text-ink-secondary hover:text-ink mb-5 transition-colors duration-clickup ease-clickup"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        <span>กลับไปหน้าตลาด</span>
-      </button>
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 text-body-sm font-medium text-ink-secondary hover:text-ink transition-colors duration-clickup ease-clickup"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>กลับไปหน้าตลาด</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleCopyProductLink}
+          className="inline-flex items-center gap-2 rounded-full border border-hairline px-4 py-2 text-body-sm font-medium text-ink-secondary transition-colors hover:border-primary hover:text-primary"
+          aria-label="คัดลอกลิงก์สินค้า"
+        >
+          <Share2 className="h-4 w-4" />
+          {linkCopied ? 'คัดลอกแล้ว' : 'คัดลอกลิงก์'}
+        </button>
+      </div>
 
       {/* Notifications */}
       {errorMsg && (
@@ -275,18 +303,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Big Product Image Frame */}
           <div className="relative aspect-square rounded-lg sm:rounded-xl bg-surface overflow-hidden flex items-center justify-center border border-hairline">
-            {product.imageUrl ? (
-              <img
-                src={product.imageUrl}
-                alt={product.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center p-8 text-center text-ink-disabled">
-                <Tag className="w-12 h-12 mb-2 stroke-[1.5]" />
-                <span className="text-xs font-mono">ภาพตัวอย่างสินค้า</span>
-              </div>
-            )}
+            <ProductImage product={product} loading="eager" className="h-full w-full object-cover" />
 
             {/* Reserved Overlay Badge */}
             {isReserved && (
@@ -315,7 +332,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 </span>
               </div>
 
-              {/* Title — Plus Jakarta Sans heading-md (26px / 650 / -0.91px) */}
+              {/* Product heading */}
               <h1 className="font-display font-extrabold text-2xl sm:text-heading-md text-ink leading-tight mb-3 tracking-tight-sm">
                 {product.title}
               </h1>
@@ -329,7 +346,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 </span>
               </div>
 
-              {/* Seller Summary Box (ClickUp card-tile) */}
+              {/* Seller summary */}
               <div className="p-3.5 sm:p-4 bg-surface rounded-md border border-hairline mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-surface-soft text-ink font-mono font-bold text-xs flex items-center justify-center border border-hairline">
@@ -434,7 +451,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         </div>
                       )}
 
-                      {/* ClickUp Dominant CTA / Brand Gradient Pill CTA */}
+                      {/* Reservation action */}
                       <button
                         onClick={handleReserve}
                         disabled={actionLoading || (user ? !isContactComplete(user) : false)}
@@ -458,7 +475,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   ) : isCurrentUserTheBuyer ? (
                     /* BUYER WHO HAS RESERVED THIS PRODUCT: STATE 2 vs STATE 3 */
                     <div className="space-y-4">
-                      {/* Revealed Contact Information Box (ClickUp surface card) */}
+                      {/* Revealed contact information */}
                       <div className="p-4 sm:p-5 bg-surface rounded-xl border border-hairline shadow-tinted-xs">
                         <div className="flex items-center gap-2 text-ink font-bold text-body-sm mb-3 pb-2 border-b border-hairline">
                           <UserCheck className="w-4 h-4 text-primary" />
@@ -611,6 +628,64 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           </div>
         </div>
       </div>
+
+      {showCancelConfirmation && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm"
+          onClick={(event) => {
+            if (event.target === event.currentTarget && !actionLoading) setShowCancelConfirmation(false);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cancel-reservation-title"
+            aria-describedby="cancel-reservation-description"
+            className="w-full max-w-md rounded-2xl border border-hairline bg-white p-6 shadow-2xl"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-soft text-ink">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 id="cancel-reservation-title" className="text-lg font-bold text-ink">
+                  ยืนยันการยกเลิกการจอง?
+                </h2>
+                <p id="cancel-reservation-description" className="mt-2 text-sm leading-relaxed text-ink-secondary">
+                  สินค้าจะกลับไปอยู่ในสถานะพร้อมขาย และนักศึกษาคนอื่นจะสามารถจองได้ทันที
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCancelConfirmation(false)}
+                disabled={actionLoading}
+                aria-label="ปิดหน้าต่างยืนยัน"
+                className="rounded-full p-1 text-ink-tertiary hover:bg-surface-soft hover:text-ink disabled:opacity-50"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-7 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setShowCancelConfirmation(false)}
+                disabled={actionLoading}
+                className="btn-secondary-sm px-5"
+              >
+                กลับไปหน้าสินค้า
+              </button>
+              <button
+                type="button"
+                onClick={confirmBuyerCancel}
+                disabled={actionLoading}
+                className="btn-primary-pill px-5 disabled:opacity-60"
+              >
+                {actionLoading ? 'กำลังยกเลิก...' : 'ยืนยันยกเลิกการจอง'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

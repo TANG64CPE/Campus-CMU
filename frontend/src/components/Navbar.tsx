@@ -31,30 +31,10 @@ export const Navbar: React.FC<NavbarProps> = ({
        bg: canvas, text: ink, body-md, height: 60px, padding: 0 40px
        Sticky on scroll with subtle resting-state hairline
        ────────────────────────────────────────────────── */
-    <nav className="sticky top-0 z-40 bg-canvas/95 backdrop-blur-md border-b border-hairline" style={{ height: '60px' }}>
+    <nav className="sticky top-0 z-40 border-b border-hairline bg-white/95 backdrop-blur-md" style={{ height: '68px' }}>
       <div className="max-w-clickup mx-auto px-4 sm:px-[40px]">
-        <div className="flex items-center justify-between h-[60px] gap-4">
-          {/* Brand Wordmark & Logo */}
-          <button
-            onClick={() => onNavigate('marketplace')}
-            className="flex items-center gap-3 group text-left focus:outline-none"
-          >
-            {/* ClickUp Brand Voltage Gradient Icon — pill (20px) radius */}
-            <div className="w-9 h-9 rounded-pill bg-brand-gradient flex items-center justify-center text-white shadow-tinted-sm group-hover:scale-105 transition-transform duration-clickup ease-clickup">
-              <ShoppingBag className="w-4 h-4 stroke-[2.2]" />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-display font-extrabold text-[19px] tracking-tight-sm text-ink group-hover:text-primary transition-colors duration-clickup ease-clickup">
-                Campus<span className="bg-brand-gradient bg-clip-text text-transparent">Mart</span>
-              </span>
-              {/* Sometype Mono Eyebrow Badge (4px radius) */}
-              <span className="eyebrow-mono bg-surface-soft text-ink-deep px-1.5 py-0.5 rounded-xxs border border-hairline font-mono text-[10px]">
-                CMU
-              </span>
-            </div>
-          </button>
-
-          {/* Quick Search — ClickUp text-input design (9px radius, 44px height) */}
+        <div className="flex items-center justify-between h-[68px] gap-4">
+          {/* Navigation search */}
           {currentView === 'marketplace' && (
             <div className="hidden md:flex flex-1 max-w-md mx-4">
               <div className="relative w-full">
@@ -64,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   placeholder="ค้นหาหนังสือ, บอร์ดไมโครคอนโทรลเลอร์, อุปกรณ์ IT..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full bg-surface text-ink text-body-sm pl-10 pr-9 py-2 rounded-pill border border-hairline-strong focus:outline-none focus:border-primary focus:bg-canvas focus:ring-2 focus:ring-primary/10 transition-all duration-clickup ease-clickup placeholder:text-ink-disabled font-sans"
+                  className="w-full bg-surface-soft text-ink text-body-sm pl-10 pr-9 py-2.5 rounded-pill border border-transparent focus:outline-none focus:border-primary focus:bg-canvas focus:ring-2 focus:ring-primary/10 transition-all duration-clickup ease-clickup placeholder:text-ink-disabled font-sans"
                 />
                 {searchQuery && (
                   <button
@@ -79,7 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           {/* Right Action buttons */}
-          <div className="flex items-center gap-2.5">
+          <div className="ml-auto flex items-center gap-2.5">
             {user ? (
               <>
                 {/* Admin System Button for Admins */}
@@ -88,16 +68,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onClick={() => onNavigate('admin')}
                     className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill text-button-md border transition-all duration-clickup ease-clickup ${
                       currentView === 'admin'
-                        ? 'bg-purple-50 text-primary border-primary font-bold shadow-tinted-xs'
-                        : 'bg-canvas text-ink hover:text-primary hover:border-primary border-hairline'
+                        ? 'bg-black text-white border-black font-medium'
+                        : 'bg-canvas text-ink hover:bg-surface-soft border-hairline'
                     }`}
                   >
-                    <Shield className="w-3.5 h-3.5 text-primary" />
+                    <Shield className="w-3.5 h-3.5" />
                     <span>ระบบ Admin</span>
                   </button>
                 )}
 
-                {/* Sell Item Button — ClickUp Dark Pill CTA (#292d34, 20px radius) */}
+                {/* Primary listing action */}
                 <button
                   onClick={() => onNavigate('create')}
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-pill text-button-md transition-all duration-clickup ease-clickup shadow-tinted-xs ${
@@ -116,8 +96,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-pill border border-hairline hover:border-hairline-strong hover:bg-surface transition-all duration-clickup ease-clickup text-body-sm font-medium text-ink"
                   >
-                    <div className="w-7 h-7 rounded-full bg-surface-soft text-ink font-mono font-bold text-caption flex items-center justify-center border border-hairline">
-                      {user.studentId.slice(-3)}
+                    <div className="w-7 h-7 rounded-full bg-surface-soft text-ink font-bold text-caption flex items-center justify-center border border-hairline overflow-hidden">
+                      {user.avatarUrl ? (
+                        <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        user.name.trim().charAt(0).toLocaleUpperCase() || '?'
+                      )}
                     </div>
                     <div className="hidden sm:block text-left">
                       <div className="font-semibold text-ink leading-tight line-clamp-1 text-body-sm">{user.name}</div>
@@ -128,27 +112,27 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {/* Dropdown Menu (14px card-feature radius, hairline border, tinted shadow) */}
                   {showUserMenu && (
                     <div
-                      className="absolute right-0 mt-2 w-64 bg-canvas rounded-lg shadow-tinted-md border border-hairline py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                      className="absolute right-0 mt-2 w-64 bg-canvas rounded-xl shadow-tinted-md border border-hairline p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
                       onClick={() => setShowUserMenu(false)}
                     >
                       <div className="px-4 py-2.5 border-b border-hairline">
                         <div className="flex items-center justify-between">
-                          <p className="eyebrow-mono text-[10px] text-ink-tertiary">CMU ACCOUNT</p>
+                          <p className="eyebrow-mono text-[10px] text-ink-tertiary">บัญชีผู้ใช้</p>
                           {user.role === 'ADMIN' && (
-                            <span className="eyebrow-mono text-[9px] font-bold text-primary bg-purple-50 px-1 rounded-xxs border border-purple-200">
+                            <span className="eyebrow-mono text-[9px] font-bold text-primary bg-surface-soft px-2 py-1 rounded-full">
                               ADMIN
                             </span>
                           )}
                         </div>
                         <p className="text-body-sm font-bold text-ink truncate mt-0.5">{user.name}</p>
-                        <p className="text-[11px] text-brand-link font-mono truncate">{user.email}</p>
+                        <p className="text-[11px] text-ink-secondary truncate">{user.email}</p>
                       </div>
 
                       <div className="py-1">
                         {user.role === 'ADMIN' && (
                           <button
                             onClick={() => onNavigate('admin')}
-                            className="w-full px-4 py-2 text-left text-body-sm font-semibold text-primary hover:bg-surface flex items-center gap-2 transition-colors"
+                            className="w-full px-4 py-2.5 text-left text-body-sm font-semibold text-primary hover:bg-surface-soft flex items-center gap-2 transition-colors"
                           >
                             <Shield className="w-3.5 h-3.5" />
                             <span>ระบบจัดการผู้ใช้ (Admin)</span>
@@ -157,17 +141,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                         <button
                           onClick={() => onNavigate('profile')}
-                          className="w-full px-4 py-2 text-left text-body-sm font-medium text-ink hover:bg-surface flex items-center gap-2 transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-body-sm font-medium text-ink hover:bg-surface-soft flex items-center gap-2 transition-colors"
                         >
-                          <UserIcon className="w-3.5 h-3.5 text-primary" />
+                            <UserIcon className="w-3.5 h-3.5" />
                           <span>โปรไฟล์ & รายการของฉัน</span>
                         </button>
 
                         <button
                           onClick={() => onNavigate('marketplace')}
-                          className="w-full px-4 py-2 text-left text-body-sm font-medium text-ink hover:bg-surface flex items-center gap-2 transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-body-sm font-medium text-ink hover:bg-surface-soft flex items-center gap-2 transition-colors"
                         >
-                          <ShoppingBag className="w-3.5 h-3.5 text-primary" />
+                            <ShoppingBag className="w-3.5 h-3.5" />
                           <span>หน้าตลาดสินค้า (Feed)</span>
                         </button>
                       </div>
@@ -185,10 +169,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                               mockLogin(s);
                               setShowUserMenu(false);
                             }}
-                            className={`w-full text-left text-body-sm px-2 py-1.5 rounded-sm transition-colors duration-clickup ease-clickup flex items-center justify-between ${
+                            className={`w-full text-left text-body-sm px-3 py-2 rounded-full transition-colors duration-clickup ease-clickup flex items-center justify-between ${
                               user.studentId === s.studentId
-                                ? 'bg-surface-soft text-primary font-bold'
-                                : 'text-ink-secondary hover:bg-surface'
+                                ? 'bg-black text-white font-medium'
+                                : 'text-ink-secondary hover:bg-surface-soft'
                             }`}
                           >
                             <span className="truncate">{s.name}</span>
@@ -202,7 +186,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <div className="border-t border-hairline pt-1 mt-1">
                         <button
                           onClick={logout}
-                          className="w-full px-4 py-2 text-left text-body-sm font-semibold text-accent-red hover:bg-red-50 flex items-center gap-2 transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-body-sm font-semibold text-accent-red hover:bg-surface-soft flex items-center gap-2 transition-colors"
                         >
                           <LogOut className="w-3.5 h-3.5" />
                           <span>ออกจากระบบ</span>
@@ -216,9 +200,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               /* Gradient Pill CTA for Log in */
               <button
                 onClick={() => onNavigate('login')}
-                className="btn-gradient-pill px-4 py-2 text-button-md shadow-tinted-sm"
+                className="btn-primary-pill px-5 py-2.5 text-button-md"
               >
-                <span>เข้าสู่ระบบ CMU</span>
+                <span>เข้าสู่ระบบ</span>
               </button>
             )}
           </div>

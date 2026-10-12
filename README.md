@@ -1,21 +1,17 @@
 # CampusMart (CMU Campus Marketplace)
 
-> ระบบเว็บแอปพลิเคชันตลาดนัดออนไลน์สำหรับนักศึกษามหาวิทยาลัยเชียงใหม่ (CMU) สำหรับซื้อขายสินค้ามือสอง เช่น หนังสือเรียน อุปกรณ์อิเล็กทรอนิกส์/บอร์ดไมโครคอนโทรลเลอร์ เครื่องแต่งกาย และของใช้ในหอพัก ออกแบบมาสำหรับการนัดรับและชำระเงินโดยตรงในพื้นที่มหาวิทยาลัยเชียงใหม่ (Face-to-face Handover & Direct Cash/Transfer) พร้อมระบบจัดการหลังบ้าน (Admin System) และดีไซน์ระดับพรีเมียมตามมาตรฐาน **ClickUp Design System** รองรับฟอนต์ภาษาไทย **Kanit**
+> ระบบเว็บแอปพลิเคชันตลาดนัดออนไลน์สำหรับนักศึกษามหาวิทยาลัยเชียงใหม่ (CMU) สำหรับซื้อขายสินค้ามือสอง เช่น หนังสือเรียน อุปกรณ์อิเล็กทรอนิกส์/บอร์ดไมโครคอนโทรลเลอร์ เครื่องแต่งกาย และของใช้ในหอพัก ออกแบบมาสำหรับการนัดรับและชำระเงินโดยตรงในพื้นที่มหาวิทยาลัยเชียงใหม่ (Face-to-face Handover & Direct Cash/Transfer) พร้อมระบบจัดการหลังบ้าน (Admin System) และหน้าตาแบบ **Uber-inspired monochrome** ที่เรียบง่าย ใช้ขาวดำเป็นหลักและรองรับฟอนต์ภาษาไทย **Kanit**
 
 ---
 
 ## Design System & Typography
 
-ระบบออกแบบส่วนติดต่อผู้ใช้ (Frontend UI/UX) อ้างอิงตาม [design.md](file:///c:/Users/exitt/Documents/Project%20Campus/design.md) โดยถ่ายทอดอัตลักษณ์ของ **ClickUp Design System**:
+หน้าตาเว็บใช้แนวทางจาก `uber.design.md` มาปรับให้เหมาะกับ CampusMart ตาม [design.md](design.md):
 
-- **Brand Voltage:** ใช้สีม่วงนีออนเอกลักษณ์ `#7612fa` ร่วมกับ **Gradient-as-brand CTA** มุม 263° (`#fa12e3` → `#7612fa` → `#12d0fa`)
-- **Graphite over True Black:** ใช้สีตัวอักษรและเส้นขอบ `#292d34` แทนสีดำสนิท เพื่อให้อ่านง่าย สบายตาบนพื้นหลังสีขาว `#ffffff`
-- **Typography Stack:**
-  - **Headlines / Display:** `Plus Jakarta Sans` (Font weight 600–700 พร้อม Tracking แน่น)
-  - **Body / Controls:** `Inter` (Font weight 400–600)
-  - **Thai Typography:** `Kanit` (รองรับการแสดงผลภาษาไทยทุกระดับอย่างสวยงามลงตัว)
-  - **Eyebrows / Badges:** `Sometype Mono` ตัวพิมพ์ใหญ่สำหรับหัวข้อกำกับ
-- **Geometry & Tokens:** ปุ่มทรง Dark Pill 20px, Feature Card 14px, Section Panel 25px–35px, และ Transition Cubic-Bezier `(0.5, 0, 0.5, 1)` สไตล์ ClickUp ที่ลื่นไหล
+- **สี:** ขาว `#ffffff` และดำ `#000000` เป็นสีหลัก; เทากลาง `#5e5e5e` และพื้นหลังอ่อน `#efefef` ใช้จัดลำดับเนื้อหา
+- **ตัวอักษร:** `Inter` สำหรับหัวเรื่องและส่วนควบคุม พร้อม `Kanit` เป็น fallback สำหรับภาษาไทย
+- **รูปทรง:** ปุ่มและตัวกรองทรง pill (`999px`); การ์ดและแผงเนื้อหาใช้มุมโค้ง `16px`
+- **พื้นผิว:** ใช้เส้นแบ่งบาง เงาให้น้อย และแถบพื้นดำสลับพื้นขาวเพื่อเน้นข้อมูลสำคัญ โดยไม่มีสีไล่ระดับ
 
 ---
 
@@ -23,9 +19,9 @@
 
 - **Frontend:**
   - React 18 + TypeScript + Vite
-  - Tailwind CSS (v3.4) ปรับแต่ง Token สีและขนาดอักษรตาม ClickUp Design System
+  - Tailwind CSS (v3.4) ปรับแต่ง Token แบบขาวดำตาม Uber-inspired design
   - Lucide React Icons
-  - Google Fonts (`Plus Jakarta Sans`, `Inter`, `Kanit`, `Sometype Mono`)
+  - Google Fonts (`Inter`, `Kanit`)
 - **Backend:**
   - Node.js + Express.js + TypeScript
   - Prisma ORM (PostgreSQL 16)
@@ -273,7 +269,7 @@ npx playwright test
 
 ```text
 Project Campus/
-├── design.md                          # ClickUp Design System Specification
+├── design.md                          # CampusMart monochrome design specification
 ├── backend/
 │   ├── src/
 │   │   ├── config/env.ts              # จัดการ Environment Variables
@@ -292,7 +288,7 @@ Project Campus/
 │   └── uploads/                       # ที่จัดเก็บรูปภาพสินค้าในเครื่อง
 ├── frontend/
 │   ├── src/
-│   │   ├── components/                # Navbar (ClickUp Nav), ProductCard (14px Feature Card)
+│   │   ├── components/                # Navbar, ProductCard, shared UI components
 │   │   ├── context/AuthContext.tsx    # Auth State, Login, Logout, Role State
 │   │   ├── pages/
 │   │   │   ├── MarketplacePage.tsx    # หน้าตลาดนัด ค้นหาสินค้า และแท็กหมวดหมู่
@@ -303,10 +299,10 @@ Project Campus/
 │   │   │   └── AdminPage.tsx          # หน้าแดชบอร์ดแอดมิน ตรวจสอบผู้ซื้อ/ผู้ขาย & จัดการสิทธิ์
 │   │   ├── services/api.ts            # Axios Client เชื่อมต่อ Backend พร้อม Cookies
 │   │   ├── types/index.ts             # TypeScript Interfaces & Models
-│   │   ├── index.css                  # ClickUp Design System Tokens & Utility Classes
+│   │   ├── index.css                  # Monochrome design tokens & utility classes
 │   │   └── App.tsx
 │   ├── e2e/                           # Playwright E2E Tests
-│   ├── tailwind.config.js             # ClickUp Color Palette, Typography & Radius Scale
+│   ├── tailwind.config.js             # Monochrome palette, typography & radius scale
 │   └── vite.config.ts
 ├── nginx/
 │   └── default.conf                   # Nginx Reverse Proxy Config

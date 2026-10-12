@@ -13,6 +13,7 @@ model User {
   studentId    String        @unique
   email        String        @unique
   name         String
+  avatarUrl    String?       // Stored profile image path (/uploads/avatar-...)
   phone        String?       // เบอร์โทรติดต่อ (*จำเป็นต้องมี)
   lineId       String?       // Line ID (*จำเป็นต้องมีอย่างน้อย 1 ช่องใน Social Media)
   facebook     String?       // Facebook Profile / Name
