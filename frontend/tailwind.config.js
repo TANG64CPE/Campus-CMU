@@ -20,7 +20,7 @@ export default {
         "accent-magenta": "#5e5e5e",
         "accent-green": "#5e5e5e",
         "accent-red": "#191919",
-        canvas: "#ffffff",
+        canvas: "#fffded",
         surface: "#f3f3f3",
         "surface-soft": "#efefef",
         hairline: "#e2e2e2",

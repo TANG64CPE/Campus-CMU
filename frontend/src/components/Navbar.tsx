@@ -31,7 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
        bg: canvas, text: ink, body-md, height: 60px, padding: 0 40px
        Sticky on scroll with subtle resting-state hairline
        ────────────────────────────────────────────────── */
-    <nav className="sticky top-0 z-40 border-b border-hairline bg-white/95 backdrop-blur-md" style={{ height: '68px' }}>
+    <nav className="sticky top-0 z-40 border-b border-white/60 bg-canvas/70 shadow-sm backdrop-blur-xl" style={{ height: '68px' }}>
       <div className="max-w-clickup mx-auto px-4 sm:px-[40px]">
         <div className="flex items-center justify-between h-[68px] gap-4">
           {/* Navigation search */}

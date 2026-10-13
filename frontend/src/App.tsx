@@ -148,7 +148,7 @@ const MainApp: React.FC = () => {
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-ink-secondary shrink-0" />
               <span>
-                <strong>ข้อมูลติดต่อยังไม่สมบูรณ์:</strong> กรุณาระบุเบอร์โทรศัพท์และ Social Media ในหน้าโปรไฟล์เพื่อเปิดใช้งานการกดจองและลงขายสินค้า
+                <strong>ข้อมูลติดต่อยังไม่สมบูรณ์</strong> กรุณาระบุเบอร์โทรศัพท์และ Social Media ในหน้าโปรไฟล์เพื่อเปิดใช้งานการกดจองและลงขายสินค้า
               </span>
             </div>
             <button
@@ -171,6 +171,7 @@ const MainApp: React.FC = () => {
             onSelectProduct={handleSelectProduct}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            onNavigateToLogin={() => handleNavigate('login')}
             onProductsLoaded={restoreMarketplacePosition}
           />
         )}
@@ -189,6 +190,7 @@ const MainApp: React.FC = () => {
             onSuccess={(newId) => handleSelectProduct(newId)}
             onCancel={() => handleNavigate('marketplace')}
             onNavigateToProfile={() => handleNavigate('profile')}
+            onNavigateToLogin={() => handleNavigate('login')}
           />
         )}
 

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
 import { productApi } from '../services/api';
 import { ProductCard } from '../components/ProductCard';
-import { ProductImage } from '../components/ProductImage';
 import {
   Search,
   BookOpen,
@@ -16,27 +15,26 @@ import {
   MapPin,
   Handshake,
   ArrowDown,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 
 interface MarketplacePageProps {
   onSelectProduct: (id: string) => void;
   searchQuery: string;
   onSearchChange: (q: string) => void;
+  onNavigateToLogin: () => void;
   onProductsLoaded?: () => void;
 }
 export const MarketplacePage: React.FC<MarketplacePageProps> = ({
   onSelectProduct,
   searchQuery,
   onSearchChange,
+  onNavigateToLogin,
   onProductsLoaded,
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [availabilityFilter, setAvailabilityFilter] = useState<'available' | 'all'>('all');
-  const [activeHeroIndex, setActiveHeroIndex] = useState(0);
 
   const categories = [
     { id: 'all', label: 'ทั้งหมด', icon: Layers, countLabel: 'All items' },
@@ -71,132 +69,63 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({
     const category = categories.find((item) => item.id === selectedCategory);
     return !category?.keyword || new RegExp(category.keyword, 'i').test(product.title);
   });
-  const heroProducts = products.slice(0, 3);
-  const activeHeroProduct = heroProducts.length > 0
-    ? heroProducts[activeHeroIndex % heroProducts.length]
-    : null;
-
-  useEffect(() => {
-    if (heroProducts.length < 2) return;
-    const interval = window.setInterval(() => {
-      setActiveHeroIndex((index) => (index + 1) % heroProducts.length);
-    }, 5000);
-    return () => window.clearInterval(interval);
-  }, [heroProducts.length]);
-
   const scrollToFeed = () => document.getElementById('marketplace-feed')?.scrollIntoView({ behavior: 'smooth' });
 
   return (
-    <div className="max-w-clickup mx-auto px-4 sm:px-8 lg:px-10 pt-6 sm:pt-10 pb-20">
-      <div className="md:hidden mb-6">
-        <div className="relative">
-          <Search className="w-4 h-4 text-ink-secondary absolute left-4 top-3.5" />
-          <input
-            type="text"
-            placeholder="ค้นหาสินค้าใน มช."
-            value={searchQuery}
-            onChange={(event) => onSearchChange(event.target.value)}
-            className="w-full bg-surface-soft rounded-full py-3 pl-11 pr-4 text-body-sm focus:outline-none focus:ring-2 focus:ring-black/20 placeholder:text-ink-tertiary"
-          />
-        </div>
-      </div>
+    <div className="pb-20">
+      <section className="relative isolate flex min-h-[560px] items-center justify-center overflow-hidden sm:min-h-[620px] lg:min-h-[680px]">
+        <img
+          src="/campus-market-banner.jpg"
+          alt=""
+          aria-hidden="true"
+          fetchPriority="high"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
+        <div aria-hidden="true" className="absolute inset-0 bg-black/25" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-b from-transparent via-[#fffded]/70 to-[#fffded]"
+        />
 
-      <section className="grid lg:grid-cols-[1.12fr_0.88fr] gap-6 lg:gap-8 items-stretch mb-14 sm:mb-16">
-        <div className="flex flex-col justify-center py-4 sm:py-8 lg:py-10">
-          <p className="eyebrow-mono text-ink-secondary mb-4">CAMPUSMART · CHIANG MAI UNIVERSITY</p>
-          <h1 className="font-display text-[38px] sm:text-[52px] leading-[1.14] font-bold max-w-2xl">
-            ของดีใกล้ตัว
-            <br />
-            ส่งต่อกันใน มช.
+        <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-5 pb-12 text-center text-white sm:px-8 sm:pb-16">
+          <h1 className="font-display text-5xl font-extrabold leading-none tracking-tight text-white drop-shadow-lg sm:text-7xl lg:text-8xl">
+            Campus Mart
           </h1>
-          <p className="mt-5 max-w-xl text-body-md text-ink-secondary leading-relaxed">
-            ตลาดมือสองของนักศึกษา มหาวิทยาลัยเชียงใหม่ เลือกซื้อของใช้ต่อจากเพื่อน นัดรับในมหาวิทยาลัย แล้วชำระเงินกันโดยตรง
+          <p className="mt-5 text-lg font-medium text-white drop-shadow-md sm:mt-6 sm:text-2xl">
+            ตลาดนัดมือสองของนักศึกษา
           </p>
-          <div className="mt-7 flex flex-wrap items-center gap-3">
-            <button onClick={scrollToFeed} className="btn-primary-pill px-6 py-3">
-              เลือกดูสินค้า <ArrowDown className="w-4 h-4" />
+          <div className="mt-8 flex w-full flex-col items-center justify-center gap-3 sm:mt-10 sm:w-auto sm:flex-row sm:gap-4">
+            <button
+              type="button"
+              onClick={scrollToFeed}
+              className="inline-flex min-w-48 items-center justify-center gap-2 rounded-full bg-white px-7 py-3.5 text-base font-semibold text-[#191919] shadow-lg transition hover:-translate-y-0.5 hover:bg-white/90 focus-visible:outline-white"
+            >
+              เริ่มช้อปปิ้ง <ArrowDown className="h-4 w-4" />
             </button>
-            <span className="text-body-sm text-ink-secondary">ซื้อขายกันง่าย ๆ ในแคมปัส</span>
+            <button
+              type="button"
+              onClick={onNavigateToLogin}
+              className="inline-flex min-w-48 items-center justify-center rounded-full border border-white/80 bg-black/20 px-7 py-3.5 text-base font-semibold text-white shadow-lg backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-black/40 focus-visible:outline-white"
+            >
+              ลงขายสินค้า
+            </button>
           </div>
         </div>
-
-        <div className="relative min-h-[260px] sm:min-h-[300px] overflow-hidden rounded-xl bg-surface-soft">
-          {activeHeroProduct ? (
-            <>
-              <button
-                type="button"
-                onClick={() => onSelectProduct(activeHeroProduct.id)}
-                aria-label={`ดูสินค้า ${activeHeroProduct.title}`}
-                className="absolute inset-0 w-full text-left"
-              >
-                <ProductImage
-                  product={activeHeroProduct}
-                  loading="eager"
-                  className="h-full w-full object-cover"
-                />
-                <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/5" />
-                <div className="absolute inset-x-0 bottom-0 z-10 p-6 pr-24 text-white sm:p-8 sm:pr-28">
-                  <p className="eyebrow-mono mb-2 text-white/80">สินค้าแนะนำในแคมปัส</p>
-                  <h2 className="line-clamp-2 text-xl font-bold leading-snug text-white sm:text-2xl">
-                    {activeHeroProduct.title}
-                  </h2>
-                  <p className="mt-2 text-lg font-semibold text-white">
-                    ฿{new Intl.NumberFormat('th-TH').format(activeHeroProduct.price)}
-                  </p>
-                </div>
-              </button>
-
-              {!activeHeroProduct.imageUrl && (
-                <span className="absolute bottom-4 right-4 z-20 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-medium text-ink-secondary">
-                  ภาพตัวอย่าง
-                </span>
-              )}
-
-              {heroProducts.length > 1 && (
-                <>
-                  <span className="absolute right-5 top-5 z-20 rounded-full bg-black/55 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
-                    {String((activeHeroIndex % heroProducts.length) + 1).padStart(2, '0')} / {String(heroProducts.length).padStart(2, '0')}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setActiveHeroIndex((index) => (index - 1 + heroProducts.length) % heroProducts.length)}
-                    aria-label="ดูสินค้าก่อนหน้า"
-                    className="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-ink shadow-sm transition-colors hover:bg-white"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveHeroIndex((index) => (index + 1) % heroProducts.length)}
-                    aria-label="ดูสินค้าถัดไป"
-                    className="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-ink shadow-sm transition-colors hover:bg-white"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
-                  <div className="absolute bottom-5 right-5 z-20 flex items-center gap-1.5">
-                    {heroProducts.map((product, index) => (
-                      <button
-                        key={product.id}
-                        type="button"
-                        onClick={() => setActiveHeroIndex(index)}
-                        aria-label={`ดูสินค้าแนะนำรายการที่ ${index + 1}`}
-                        aria-pressed={index === activeHeroIndex % heroProducts.length}
-                        className={`h-2 rounded-full transition-all ${index === activeHeroIndex % heroProducts.length ? 'w-6 bg-white' : 'w-2 bg-white/60 hover:bg-white'}`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
-          ) : (
-            <div className="flex min-h-[260px] items-center justify-center sm:min-h-[300px]">
-              <p className="text-body-sm text-ink-secondary">
-                {loading ? 'กำลังโหลดสินค้าแนะนำ…' : 'ยังไม่มีสินค้าแนะนำ'}
-              </p>
-            </div>
-          )}
-        </div>
       </section>
+
+      <div className="max-w-clickup mx-auto px-4 sm:px-8 lg:px-10 pt-6 sm:pt-10">
+        <div className="md:hidden mb-6">
+          <div className="relative">
+            <Search className="w-4 h-4 text-ink-secondary absolute left-4 top-3.5" />
+            <input
+              type="text"
+              placeholder="ค้นหาสินค้าใน มช."
+              value={searchQuery}
+              onChange={(event) => onSearchChange(event.target.value)}
+              className="w-full bg-surface-soft rounded-full py-3 pl-11 pr-4 text-body-sm focus:outline-none focus:ring-2 focus:ring-black/20 placeholder:text-ink-tertiary"
+            />
+          </div>
+        </div>
 
       <section aria-label="วิธีซื้อขาย" className="grid sm:grid-cols-3 border-y border-hairline py-5 mb-12">
         <div className="flex items-center gap-3 py-2 sm:py-0 sm:px-5 sm:first:pl-0">
@@ -216,7 +145,6 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({
       <section className="mb-12">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-5">
           <div>
-            <p className="eyebrow-mono text-ink-secondary mb-1">BROWSE BY CATEGORY</p>
             <h2 className="font-display text-2xl sm:text-3xl font-bold">เลือกดูตามหมวดหมู่</h2>
           </div>
           <div className="inline-flex self-start sm:self-auto p-1 bg-surface-soft rounded-full text-body-sm font-medium">
@@ -257,7 +185,6 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({
       <section id="marketplace-feed" className="scroll-mt-24">
         <div className="flex items-end justify-between gap-4 mb-5 pb-4 border-b border-hairline">
           <div>
-            <p className="eyebrow-mono text-ink-secondary mb-1">CAMPUS FINDS</p>
             <h2 className="font-display text-2xl sm:text-3xl font-bold">สินค้าที่ลงขายล่าสุด</h2>
             <p className="mt-1 text-body-sm text-ink-secondary">
               {filteredProducts.length} รายการ{searchQuery && <> · ผลการค้นหา “{searchQuery}”</>}
@@ -306,6 +233,7 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({
           </div>
         )}
       </section>
+      </div>
     </div>
   );
 };

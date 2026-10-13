@@ -17,10 +17,11 @@ interface CreateProductPageProps {
   onSuccess: (productId: string) => void;
   onCancel: () => void;
   onNavigateToProfile?: () => void;
+  onNavigateToLogin?: () => void;
 }
 
-export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess, onCancel, onNavigateToProfile }) => {
-  const { user } = useAuth();
+export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess, onCancel, onNavigateToProfile, onNavigateToLogin }) => {
+  const { user, loading: authLoading } = useAuth();
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
   const [meetupLocation, setMeetupLocation] = useState('');
@@ -89,8 +90,45 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
     }
   };
 
-  // Block listing if contact info is incomplete
-  if (user && !isContactComplete(user)) {
+  // Keep the form unavailable until authentication has resolved. The API also
+  // checks the latest profile contact data before accepting a listing.
+  if (authLoading) {
+    return (
+      <div className="max-w-[620px] mx-auto px-4 py-16 text-center" role="status" aria-live="polite">
+        <p className="text-body-sm text-ink-secondary">กำลังตรวจสอบบัญชีของคุณ…</p>
+      </div>
+    );
+  }
+
+  // A direct visit to /create must not briefly expose the listing form to a
+  // signed-out user while the API would reject the submission.
+  if (!user) {
+    return (
+      <div className="max-w-[620px] mx-auto px-4 py-16 text-center">
+        <div className="w-16 h-16 rounded-full bg-surface-soft text-ink border border-hairline flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle className="w-8 h-8" />
+        </div>
+        <h2 className="font-display font-extrabold text-heading-md text-ink mb-2">
+          เข้าสู่ระบบก่อนลงขายสินค้า
+        </h2>
+        <p className="text-body-sm text-ink-secondary mb-6 leading-relaxed max-w-md mx-auto">
+          กรุณาเข้าสู่ระบบด้วยบัญชีนักศึกษา แล้วกรอกข้อมูลติดต่อให้ครบก่อนลงขายสินค้า
+        </p>
+        <div className="flex items-center justify-center gap-3">
+          <button onClick={onCancel} className="btn-secondary-sm px-5 py-2.5 text-button-md">
+            ย้อนกลับ
+          </button>
+          <button onClick={onNavigateToLogin} className="btn-primary-pill px-6 py-2.5 text-button-md">
+            เข้าสู่ระบบ →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Block listing until a valid mobile number and at least one social contact
+  // have been saved. The backend enforces the same rule independently.
+  if (!isContactComplete(user)) {
     return (
       <div className="max-w-[620px] mx-auto px-4 py-16 text-center">
         <div className="w-16 h-16 rounded-full bg-amber-50 text-brand-orange border border-amber-200 flex items-center justify-center mx-auto mb-4 shadow-tinted-xs">
