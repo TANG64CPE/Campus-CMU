@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { productApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { isContactComplete } from '../types';
+import { isAdminRole, isContactComplete } from '../types';
 import {
   MapPin,
   Tag,
@@ -122,6 +122,25 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
             เข้าสู่ระบบ →
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (isAdminRole(user.role)) {
+    return (
+      <div className="max-w-[620px] mx-auto px-4 py-16 text-center">
+        <div className="w-16 h-16 rounded-full bg-surface-soft text-ink border border-hairline flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle className="w-8 h-8" />
+        </div>
+        <h2 className="font-display font-extrabold text-heading-md text-ink mb-2">
+          บัญชีผู้ดูแลระบบไม่สามารถลงขายสินค้าได้
+        </h2>
+        <p className="text-body-sm text-ink-secondary mb-6 leading-relaxed max-w-md mx-auto">
+          การซื้อขายเปิดให้บัญชีนักศึกษาเท่านั้น
+        </p>
+        <button onClick={onCancel} className="btn-secondary-sm px-5 py-2.5 text-button-md">
+          กลับไปหน้าตลาด
+        </button>
       </div>
     );
   }

@@ -7,7 +7,7 @@ import { CreateProductPage } from './pages/CreateProductPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { LoginPage } from './pages/LoginPage';
 import { AdminPage } from './pages/AdminPage';
-import { isContactComplete } from './types';
+import { isAdminRole, isContactComplete } from './types';
 import { AlertTriangle } from 'lucide-react';
 
 type AppView = 'marketplace' | 'detail' | 'create' | 'profile' | 'login' | 'admin';
@@ -34,7 +34,7 @@ const pathForView = (view: AppView, productId?: string): string => {
 };
 
 const MainApp: React.FC = () => {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, loading: authLoading } = useAuth();
   const [initialRoute] = useState(readRoute);
   const [currentView, setCurrentView] = useState<AppView>(initialRoute.view);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(initialRoute.productId);
@@ -72,6 +72,15 @@ const MainApp: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Admin accounts do not have a profile or listing flow. Redirect direct URL
+  // visits after authentication has resolved so those pages are never exposed.
+  useEffect(() => {
+    if (authLoading || !isAdminRole(user?.role)) return;
+    if (currentViewRef.current === 'profile' || currentViewRef.current === 'create') {
+      setRoute('admin', undefined, true);
+    }
+  }, [authLoading, user?.role, setRoute]);
+
   // Handle URL callback from CMU OAuth
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -103,6 +112,8 @@ const MainApp: React.FC = () => {
     } else if (view === 'create') {
       if (!user) {
         setRoute('login');
+      } else if (isAdminRole(user.role)) {
+        setRoute('admin');
       } else if (!isContactComplete(user)) {
         setRoute('profile');
       } else {
@@ -111,6 +122,8 @@ const MainApp: React.FC = () => {
     } else if (view === 'profile') {
       if (!user) {
         setRoute('login');
+      } else if (isAdminRole(user.role)) {
+        setRoute('admin');
       } else {
         setRoute('profile');
       }
@@ -142,7 +155,7 @@ const MainApp: React.FC = () => {
       )}
 
       {/* Global Incomplete Contact Warning Banner */}
-      {user && !isContactComplete(user) && currentView !== 'profile' && (
+      {user && !isAdminRole(user.role) && !isContactComplete(user) && currentView !== 'profile' && currentView !== 'marketplace' && (
         <div className="bg-surface-soft border-b border-hairline px-4 py-2.5 text-caption sm:text-body-sm text-ink">
           <div className="max-w-clickup mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2">
@@ -172,6 +185,9 @@ const MainApp: React.FC = () => {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onNavigateToLogin={() => handleNavigate('login')}
+            onNavigateToProfile={() => handleNavigate('profile')}
+            contactIncomplete={Boolean(user && !isAdminRole(user.role) && !isContactComplete(user))}
+            canSell={!isAdminRole(user?.role)}
             onProductsLoaded={restoreMarketplacePosition}
           />
         )}
@@ -194,7 +210,13 @@ const MainApp: React.FC = () => {
           />
         )}
 
-        {currentView === 'profile' && (
+        {currentView === 'profile' && authLoading && (
+          <div className="max-w-clickup mx-auto px-4 py-16 text-center text-body-sm text-ink-secondary" role="status">
+            กำลังตรวจสอบบัญชีของคุณ…
+          </div>
+        )}
+
+        {currentView === 'profile' && !authLoading && !isAdminRole(user?.role) && (
           <ProfilePage
             onSelectProduct={handleSelectProduct}
             onNavigateToFeed={() => handleNavigate('marketplace')}
@@ -213,30 +235,41 @@ const MainApp: React.FC = () => {
         )}
       </main>
 
-      <footer className="bg-black text-white py-10 mt-12">
-        <div className="max-w-clickup mx-auto px-4 sm:px-[40px]">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-body-sm text-white/70">
-            <div className="flex items-center gap-3">
-              <span className="font-display font-bold text-heading-sm tracking-tight-sm text-white">
-                CampusMart
-              </span>
-              <span className="text-white/65">ตลาดนัดของใช้มือสองสำหรับนักศึกษา มหาวิทยาลัยเชียงใหม่</span>
-            </div>
+      {currentView !== 'login' && (
+        <footer className="relative flex min-h-[420px] items-end overflow-hidden py-8 text-white">
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-cover bg-bottom"
+            style={{
+              backgroundImage: "linear-gradient(180deg, #fffded 0%, rgba(255,253,237,0.9) 18%, rgba(255,253,237,0.52) 44%, rgba(255,253,237,0.08) 65%, rgba(25,25,25,0.48) 86%, rgba(25,25,25,0.98) 100%), url('/campus-market-banner.jpg')",
+              backgroundPosition: 'center bottom',
+              backgroundSize: 'cover',
+            }}
+          />
+          <div className="relative z-10 w-full max-w-clickup mx-auto px-4 sm:px-[40px]">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-body-sm text-white/85">
+              <div className="flex items-center gap-3">
+                <span className="font-display font-bold text-heading-sm tracking-tight-sm text-white">
+                  CampusMart
+                </span>
+                <span className="text-white/80">ตลาดนัดของใช้มือสองสำหรับนักศึกษา มหาวิทยาลัยเชียงใหม่</span>
+              </div>
 
-            <div className="flex items-center gap-4 text-body-sm">
-              <span className="hover:text-white cursor-pointer transition-colors duration-clickup ease-clickup">
-                นโยบายความปลอดภัย
-              </span>
-              <span className="text-white/35">•</span>
-              <span className="hover:text-white cursor-pointer transition-colors duration-clickup ease-clickup">
-                จุดนัดรับใน มช.
-              </span>
-              <span className="text-white/35">•</span>
-              <span className="text-white/50">© 2026 CampusMart</span>
+              <div className="flex items-center gap-4 text-body-sm">
+                <span className="hover:text-white cursor-pointer transition-colors duration-clickup ease-clickup">
+                  นโยบายความปลอดภัย
+                </span>
+                <span className="text-white/55">•</span>
+                <span className="hover:text-white cursor-pointer transition-colors duration-clickup ease-clickup">
+                  จุดนัดรับใน มช.
+                </span>
+                <span className="text-white/55">•</span>
+                <span className="text-white/70">© 2026 CampusMart</span>
+              </div>
             </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 };

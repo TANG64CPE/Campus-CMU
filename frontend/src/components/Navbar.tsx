@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { isAdminRole } from '../types';
 import { ShoppingBag, PlusCircle, User as UserIcon, LogOut, ChevronDown, Sparkles, Search, Shield } from 'lucide-react';
 
 interface NavbarProps {
@@ -17,6 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { user, logout, mockLogin } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const isAdmin = isAdminRole(user?.role);
 
   // Mock accounts for quick local testing
   const mockStudents = [
@@ -31,7 +33,12 @@ export const Navbar: React.FC<NavbarProps> = ({
        bg: canvas, text: ink, body-md, height: 60px, padding: 0 40px
        Sticky on scroll with subtle resting-state hairline
        ────────────────────────────────────────────────── */
-    <nav className="sticky top-0 z-40 border-b border-white/60 bg-canvas/70 shadow-sm backdrop-blur-xl" style={{ height: '68px' }}>
+    <nav
+      className={`sticky top-0 z-40 backdrop-blur-xl ${
+        currentView === 'marketplace' ? 'mb-[-68px] bg-canvas/35' : 'bg-canvas/70'
+      }`}
+      style={{ height: '68px' }}
+    >
       <div className="max-w-clickup mx-auto px-4 sm:px-[40px]">
         <div className="flex items-center justify-between h-[68px] gap-4">
           {/* Navigation search */}
@@ -63,14 +70,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             {user ? (
               <>
                 {/* Admin System Button for Admins */}
-                {user.role === 'ADMIN' && (
+                {isAdmin && (
                   <button
                     onClick={() => onNavigate('admin')}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill text-button-md border transition-all duration-clickup ease-clickup ${
-                      currentView === 'admin'
-                        ? 'bg-black text-white border-black font-medium'
-                        : 'bg-canvas text-ink hover:bg-surface-soft border-hairline'
-                    }`}
+                    className="flex items-center gap-1.5 rounded-pill border border-white bg-white px-3.5 py-2 text-button-md font-medium text-[#191919] transition-all duration-clickup ease-clickup hover:bg-white/90"
                   >
                     <Shield className="w-3.5 h-3.5" />
                     <span>ระบบ Admin</span>
@@ -80,10 +83,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {/* Primary listing action */}
                 <button
                   onClick={() => onNavigate('create')}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-pill text-button-md transition-all duration-clickup ease-clickup shadow-tinted-xs ${
-                    currentView === 'create'
-                      ? 'bg-ink-deep text-canvas'
-                      : 'bg-ink hover:bg-ink-deep text-canvas'
+                  disabled={isAdmin}
+                  title={isAdmin ? 'บัญชี Admin ไม่สามารถลงขายสินค้าได้' : undefined}
+                  className={`flex items-center gap-1.5 rounded-pill px-4 py-2 text-button-md transition-all duration-clickup ease-clickup shadow-tinted-xs ${
+                    isAdmin
+                      ? 'cursor-not-allowed border border-white bg-white text-[#191919]'
+                      : currentView === 'create'
+                        ? 'bg-ink-deep text-canvas'
+                        : 'bg-ink text-canvas hover:bg-ink-deep'
                   }`}
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
@@ -94,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-pill border border-hairline hover:border-hairline-strong hover:bg-surface transition-all duration-clickup ease-clickup text-body-sm font-medium text-ink"
+                    className={`flex items-center gap-2 rounded-pill border p-1 text-body-sm font-medium text-ink transition-all duration-clickup ease-clickup sm:px-2.5 sm:py-1.5 ${isAdmin ? 'border-white bg-white hover:bg-white/90' : 'border-hairline hover:border-hairline-strong hover:bg-surface'}`}
                   >
                     <div className="w-7 h-7 rounded-full bg-surface-soft text-ink font-bold text-caption flex items-center justify-center border border-hairline overflow-hidden">
                       {user.avatarUrl ? (
@@ -118,9 +125,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <div className="px-4 py-2.5 border-b border-hairline">
                         <div className="flex items-center justify-between">
                           <p className="eyebrow-mono text-[10px] text-ink-tertiary">บัญชีผู้ใช้</p>
-                          {user.role === 'ADMIN' && (
+                          {isAdmin && (
                             <span className="eyebrow-mono text-[9px] font-bold text-primary bg-surface-soft px-2 py-1 rounded-full">
-                              ADMIN
+                              {user.role}
                             </span>
                           )}
                         </div>
@@ -129,7 +136,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </div>
 
                       <div className="py-1">
-                        {user.role === 'ADMIN' && (
+                        {isAdmin && (
                           <button
                             onClick={() => onNavigate('admin')}
                             className="w-full px-4 py-2.5 text-left text-body-sm font-semibold text-primary hover:bg-surface-soft flex items-center gap-2 transition-colors"
@@ -139,13 +146,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                           </button>
                         )}
 
-                        <button
-                          onClick={() => onNavigate('profile')}
-                          className="w-full px-4 py-2.5 text-left text-body-sm font-medium text-ink hover:bg-surface-soft flex items-center gap-2 transition-colors"
-                        >
+                        {!isAdmin && (
+                          <button
+                            onClick={() => onNavigate('profile')}
+                            className="w-full px-4 py-2.5 text-left text-body-sm font-medium text-ink hover:bg-surface-soft flex items-center gap-2 transition-colors"
+                          >
                             <UserIcon className="w-3.5 h-3.5" />
-                          <span>โปรไฟล์ & รายการของฉัน</span>
-                        </button>
+                            <span>โปรไฟล์ & รายการของฉัน</span>
+                          </button>
+                        )}
 
                         <button
                           onClick={() => onNavigate('marketplace')}
@@ -200,7 +209,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               /* Gradient Pill CTA for Log in */
               <button
                 onClick={() => onNavigate('login')}
-                className="btn-primary-pill px-5 py-2.5 text-button-md"
+                className="inline-flex items-center justify-center rounded-full border border-white/80 bg-white/90 px-5 py-2.5 text-button-md font-semibold text-[#191919] shadow-sm backdrop-blur-md transition hover:bg-white"
               >
                 <span>เข้าสู่ระบบ</span>
               </button>

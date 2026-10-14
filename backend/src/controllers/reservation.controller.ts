@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { isProfileContactComplete } from '../utils/userValidation';
+import { isAdminRole } from '../utils/roles';
 
 export class ReservationController {
   /**
@@ -11,6 +12,14 @@ export class ReservationController {
   public static async createReservation(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const user = req.user!;
+
+      if (isAdminRole(user.role)) {
+        res.status(403).json({
+          success: false,
+          message: 'บัญชีผู้ดูแลระบบไม่สามารถซื้อหรือจองสินค้าได้',
+        });
+        return;
+      }
 
       // Enforce mandatory profile contact info before reserving products
       if (!isProfileContactComplete(user)) {

@@ -11,10 +11,15 @@ export interface User {
   meetingNote?: string | null;
   contactInfo: string | null;
   hasCompletedContact?: boolean;
-  role?: 'STUDENT' | 'ADMIN';
+  role?: UserRole;
   isBanned: boolean;
   createdAt: string;
 }
+
+export type UserRole = 'STUDENT' | 'ADMIN' | 'ADMIN1' | 'ADMIN2' | 'ADMIN3';
+
+export const isAdminRole = (role?: string | null): boolean =>
+  role === 'ADMIN' || role === 'ADMIN1' || role === 'ADMIN2' || role === 'ADMIN3';
 
 export function isValidThaiMobileNumber(phone?: string | null): boolean {
   const normalizedPhone = phone?.trim().replace(/[-\s]/g, '');
@@ -95,9 +100,10 @@ export interface AdminUserSummary {
   id: string;
   studentId: string;
   name: string;
+  avatarUrl?: string | null;
   email: string;
   contactInfo: string | null;
-  role: 'STUDENT' | 'ADMIN';
+  role: UserRole;
   isBanned: boolean;
   createdAt: string;
   sellerStats: {

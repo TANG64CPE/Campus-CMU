@@ -15,6 +15,7 @@ import {
   MapPin,
   Handshake,
   ArrowDown,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface MarketplacePageProps {
@@ -22,6 +23,9 @@ interface MarketplacePageProps {
   searchQuery: string;
   onSearchChange: (q: string) => void;
   onNavigateToLogin: () => void;
+  onNavigateToProfile: () => void;
+  contactIncomplete: boolean;
+  canSell: boolean;
   onProductsLoaded?: () => void;
 }
 export const MarketplacePage: React.FC<MarketplacePageProps> = ({
@@ -29,6 +33,9 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({
   searchQuery,
   onSearchChange,
   onNavigateToLogin,
+  onNavigateToProfile,
+  contactIncomplete,
+  canSell,
   onProductsLoaded,
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -87,7 +94,27 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({
           className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-b from-transparent via-[#fffded]/70 to-[#fffded]"
         />
 
-        <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-5 pb-12 text-center text-white sm:px-8 sm:pb-16">
+        {contactIncomplete && (
+          <div className="absolute inset-x-0 top-[82px] z-20 px-4 sm:px-8 lg:px-10">
+            <div className="mx-auto flex max-w-clickup flex-col items-start justify-between gap-3 rounded-xl border border-hairline bg-white/90 px-4 py-3 text-body-sm text-ink shadow-sm backdrop-blur-md sm:flex-row sm:items-center">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-ink-secondary" />
+                <span>
+                  <strong>ข้อมูลติดต่อยังไม่สมบูรณ์</strong> กรุณาระบุเบอร์โทรศัพท์และ Social Media เพื่อเปิดใช้งานการจองและลงขายสินค้า
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={onNavigateToProfile}
+                className="shrink-0 rounded-full bg-[#191919] px-4 py-2 text-xs font-semibold text-white transition hover:bg-black"
+              >
+                ไปกรอกข้อมูลติดต่อ →
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className={`relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-5 pb-12 text-center text-white sm:px-8 sm:pb-16 ${contactIncomplete ? 'translate-y-[-8px] sm:translate-y-[-18px]' : '-translate-y-8 sm:-translate-y-12'}`}>
           <h1 className="font-display text-5xl font-extrabold leading-none tracking-tight text-white drop-shadow-lg sm:text-7xl lg:text-8xl">
             Campus Mart
           </h1>
@@ -102,13 +129,15 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({
             >
               เริ่มช้อปปิ้ง <ArrowDown className="h-4 w-4" />
             </button>
-            <button
-              type="button"
-              onClick={onNavigateToLogin}
-              className="inline-flex min-w-48 items-center justify-center rounded-full border border-white/80 bg-black/20 px-7 py-3.5 text-base font-semibold text-white shadow-lg backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-black/40 focus-visible:outline-white"
-            >
-              ลงขายสินค้า
-            </button>
+            {canSell && (
+              <button
+                type="button"
+                onClick={onNavigateToLogin}
+                className="inline-flex min-w-48 items-center justify-center rounded-full border border-white/80 bg-black/20 px-7 py-3.5 text-base font-semibold text-white shadow-lg backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-black/40 focus-visible:outline-white"
+              >
+                ลงขายสินค้า
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -128,15 +157,15 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({
         </div>
 
       <section aria-label="วิธีซื้อขาย" className="grid sm:grid-cols-3 border-y border-hairline py-5 mb-12">
-        <div className="flex items-center gap-3 py-2 sm:py-0 sm:px-5 sm:first:pl-0">
+        <div className="flex items-center justify-center gap-3 py-2 sm:py-0 sm:px-5 sm:first:pl-0">
           <ShieldCheck className="w-5 h-5 text-ink" />
           <span className="text-body-sm font-medium">ชุมชนนักศึกษา มช.</span>
         </div>
-        <div className="flex items-center gap-3 py-2 sm:py-0 sm:px-5 sm:border-l sm:border-hairline">
+        <div className="flex items-center justify-center gap-3 py-2 sm:py-0 sm:px-5 sm:border-l sm:border-hairline">
           <MapPin className="w-5 h-5 text-ink" />
           <span className="text-body-sm font-medium">นัดรับในมหาวิทยาลัย</span>
         </div>
-        <div className="flex items-center gap-3 py-2 sm:py-0 sm:px-5 sm:border-l sm:border-hairline">
+        <div className="flex items-center justify-center gap-3 py-2 sm:py-0 sm:px-5 sm:border-l sm:border-hairline">
           <Handshake className="w-5 h-5 text-ink" />
           <span className="text-body-sm font-medium">ตกลงซื้อขายกันโดยตรง</span>
         </div>

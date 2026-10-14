@@ -4,6 +4,7 @@ import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import fs from 'fs';
 import path from 'path';
 import { isProfileContactComplete } from '../utils/userValidation';
+import { isAdminRole } from '../utils/roles';
 
 export class ProductController {
   /**
@@ -13,6 +14,21 @@ export class ProductController {
   public static async createProduct(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const user = req.user!;
+
+      if (isAdminRole(user.role)) {
+        if (req.file) {
+          try {
+            fs.unlinkSync(req.file.path);
+          } catch {
+            // Ignore cleanup errors; the account is still denied listing access.
+          }
+        }
+        res.status(403).json({
+          success: false,
+          message: 'บัญชีผู้ดูแลระบบไม่สามารถลงขายสินค้าได้',
+        });
+        return;
+      }
 
       // Enforce mandatory profile contact info before listing products
       if (!isProfileContactComplete(user)) {
@@ -219,7 +235,7 @@ export class ProductController {
         activeReservation.buyerId === currentUserId;
 
       // Reveal contact info only if authorized
-      const canViewSellerContact = isSeller || isReservedBuyer;
+      const canViewSellerContact = !isAdminRole(req.user?.role) && (isSeller || isReservedBuyer);
 
       const sanitizedSeller = {
         id: product.seller.id,

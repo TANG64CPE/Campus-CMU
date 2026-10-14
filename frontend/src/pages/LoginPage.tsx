@@ -57,8 +57,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden px-4 py-12">
+      <img
+        src="/campus-market-banner.jpg"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full scale-110 object-cover object-center blur-md"
+      />
+      <div aria-hidden="true" className="absolute inset-0 bg-[#fffded]/45 backdrop-blur-sm" />
+      <div className="relative z-10 w-full max-w-md">
         <div className="card-feature-panel shadow-tinted-sm overflow-hidden p-7 sm:p-10 text-center relative">
           <div className="relative z-10">
             <p className="text-body-sm text-ink-secondary mt-1.5 font-medium">

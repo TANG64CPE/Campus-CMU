@@ -1,6 +1,35 @@
+import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
+import { ADMIN_ROLES, ADMIN_ROLE_SLOTS, isAdminRole, isNumberedAdminRole } from '../utils/roles';
+
+const getAdminRoleLabels = async (): Promise<Map<string, string>> => {
+  const admins = await prisma.user.findMany({
+    where: { role: { in: [...ADMIN_ROLES] } },
+    select: { id: true, role: true },
+    orderBy: { createdAt: 'asc' },
+  });
+  const labels = new Map<string, string>();
+  const usedSlots = new Set<string>();
+
+  for (const admin of admins) {
+    if (isNumberedAdminRole(admin.role)) {
+      labels.set(admin.id, admin.role);
+      usedSlots.add(admin.role);
+    }
+  }
+  for (const admin of admins) {
+    if (admin.role !== 'ADMIN') continue;
+    const availableSlot = ADMIN_ROLE_SLOTS.find((slot) => !usedSlots.has(slot));
+    if (availableSlot) {
+      labels.set(admin.id, availableSlot);
+      usedSlots.add(availableSlot);
+    }
+  }
+
+  return labels;
+};
 
 export class AdminController {
   /**
@@ -73,7 +102,9 @@ export class AdminController {
         ];
       }
 
-      if (role && (role === 'STUDENT' || role === 'ADMIN')) {
+      if (role === 'ADMIN') {
+        whereClause.role = { in: [...ADMIN_ROLES] };
+      } else if (role === 'STUDENT' || (typeof role === 'string' && isNumberedAdminRole(role))) {
         whereClause.role = role;
       }
 
@@ -114,6 +145,7 @@ export class AdminController {
         },
         orderBy: { createdAt: 'desc' },
       });
+      const adminRoleLabels = await getAdminRoleLabels();
 
       // Enhance users with clean calculated metrics
       const formattedUsers = users.map((u) => {
@@ -125,9 +157,10 @@ export class AdminController {
           id: u.id,
           studentId: u.studentId,
           name: u.name,
+          avatarUrl: u.avatarUrl,
           email: u.email,
           contactInfo: u.contactInfo,
-          role: u.role,
+          role: isAdminRole(u.role) ? adminRoleLabels.get(u.id) || u.role : u.role,
           isBanned: u.isBanned,
           createdAt: u.createdAt,
           sellerStats: {
@@ -214,6 +247,8 @@ export class AdminController {
         return;
       }
 
+      const adminRoleLabels = await getAdminRoleLabels();
+
       // Calculate Seller Side details
       const totalListed = user.products.length;
       const activeListed = user.products.filter((p) => p.isAvailable).length;
@@ -235,9 +270,10 @@ export class AdminController {
           id: user.id,
           studentId: user.studentId,
           name: user.name,
+          avatarUrl: user.avatarUrl,
           email: user.email,
           contactInfo: user.contactInfo,
-          role: user.role,
+          role: isAdminRole(user.role) ? adminRoleLabels.get(user.id) || user.role : user.role,
           isBanned: user.isBanned,
           createdAt: user.createdAt,
         },
@@ -333,31 +369,66 @@ export class AdminController {
     const { id } = req.params;
     const { role } = req.body;
 
-    if (!role || (role !== 'STUDENT' && role !== 'ADMIN')) {
+    if (!role || (role !== 'STUDENT' && !isAdminRole(role))) {
       res.status(400).json({ success: false, message: 'Role must be STUDENT or ADMIN.' });
       return;
     }
 
     try {
-      const targetUser = await prisma.user.findUnique({ where: { id } });
+      const result = await prisma.$transaction(async (tx) => {
+        const targetUser = await tx.user.findUnique({ where: { id } });
+        if (!targetUser) return { error: 'not-found' as const };
 
-      if (!targetUser) {
+        let nextRole = 'STUDENT';
+        if (isAdminRole(role)) {
+          const otherAdmins = await tx.user.findMany({
+            where: { id: { not: id }, role: { in: [...ADMIN_ROLES] } },
+            select: { role: true },
+          });
+          const currentIsAdmin = isAdminRole(targetUser.role);
+          if (!currentIsAdmin && otherAdmins.length >= ADMIN_ROLE_SLOTS.length) {
+            return { error: 'limit' as const };
+          }
+
+          const usedSlots = new Set(otherAdmins.map((admin) => admin.role).filter(isNumberedAdminRole));
+          if (currentIsAdmin && targetUser.role !== 'ADMIN') {
+            nextRole = targetUser.role;
+          } else {
+            const preferredSlot = isNumberedAdminRole(role) && !usedSlots.has(role) ? role : undefined;
+            const firstAvailableSlot = preferredSlot || ADMIN_ROLE_SLOTS.find((slot) => !usedSlots.has(slot));
+            if (!firstAvailableSlot) return { error: 'limit' as const };
+            nextRole = firstAvailableSlot;
+          }
+        }
+
+        const updated = await tx.user.update({
+          where: { id },
+          data: { role: nextRole },
+        });
+        return { updated };
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+      if ('error' in result && result.error === 'not-found') {
         res.status(404).json({ success: false, message: 'User not found' });
         return;
       }
-
-      const updated = await prisma.user.update({
-        where: { id },
-        data: { role },
-      });
+      if ('error' in result && result.error === 'limit') {
+        res.status(409).json({ success: false, message: 'กำหนดผู้ดูแลระบบได้สูงสุด 3 บัญชี' });
+        return;
+      }
+      const updated = result.updated;
 
       res.json({
         success: true,
-        message: `User role updated to ${role}.`,
+        message: `เปลี่ยนสิทธิ์เป็น ${updated.role} เรียบร้อยแล้ว`,
         user: updated,
       });
     } catch (error: any) {
       console.error('[Admin updateUserRole Error]:', error);
+      if (error.code === 'P2034') {
+        res.status(409).json({ success: false, message: 'มีการเปลี่ยนสิทธิ์พร้อมกัน กรุณาลองใหม่อีกครั้ง' });
+        return;
+      }
       res.status(500).json({ success: false, message: 'Failed to update user role', error: error.message });
     }
   }

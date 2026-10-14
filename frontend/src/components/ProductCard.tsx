@@ -1,6 +1,6 @@
 import React from 'react';
 import { Product } from '../types';
-import { MapPin, Clock, Check } from 'lucide-react';
+import { Clock, Check } from 'lucide-react';
 import { ProductImage } from './ProductImage';
 
 interface ProductCardProps {
@@ -33,17 +33,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) =>
           <span className="text-sm font-medium text-ink-secondary">฿</span>
           <span className="font-display text-xl font-bold text-black">{formattedPrice}</span>
         </div>
-        <h3 className="line-clamp-2 min-h-[44px] text-body-sm font-medium leading-relaxed text-black group-hover:underline decoration-1 underline-offset-4">
+        <h3 className="line-clamp-2 min-h-[44px] text-body-sm font-medium leading-relaxed text-black">
           {product.title}
         </h3>
-        <div className="mt-4 flex items-center gap-2 border-t border-hairline pt-3 text-caption text-ink-secondary">
-          <MapPin className="h-4 w-4 shrink-0 text-black" />
-          <span className="truncate">{product.meetupLocation}</span>
-        </div>
-        <div className="mt-2 flex items-center justify-between gap-3 text-caption text-ink-tertiary">
-          <span className="truncate">ลงขายโดย {product.seller?.name || 'นักศึกษา มช.'}</span>
-          <span className="shrink-0">{product.seller?.studentId ? `#${product.seller.studentId.slice(-3)}` : 'CMU'}</span>
-        </div>
       </div>
     </button>
   );

@@ -5,8 +5,24 @@ import { prisma } from '../lib/prisma';
 import { CmuOAuthService } from '../services/cmu-oauth.service';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { isProfileContactComplete } from '../utils/userValidation';
+import { ADMIN_ROLES, ADMIN_ROLE_SLOTS, isAdminRole, isNumberedAdminRole } from '../utils/roles';
 
 export class AuthController {
+  private static async getAvailableAdminRole(preferredRole?: string, excludeUserId?: string): Promise<string | null> {
+    const admins = await prisma.user.findMany({
+      where: {
+        role: { in: [...ADMIN_ROLES] },
+        ...(excludeUserId ? { id: { not: excludeUserId } } : {}),
+      },
+      select: { role: true },
+    });
+    if (admins.length >= ADMIN_ROLE_SLOTS.length) return null;
+
+    const usedSlots = new Set(admins.map((admin) => admin.role).filter(isNumberedAdminRole));
+    if (isNumberedAdminRole(preferredRole) && !usedSlots.has(preferredRole)) return preferredRole;
+    return ADMIN_ROLE_SLOTS.find((slot) => !usedSlots.has(slot)) || null;
+  }
+
   /**
    * Helper to detect redirect URI dynamically based on request origin
    */
@@ -81,24 +97,36 @@ export class AuthController {
       });
 
       const ADMIN_EMAILS = ['admin_cpe@cmu.ac.th', 'wichai.t@cmu.ac.th', 'supaporn.k@cmu.ac.th'];
-      const isDefaultAdmin = ADMIN_EMAILS.includes(profile.email.toLowerCase()) || profile.studentId === 'ADMIN001';
+      const adminEmailIndex = ADMIN_EMAILS.indexOf(profile.email.toLowerCase());
+      const preferredAdminRole = adminEmailIndex >= 0
+        ? ADMIN_ROLE_SLOTS[adminEmailIndex]
+        : profile.studentId === 'ADMIN001' ? ADMIN_ROLE_SLOTS[0] : undefined;
+      const isDefaultAdmin = preferredAdminRole !== undefined;
 
       if (user) {
+        let role = user.role;
+        if (isDefaultAdmin && (!isAdminRole(role) || role === 'ADMIN')) {
+          role = await AuthController.getAvailableAdminRole(preferredAdminRole, user.id)
+            || (role === 'ADMIN' ? 'STUDENT' : role);
+        }
         user = await prisma.user.update({
           where: { id: user.id },
           data: {
             name: profile.name || user.name,
             email: profile.email || user.email,
-            ...(isDefaultAdmin && user.role !== 'ADMIN' ? { role: 'ADMIN' } : {}),
+            ...(role !== user.role ? { role } : {}),
           },
         });
       } else {
+        const role = isDefaultAdmin
+          ? await AuthController.getAvailableAdminRole(preferredAdminRole) || 'STUDENT'
+          : 'STUDENT';
         user = await prisma.user.create({
           data: {
             studentId: profile.studentId,
             email: profile.email,
             name: profile.name,
-            role: isDefaultAdmin ? 'ADMIN' : 'STUDENT',
+            role,
           },
         });
       }
@@ -148,7 +176,8 @@ export class AuthController {
     const targetStudentId = studentId || '650610001';
     const targetEmail = email || `student_${targetStudentId}@cmu.ac.th`;
     const targetName = name || `นักศึกษา มช. (${targetStudentId})`;
-    const targetRole = role || (targetStudentId === 'ADMIN001' || targetEmail.includes('admin') ? 'ADMIN' : undefined);
+    const inferredRole = targetStudentId === 'ADMIN001' || targetEmail.toLowerCase().includes('admin') ? 'ADMIN' : undefined;
+    const requestedRole = role === 'STUDENT' || isAdminRole(role) ? role : inferredRole;
 
     try {
       let user = await prisma.user.findFirst({
@@ -157,6 +186,21 @@ export class AuthController {
         },
       });
 
+      let assignedRole = requestedRole || user?.role || 'STUDENT';
+      if (requestedRole && isAdminRole(requestedRole)) {
+        if (user && isAdminRole(user.role)) {
+          assignedRole = user.role;
+        } else {
+          const preferredRole = isNumberedAdminRole(requestedRole) ? requestedRole : undefined;
+          const availableRole = await AuthController.getAvailableAdminRole(preferredRole, user?.id);
+          if (!availableRole) {
+            res.status(409).json({ success: false, message: 'กำหนดผู้ดูแลระบบได้สูงสุด 3 บัญชี' });
+            return;
+          }
+          assignedRole = availableRole;
+        }
+      }
+
       if (user) {
         user = await prisma.user.update({
           where: { id: user.id },
@@ -164,7 +208,7 @@ export class AuthController {
             name: targetName,
             email: targetEmail,
             ...(contactInfo ? { contactInfo } : {}),
-            ...(targetRole ? { role: targetRole } : {}),
+            role: assignedRole,
           },
         });
       } else {
@@ -174,7 +218,7 @@ export class AuthController {
             email: targetEmail,
             name: targetName,
             contactInfo: contactInfo || 'Line: @cmu_test | Tel: 081-234-5678',
-            role: targetRole || 'STUDENT',
+            role: assignedRole,
           },
         });
       }

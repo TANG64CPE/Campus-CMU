@@ -108,6 +108,7 @@ export const userApi = {
     return res.data.user;
   },
   updateProfile: async (data: {
+    studentId: string;
     phone: string;
     lineId?: string;
     facebook?: string;

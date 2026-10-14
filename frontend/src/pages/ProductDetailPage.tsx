@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Product, Reservation, SellerContact, isContactComplete } from '../types';
+import { Product, Reservation, SellerContact, isAdminRole, isContactComplete } from '../types';
 import { productApi, reservationApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -124,6 +124,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const handleReserve = async () => {
     if (!user) {
       onNavigateToLogin();
+      return;
+    }
+
+    if (isAdminRole(user.role)) {
+      setErrorMsg('บัญชีผู้ดูแลระบบไม่สามารถซื้อหรือจองสินค้าได้');
       return;
     }
 
@@ -371,7 +376,13 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             {/* ============================================================== */}
             <div className="pt-5 border-t border-hairline">
               {/* CASE A: CURRENT USER IS THE SELLER */}
-              {isCurrentUserTheSeller ? (
+              {isAdminRole(user?.role) ? (
+                <div className="rounded-xl border border-hairline bg-surface-soft p-4 text-center text-body-sm text-ink-secondary">
+                  <ShieldAlert className="mx-auto mb-2 h-5 w-5 text-ink" />
+                  <p className="font-bold text-ink">บัญชีผู้ดูแลระบบไม่สามารถซื้อหรือขายสินค้าได้</p>
+                  <p className="mt-1 text-caption">คุณยังสามารถดูรายละเอียดสินค้าได้</p>
+                </div>
+              ) : isCurrentUserTheSeller ? (
                 <div className="space-y-3">
                   <div className="p-3 bg-surface rounded-md border border-hairline text-body-sm text-ink">
                     <p className="font-semibold flex items-center gap-1.5 text-primary">

@@ -34,6 +34,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
   const { user, refreshUser } = useAuth();
 
   // Contact Info Form State
+  const [studentId, setStudentId] = useState(user?.studentId || '');
   const [phone, setPhone] = useState((user?.phone || '').replace(/\D/g, '').slice(0, 10));
   const [lineId, setLineId] = useState(user?.lineId || '');
   const [facebook, setFacebook] = useState(user?.facebook || '');
@@ -71,6 +72,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
 
   useEffect(() => {
     if (user) {
+      setStudentId(user.studentId || '');
       setPhone((user.phone || '').replace(/\D/g, '').slice(0, 10));
       setLineId(user.lineId || '');
       setFacebook(user.facebook || '');
@@ -89,6 +91,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
     e.preventDefault();
     setContactError(null);
     setContactSuccess(false);
+
+    if (!studentId.trim()) {
+      setContactError('กรุณากรอกรหัสนักศึกษา (*จำเป็นต้องมี)');
+      return;
+    }
 
     // Validation 1: Phone is mandatory
     if (!phone.trim()) {
@@ -110,6 +117,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
     setSavingContact(true);
     try {
       await userApi.updateProfile({
+        studentId: studentId.trim(),
         phone: phone.trim(),
         lineId: lineId.trim() || undefined,
         facebook: facebook.trim() || undefined,
@@ -297,6 +305,24 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
 
         {/* Form: Mandatory Contact Info (Phone, Social Media, Meetup Notes) */}
         <form onSubmit={handleSaveContact} className="mt-6">
+          <div className="mb-4 rounded-xl border border-hairline bg-surface p-4">
+            <label htmlFor="profile-student-id" className="mb-2 flex items-center gap-2 text-body-sm font-bold text-ink">
+              <span>รหัสนักศึกษา</span>
+              <span className="font-bold text-accent-red">* จำเป็นต้องมี</span>
+            </label>
+            <input
+              id="profile-student-id"
+              type="text"
+              autoComplete="username"
+              maxLength={32}
+              required
+              value={studentId}
+              onChange={(event) => setStudentId(event.target.value)}
+              placeholder="กรอกรหัสนักศึกษา"
+              className="w-full input-field"
+            />
+          </div>
+
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-display font-bold text-body-lg text-ink">

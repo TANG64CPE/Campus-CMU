@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { ENV } from '../config/env';
 import { prisma } from '../lib/prisma';
 import { User } from '@prisma/client';
+import { isAdminRole } from '../utils/roles';
 
 export interface AuthenticatedRequest extends Request {
   user?: User;
@@ -100,12 +101,7 @@ export const requireAdmin = async (
     return;
   }
 
-  const isAdmin =
-    req.user.role === 'ADMIN' ||
-    req.user.studentId === 'ADMIN001' ||
-    req.user.email === 'admin_cpe@cmu.ac.th' ||
-    req.user.email === 'wichai.t@cmu.ac.th' ||
-    req.user.email === 'supaporn.k@cmu.ac.th';
+  const isAdmin = isAdminRole(req.user.role);
 
   if (!isAdmin) {
     res.status(403).json({

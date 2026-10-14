@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../services/api';
-import { AdminStats, AdminUserSummary, AdminUserDetail } from '../types';
+import { AdminStats, AdminUserSummary, AdminUserDetail, isAdminRole } from '../types';
 import {
   Users,
   Shield,
   ShoppingBag,
   Clock,
-  Search,
   CheckCircle,
   AlertTriangle,
   Ban,
@@ -19,7 +18,6 @@ import {
   MessageSquare,
   Tag,
   RefreshCw,
-  Eye,
   Calendar,
   Sparkles,
   Phone,
@@ -39,6 +37,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
 
   // Detail Modal State
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [banConfirmationUser, setBanConfirmationUser] = useState<AdminUserSummary | null>(null);
   const [userDetail, setUserDetail] = useState<AdminUserDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailTab, setDetailTab] = useState<'seller' | 'buyer'>('seller');
@@ -102,9 +101,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
 
   const handleToggleBan = async (userSummary: AdminUserSummary) => {
     const actionWord = userSummary.isBanned ? 'ปลดแบน' : 'ระงับการใช้งาน (แบน)';
-    if (!confirm(`คุณต้องการ ${actionWord} บัญชี ${userSummary.name} (${userSummary.studentId}) ใช่หรือไม่?`)) {
-      return;
-    }
 
     setActionLoadingId(userSummary.id);
     try {
@@ -133,20 +129,20 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
   };
 
   const handleToggleRole = async (userSummary: AdminUserSummary) => {
-    const newRole = userSummary.role === 'ADMIN' ? 'STUDENT' : 'ADMIN';
+    const newRole = isAdminRole(userSummary.role) ? 'STUDENT' : 'ADMIN';
     if (!confirm(`ต้องการเปลี่ยนสิทธิ์ของ ${userSummary.name} เป็น ${newRole} หรือไม่?`)) {
       return;
     }
 
     setActionLoadingId(userSummary.id);
     try {
-      await adminApi.updateRole(userSummary.id, newRole);
-      setMessage({ text: `เปลี่ยนสิทธิ์เป็น ${newRole} เรียบร้อยแล้ว`, type: 'success' });
+      const response = await adminApi.updateRole(userSummary.id, newRole);
+      setMessage({ text: response.message || `เปลี่ยนสิทธิ์เป็น ${response.user.role} เรียบร้อยแล้ว`, type: 'success' });
       await loadData();
       if (userDetail && userDetail.user.id === userSummary.id) {
         setUserDetail({
           ...userDetail,
-          user: { ...userDetail.user, role: newRole },
+          user: { ...userDetail.user, role: response.user.role },
         });
       }
     } catch (err: any) {
@@ -280,13 +276,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 mb-5">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-ink-tertiary absolute left-3.5 top-3" />
           <input
             type="text"
             placeholder="ค้นหาตามชื่อ, รหัสนักศึกษา, อีเมล..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full input-field pl-10 pr-9 text-body-sm"
+            className="w-full input-field pl-4 pr-9 text-body-sm"
           />
           {searchQuery && (
             <button
@@ -375,7 +370,11 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-surface-soft border border-hairline font-mono font-bold text-xs flex items-center justify-center text-ink shrink-0">
-                            {u.studentId.slice(-3)}
+                            {u.avatarUrl ? (
+                              <img src={u.avatarUrl} alt={`รูปโปรไฟล์ ${u.name}`} className="h-full w-full rounded-full object-cover" />
+                            ) : (
+                              u.name.trim().charAt(0).toLocaleUpperCase() || '?'
+                            )}
                           </div>
                           <div>
                             <div className="font-semibold text-ink text-xs group-hover:text-primary transition-colors flex items-center gap-1.5">
@@ -394,7 +393,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                       <td className="py-3.5 px-4">
                         <span
                           className={`eyebrow-mono px-2 py-0.5 rounded-xxs text-[10px] font-bold border ${
-                            u.role === 'ADMIN'
+                            isAdminRole(u.role)
                               ? 'bg-purple-50 text-primary border-purple-200'
                               : 'bg-surface text-ink-secondary border-hairline'
                           }`}
@@ -457,20 +456,19 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => openUserDetail(u.id)}
-                            className="btn-secondary-sm px-2.5 py-1 text-[11px] flex items-center gap-1"
+                            className="btn-secondary-sm rounded-full px-2.5 py-1 text-[11px] flex items-center gap-1"
                             title="ดูรายละเอียดการขายและการจอง"
                           >
-                            <Eye className="w-3 h-3 text-primary" />
                             <span>ดูประวัติ</span>
                           </button>
 
                           <button
-                            onClick={() => handleToggleBan(u)}
+                            onClick={() => setBanConfirmationUser(u)}
                             disabled={actionLoadingId === u.id}
                             className={`px-2.5 py-1 rounded-sm text-[11px] font-semibold border transition-all ${
                               u.isBanned
                                 ? 'bg-emerald-50 text-accent-green border-emerald-200 hover:bg-emerald-100'
-                                : 'bg-surface text-ink-secondary hover:text-accent-red hover:bg-red-50 border-hairline'
+                                : 'rounded-full bg-red-50 text-accent-red border-red-200 hover:bg-red-100'
                             }`}
                           >
                             {u.isBanned ? 'ปลดแบน' : 'ระงับบัญชี'}
@@ -511,7 +509,11 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
               ) : (
                 <div className="flex items-start gap-4">
                   <div className="w-14 h-14 rounded-full bg-canvas border border-hairline font-mono font-bold text-base flex items-center justify-center text-ink shadow-tinted-xs shrink-0">
-                    {userDetail.user.studentId.slice(-3)}
+                    {userDetail.user.avatarUrl ? (
+                      <img src={userDetail.user.avatarUrl} alt={`รูปโปรไฟล์ ${userDetail.user.name}`} className="h-full w-full rounded-full object-cover" />
+                    ) : (
+                      userDetail.user.name.trim().charAt(0).toLocaleUpperCase() || '?'
+                    )}
                   </div>
                   <div>
                     <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -855,11 +857,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                     onClick={() => handleToggleRole(userDetail.user as AdminUserSummary)}
                     className="btn-secondary-sm px-3 py-1.5 text-xs font-semibold"
                   >
-                    สลับบทบาทเป็น {userDetail.user.role === 'ADMIN' ? 'STUDENT' : 'ADMIN'}
+                    สลับบทบาทเป็น {isAdminRole(userDetail.user.role) ? 'STUDENT' : 'ADMIN'}
                   </button>
 
                   <button
-                    onClick={() => handleToggleBan(userDetail.user as AdminUserSummary)}
+                    onClick={() => setBanConfirmationUser(userDetail.user as AdminUserSummary)}
+                    disabled={actionLoadingId === userDetail.user.id}
                     className={`px-3 py-1.5 rounded-sm text-xs font-semibold border transition-all ${
                       userDetail.user.isBanned
                         ? 'bg-emerald-50 text-accent-green border-emerald-200 hover:bg-emerald-100'
@@ -875,6 +878,65 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {banConfirmationUser && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm"
+          onClick={(event) => {
+            if (event.target === event.currentTarget && !actionLoadingId) setBanConfirmationUser(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ban-confirmation-title"
+            className="w-full max-w-md rounded-2xl border border-hairline bg-white p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start gap-4">
+              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${banConfirmationUser.isBanned ? 'bg-emerald-50 text-accent-green' : 'bg-red-50 text-accent-red'}`}>
+                <Ban className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 id="ban-confirmation-title" className="text-lg font-bold text-ink">
+                  {banConfirmationUser.isBanned ? 'ยืนยันปลดระงับบัญชี?' : 'ยืนยันระงับบัญชี?'}
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-ink-secondary">
+                  {banConfirmationUser.isBanned
+                    ? `ต้องการให้ ${banConfirmationUser.name} กลับมาใช้งานบัญชีได้อีกครั้งหรือไม่`
+                    : `บัญชี ${banConfirmationUser.name} จะไม่สามารถใช้งานระบบได้`}
+                </p>
+                <p className="mt-1 text-xs text-ink-tertiary">รหัสนักศึกษา: {banConfirmationUser.studentId}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBanConfirmationUser(null)}
+                aria-label="ปิดหน้าต่างยืนยัน"
+                className="rounded-full p-1 text-ink-tertiary hover:bg-surface-soft hover:text-ink"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-7 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button type="button" onClick={() => setBanConfirmationUser(null)} className="btn-secondary-sm px-5">
+                ย้อนกลับ
+              </button>
+              <button
+                type="button"
+                disabled={actionLoadingId === banConfirmationUser.id}
+                onClick={() => {
+                  const target = banConfirmationUser;
+                  setBanConfirmationUser(null);
+                  void handleToggleBan(target);
+                }}
+                className={`rounded-full px-5 py-2 text-sm font-semibold text-white transition disabled:opacity-60 ${banConfirmationUser.isBanned ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}`}
+              >
+                {banConfirmationUser.isBanned ? 'ปลดระงับบัญชี' : 'ระงับบัญชี'}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -88,7 +88,29 @@ export class UserController {
   public static async updateProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const user = req.user!;
-      const { phone, lineId, facebook, instagram, meetingNote } = req.body;
+      const { studentId, phone, lineId, facebook, instagram, meetingNote } = req.body;
+
+      const trimmedStudentId = studentId ? String(studentId).trim() : '';
+      if (!trimmedStudentId) {
+        res.status(400).json({
+          success: false,
+          message: 'กรุณากรอกรหัสนักศึกษา (*จำเป็นต้องมี)',
+        });
+        return;
+      }
+      if (trimmedStudentId.length > 32) {
+        res.status(400).json({ success: false, message: 'รหัสนักศึกษาต้องมีความยาวไม่เกิน 32 ตัวอักษร' });
+        return;
+      }
+
+      const existingStudentId = await prisma.user.findFirst({
+        where: { studentId: trimmedStudentId, id: { not: user.id } },
+        select: { id: true },
+      });
+      if (existingStudentId) {
+        res.status(409).json({ success: false, message: 'รหัสนักศึกษานี้ถูกใช้งานแล้ว' });
+        return;
+      }
 
       // 1. Validate Phone (Mandatory)
       const trimmedPhone = phone ? String(phone).trim() : '';
@@ -135,6 +157,7 @@ export class UserController {
       const updated = await prisma.user.update({
         where: { id: user.id },
         data: {
+          studentId: trimmedStudentId,
           phone: trimmedPhone,
           lineId: trimmedLine || null,
           facebook: trimmedFb || null,
@@ -153,6 +176,10 @@ export class UserController {
         },
       });
     } catch (error: any) {
+      if (error.code === 'P2002') {
+        res.status(409).json({ success: false, message: 'รหัสนักศึกษานี้ถูกใช้งานแล้ว' });
+        return;
+      }
       res.status(500).json({ success: false, message: error.message });
     }
   }
