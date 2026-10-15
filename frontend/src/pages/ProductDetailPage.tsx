@@ -418,8 +418,16 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               {/* Seller summary */}
               <div className="p-3.5 sm:p-4 bg-surface rounded-md border border-hairline mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-surface-soft text-ink font-mono font-bold text-xs flex items-center justify-center border border-hairline">
-                    {product.seller.studentId?.slice(-3) || 'CMU'}
+                  <div className="w-9 h-9 rounded-full bg-surface-soft text-ink font-bold text-xs flex items-center justify-center border border-hairline overflow-hidden shrink-0">
+                    {product.seller.avatarUrl ? (
+                      <img
+                        src={product.seller.avatarUrl}
+                        alt={`รูปโปรไฟล์ ${product.seller.name}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      product.seller.name.trim().charAt(0).toLocaleUpperCase() || '?'
+                    )}
                   </div>
                   <div>
                     <p className="eyebrow-mono text-[10px] text-ink-tertiary">ผู้ลงขายสินค้า</p>

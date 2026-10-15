@@ -52,6 +52,7 @@ export interface Product {
     id: string;
     name: string;
     studentId: string;
+    avatarUrl?: string | null;
     email?: string;
     phone?: string | null;
     lineId?: string | null;
