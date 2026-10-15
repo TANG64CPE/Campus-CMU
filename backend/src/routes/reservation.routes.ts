@@ -1,18 +1,20 @@
 import { Router } from 'express';
 import { ReservationController } from '../controllers/reservation.controller';
 import { ChatController } from '../controllers/chat.controller';
-import { authenticateToken } from '../middlewares/auth.middleware';
+import { authenticateToken, requireActiveAccount } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-router.post('/', authenticateToken, ReservationController.createReservation);
-router.post('/:id/cancel', authenticateToken, ReservationController.cancelReservation);
-router.post('/:id/complete', authenticateToken, ReservationController.completeReservation);
-router.post('/:id/report-ghost', authenticateToken, ReservationController.reportGhost);
-router.get('/my', authenticateToken, ReservationController.getMyReservations);
-router.get('/seller', authenticateToken, ReservationController.getSellerReservations);
-router.get('/chats', authenticateToken, ChatController.getMyThreads);
-router.get('/:id/messages', authenticateToken, ChatController.getMessages);
-router.post('/:id/messages', authenticateToken, ChatController.sendMessage);
+router.use(authenticateToken, requireActiveAccount);
+
+router.post('/', ReservationController.createReservation);
+router.post('/:id/cancel', ReservationController.cancelReservation);
+router.post('/:id/complete', ReservationController.completeReservation);
+router.post('/:id/report-ghost', ReservationController.reportGhost);
+router.get('/my', ReservationController.getMyReservations);
+router.get('/seller', ReservationController.getSellerReservations);
+router.get('/chats', ChatController.getMyThreads);
+router.get('/:id/messages', ChatController.getMessages);
+router.post('/:id/messages', ChatController.sendMessage);
 
 export default router;

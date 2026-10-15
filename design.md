@@ -28,6 +28,7 @@ Use status labels, icons and copy to distinguish states. Keep status colors insi
 ## Typography
 
 - **Display and body:** Google Sans, weight 400–700 for body, controls and headlines.
+- **Hero wordmark:** Ribeye for the “Campus Mart” title on the marketplace hero.
 - **Thai fallback:** Kanit, with the same weight hierarchy.
 - **Display scale:** 52px / 36px / 32px / 24px / 20px, with line-height around 1.22–1.4.
 - **Body scale:** 18px / 16px / 14px / 12px.

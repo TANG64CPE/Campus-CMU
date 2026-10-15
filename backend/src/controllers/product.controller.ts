@@ -7,6 +7,8 @@ import { isProfileContactComplete } from '../utils/userValidation';
 import { isAdminRole } from '../utils/roles';
 import { MAX_PRODUCT_IMAGES, resolveProductImageUrls } from '../utils/productImages';
 
+const PRODUCT_CATEGORY_IDS = ['micro', 'books', 'arch', 'dorm', 'other'];
+
 export class ProductController {
   private static getUploadedImages(req: AuthenticatedRequest): Express.Multer.File[] {
     return Array.isArray(req.files) ? req.files : [];
@@ -51,14 +53,23 @@ export class ProductController {
         return;
       }
 
-      const { title, price, meetupLocation } = req.body;
+      const { title, price, category, meetupLocation } = req.body;
 
-      if (!title || !price || !meetupLocation) {
+      if (!title || !price || !category || !meetupLocation) {
         // If an image was uploaded, remove it since validation failed
         ProductController.removeUploadedImages(files);
         res.status(400).json({
           success: false,
-          message: 'Title, price, and meetup location are required.',
+          message: 'Title, price, category, and meetup location are required.',
+        });
+        return;
+      }
+
+      if (typeof category !== 'string' || !PRODUCT_CATEGORY_IDS.includes(category)) {
+        ProductController.removeUploadedImages(files);
+        res.status(400).json({
+          success: false,
+          message: 'กรุณาเลือกหมวดหมู่สินค้าที่ถูกต้อง',
         });
         return;
       }
@@ -87,6 +98,7 @@ export class ProductController {
         data: {
           title: title.trim(),
           price: parsedPrice,
+          category,
           meetupLocation: meetupLocation.trim(),
           imageUrl,
           imageUrls,

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ScrollReveal } from '../components/ScrollReveal';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, Sparkles, MapPin, Handshake, Key } from 'lucide-react';
 
@@ -65,7 +66,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         className="absolute inset-0 h-full w-full scale-110 object-cover object-center blur-md"
       />
       <div aria-hidden="true" className="absolute inset-0 bg-[#fffded]/45 backdrop-blur-sm" />
-      <div className="relative z-10 w-full max-w-md">
+      <ScrollReveal className="relative z-10 w-full max-w-md">
         <div className="card-feature-panel shadow-tinted-sm overflow-hidden p-7 sm:p-10 text-center relative">
           <div className="relative z-10">
             <p className="text-body-sm text-ink-secondary mt-1.5 font-medium">
@@ -187,7 +188,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             )}
           </div>
         </div>
-      </div>
+      </ScrollReveal>
     </div>
   );
 };

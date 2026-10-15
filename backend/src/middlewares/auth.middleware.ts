@@ -44,20 +44,31 @@ export const authenticateToken = async (
       return;
     }
 
-    if (user.isBanned) {
-      res.status(403).json({
-        success: false,
-        message: 'Account banned due to ghosting or policy violations.',
-        isBanned: true,
-      });
-      return;
-    }
-
     req.user = user;
     next();
   } catch (error) {
     res.status(401).json({ success: false, message: 'Invalid or expired session token.' });
   }
+};
+
+export const requireActiveAccount = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.user) {
+    res.status(401).json({ success: false, message: 'Authentication required. Please log in.' });
+    return;
+  }
+  if (req.user.isBanned) {
+    res.status(403).json({
+      success: false,
+      message: 'บัญชีคุณถูกระงับ โปรดติดต่อ Admin เพื่อปลดแบน',
+      isBanned: true,
+    });
+    return;
+  }
+  next();
 };
 
 /**

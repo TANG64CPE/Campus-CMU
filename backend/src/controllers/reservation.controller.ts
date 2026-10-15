@@ -319,6 +319,11 @@ export class ReservationController {
         return;
       }
 
+      if (isAdminRole(reservation.buyer.role)) {
+        res.status(400).json({ success: false, message: 'ไม่สามารถรายงานหรือแบนบัญชี Admin ได้' });
+        return;
+      }
+
       // Transaction: Cancel reservation, restore product, and ban buyer
       await prisma.$transaction([
         prisma.reservation.update({

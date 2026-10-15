@@ -1,3 +1,5 @@
+import type { ProductCategory } from '../utils/productCategories';
+
 export interface User {
   id: string;
   studentId: string;
@@ -45,6 +47,7 @@ export interface Product {
   price: number;
   imageUrl: string | null;
   imageUrls?: string[];
+  category?: ProductCategory | null;
   meetupLocation: string;
   isAvailable: boolean;
   sellerId: string;
@@ -89,6 +92,24 @@ export interface ChatThread {
   product: Pick<Product, 'id' | 'title' | 'imageUrl'>;
   otherParticipant: Pick<User, 'id' | 'name'>;
   latestMessage: ChatMessage | null;
+}
+
+export interface SupportMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  createdAt: string;
+  sender: Pick<User, 'id' | 'name' | 'avatarUrl'>;
+}
+
+export interface AdminSupportConversation {
+  id: string;
+  userId: string;
+  user: Pick<User, 'id' | 'name' | 'email' | 'studentId' | 'avatarUrl' | 'isBanned'>;
+  latestMessage: SupportMessage | null;
+  updatedAt: string;
+  isResolved: boolean;
 }
 
 export interface SellerContact {

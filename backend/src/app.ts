@@ -8,6 +8,7 @@ import productRoutes from './routes/product.routes';
 import reservationRoutes from './routes/reservation.routes';
 import userRoutes from './routes/user.routes';
 import adminRoutes from './routes/admin.routes';
+import supportRoutes from './routes/support.routes';
 import { errorHandler } from './middlewares/error.middleware';
 
 const app: Application = express();
@@ -46,6 +47,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/support', supportRoutes);
 
 // Centralized error handling
 app.use(errorHandler);

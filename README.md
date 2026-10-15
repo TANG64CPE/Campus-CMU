@@ -76,6 +76,7 @@ model Product {
   id             String        @id @default(uuid())
   title          String
   price          Float
+  category       String?       // หมวดสินค้าที่ผู้ขายเลือก (micro, books, arch, dorm, other)
   imageUrl       String?       // เก็บ Path รูปภาพในเครื่อง (/uploads/...)
   meetupLocation String        // จุดนัดรับใน มช. (เช่น หอสมุดกลาง, ตึก 30 ปี วิศวะ, ลานสัก)
   isAvailable    Boolean       @default(true)
@@ -120,7 +121,7 @@ model Reservation {
   - **Backend API:** Controllers (`ProductController.createProduct` และ `ReservationController.createReservation`) จะตรวจสอบความสมบูรณ์ของข้อมูลผู้ใช้ หากไม่ครบจะปฏิเสธด้วย HTTP `403 Forbidden` ป้องกันการ Bypass Request
 
 ### 3. การลงขายสินค้าและจัดเก็บรูปภาพ (Product Listing)
-- ผู้ขายสามารถลงรายการสินค้า ระบุราคา จุดนัดรับในมหาวิทยาลัย และอัปโหลดภาพถ่ายจริง
+- ผู้ขายสามารถเลือกหมวดหมู่สินค้า (ฮาร์ดแวร์ & IT, หนังสือเรียน & เอกสาร, เครื่องเขียน & สถาปัตย์, ของใช้หอพัก หรืออื่นๆ) ระบุราคา จุดนัดรับในมหาวิทยาลัย และอัปโหลดภาพถ่ายจริง
 - รูปภาพจัดเก็บลงฮาร์ดดิสก์เครื่องเซิร์ฟเวอร์ (`backend/uploads/`) ผ่าน `multer` โดยตรง (ไม่ต้องพึ่งพา Cloud Storage)
 - ระบบค้นหาแบบเรียลไทม์ พร้อมตัวกรองตามสถานะสินค้า
 
@@ -136,12 +137,15 @@ model Reservation {
 ### 6. ระบบผู้ดูแลระบบ (Admin Management System)
 - **Role-based Access Control:** สิทธิ์ `ADMIN` ได้รับการป้องกันผ่าน `requireAdmin` middleware
 - **Dashboard KPI Metrics:** ดูสถิติรวมของระบบ เช่น จำนวนผู้ใช้ทั้งหมด, จำนวนผู้ขาย (Sellers), จำนวนผู้ซื้อ (Buyers), สินค้าที่ลงขาย, การจอง, และดีลที่ปิดสำเร็จ
-- **User Management & Filters:** ค้นหาบัญชีผู้ใช้ตามชื่อ อีเมล หรือรหัสนักศึกษา กรองตาม Role, สถานะการใช้งาน (Active / Banned), และกิจกรรม (ผู้ขาย / ผู้ซื้อ)
+- **User Management & Filters:** ค้นหาบัญชีนักศึกษาตามชื่อ อีเมล หรือรหัสนักศึกษา กรองตามสถานะการใช้งาน (Active / Banned) และกิจกรรม (ผู้ขาย / ผู้ซื้อ)
+- **Separated Admin Accounts:** แสดงบัญชี Admin ในส่วนแยกจากรายชื่อผู้ใช้ และไม่อนุญาตให้แบนหรือปลดแบนบัญชี Admin
+- **Banned Account Support:** ผู้ใช้ที่ถูกระงับจะเข้าสู่หน้าข้อความแจ้งสถานะและส่งข้อความหา Admin ได้ โดย Admin ตอบกลับจากกล่องข้อความในหน้า Admin
+- **Support Conversation Resolution:** Admin ทำเครื่องหมายบทสนทนาว่าแก้ไขแล้วเพื่อเก็บประวัติและแยกออกจากรายการที่กำลังดำเนินการได้
 - **Deep Inspection Drawer (ตรวจสอบประวัติสองฝั่ง):**
   - **ฝั่งผู้ขาย (Seller Side):** ตรวจสอบรายการสินค้าทั้งหมดที่ผู้ใช้คนนี้เคยลงขาย พร้อมราคา สถานะ และประวัติ
   - **ฝั่งผู้ซื้อ (Buyer Side):** ตรวจสอบประวัติการกดจองสินค้าทั้งหมด สถานะดีล และข้อมูลผู้ขายที่นัดรับ
 - **Admin Moderation Actions:**
-  - สลับสถานะระงับบัญชี (Ban / Unban) ทันที
+  - สลับสถานะระงับบัญชีนักศึกษา (Ban / Unban) ทันที โดยห้ามระงับหรือปลดระงับบัญชี Admin
   - เลื่อนขั้นหรือปรับบทบาทผู้ใช้ระหว่าง `STUDENT` ↔ `ADMIN`
 
 ---
@@ -175,6 +179,12 @@ model Reservation {
 | `GET` | `/api/reservations/my` | รายการสินค้าที่ตัวเราเป็นผู้กดจอง |
 | `GET` | `/api/reservations/seller` | รายการจองสินค้าที่เข้ามายังสินค้าที่เราลงขาย |
 
+### Account Support (`/api/support`)
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/support/messages` | โหลดประวัติข้อความติดต่อ Admin ของบัญชีปัจจุบัน |
+| `POST` | `/api/support/messages` | ส่งข้อความถึง Admin (ใช้ได้แม้บัญชีถูกระงับ) |
+
 ### User Profile (`/api/users`)
 | Method | Endpoint | Description |
 |---|---|---|
@@ -191,6 +201,10 @@ model Reservation {
 | `GET` | `/api/admin/users/:id` | เจาะลึกประวัติของผู้ใช้ ดูรายการที่ขาย และรายการที่กดจองทั้งหมด |
 | `PATCH` | `/api/admin/users/:id/ban` | สลับสถานะระงับการใช้งานบัญชี (Ban / Unban) |
 | `PATCH` | `/api/admin/users/:id/role` | ปรับเปลี่ยนระดับสิทธิ์ (`STUDENT` / `ADMIN`) |
+| `GET` | `/api/admin/support` | รายการบทสนทนาที่ผู้ใช้ส่งถึง Admin |
+| `GET` | `/api/admin/support/:userId/messages` | โหลดบทสนทนาของผู้ใช้ |
+| `POST` | `/api/admin/support/:userId/messages` | ส่งข้อความตอบกลับผู้ใช้ |
+| `PATCH` | `/api/admin/support/:userId/status` | ทำเครื่องหมายบทสนทนาว่าแก้ไขแล้วหรือเปิดกลับมาดำเนินการอีกครั้ง |
 
 ---
 

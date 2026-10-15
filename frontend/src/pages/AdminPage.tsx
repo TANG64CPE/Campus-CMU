@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { adminApi } from '../services/api';
 import { AdminStats, AdminUserSummary, AdminUserDetail, isAdminRole } from '../types';
 import { getProductImageUrls } from '../utils/productImages';
+import { ScrollReveal } from '../components/ScrollReveal';
+import { AdminSupportInbox } from '../components/AdminSupportInbox';
+import { useAuth } from '../context/AuthContext';
 import {
   Users,
   Shield,
@@ -30,8 +33,10 @@ interface AdminPageProps {
 }
 
 export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectProduct }) => {
+  const { user: currentAdmin } = useAuth();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<AdminUserSummary[]>([]);
+  const [adminUsers, setAdminUsers] = useState<AdminUserSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSideFilter, setActiveSideFilter] = useState<'all' | 'sellers' | 'buyers' | 'banned'>('all');
@@ -50,16 +55,18 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
   const loadData = async () => {
     setLoading(true);
     try {
-      const [statsData, usersData] = await Promise.all([
+      const [statsData, usersData, adminsData] = await Promise.all([
         adminApi.getStats(),
         adminApi.getUsers({
           search: searchQuery,
           side: activeSideFilter === 'sellers' ? 'sellers' : activeSideFilter === 'buyers' ? 'buyers' : undefined,
           status: activeSideFilter === 'banned' ? 'banned' : undefined,
         }),
+        adminApi.getUsers({ search: searchQuery, role: 'ADMIN' }),
       ]);
       setStats(statsData);
       setUsers(usersData);
+      setAdminUsers(adminsData);
     } catch (err: any) {
       console.error('Failed to load admin data:', err);
       setMessage({ text: 'ไม่สามารถโหลดข้อมูลระบบ Admin ได้ กรุณาตรวจสอบสิทธิ์', type: 'error' });
@@ -207,71 +214,45 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
       )}
 
       {/* KPI overview cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-        <div className="card-tile p-4 sm:p-5 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="eyebrow-mono text-[11px] text-ink-tertiary">ผู้ใช้ทั้งหมด</span>
-            <div className="w-8 h-8 rounded-full bg-surface-soft border border-hairline flex items-center justify-center text-primary">
-              <Users className="w-4 h-4" />
-            </div>
+      <ScrollReveal className="mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="card-tile flex flex-col items-center p-4 text-center sm:p-5">
+          <span className="eyebrow-mono text-[11px] text-ink-tertiary">ผู้ใช้ทั้งหมด (Users)</span>
+          <div className="mt-2 font-display text-2xl font-extrabold text-ink sm:text-3xl">
+            {stats?.totalUsers ?? '...'}
           </div>
-          <div className="mt-3">
-            <div className="font-display font-extrabold text-2xl sm:text-3xl text-ink">
-              {stats?.totalUsers ?? '...'}
-            </div>
-            <p className="text-[11px] text-ink-tertiary mt-0.5">บัญชีนักศึกษา/อาจารย์ในระบบ</p>
-          </div>
+          <p className="mt-0.5 text-[11px] text-ink-tertiary">บัญชีนักศึกษา/อาจารย์ในระบบ</p>
         </div>
 
-        <div className="card-tile p-4 sm:p-5 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="eyebrow-mono text-[11px] text-ink-tertiary">ฝั่งผู้ขาย (Sellers)</span>
-            <div className="w-8 h-8 rounded-full bg-surface-soft border border-hairline flex items-center justify-center text-accent-green">
-              <ShoppingBag className="w-4 h-4" />
-            </div>
+        <div className="card-tile flex flex-col items-center p-4 text-center sm:p-5">
+          <span className="eyebrow-mono text-[11px] text-ink-tertiary">ฝั่งผู้ขาย (Sellers)</span>
+          <div className="mt-2 font-display text-2xl font-extrabold text-ink sm:text-3xl">
+            {stats?.totalSellers ?? '...'}
           </div>
-          <div className="mt-3">
-            <div className="font-display font-extrabold text-2xl sm:text-3xl text-ink">
-              {stats?.totalSellers ?? '...'}
-            </div>
-            <p className="text-[11px] text-ink-tertiary mt-0.5">
-              สินค้าทั้งหมดในตลาด {stats?.totalProducts ?? 0} ชิ้น
-            </p>
-          </div>
+          <p className="mt-0.5 text-[11px] text-ink-tertiary">
+            สินค้าทั้งหมดในตลาด {stats?.totalProducts ?? 0} ชิ้น
+          </p>
         </div>
 
-        <div className="card-tile p-4 sm:p-5 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="eyebrow-mono text-[11px] text-ink-tertiary">ฝั่งผู้ซื้อ (Buyers)</span>
-            <div className="w-8 h-8 rounded-full bg-surface-soft border border-hairline flex items-center justify-center text-brand-orange">
-              <Clock className="w-4 h-4" />
-            </div>
+        <div className="card-tile flex flex-col items-center p-4 text-center sm:p-5">
+          <span className="eyebrow-mono text-[11px] text-ink-tertiary">ฝั่งผู้ซื้อ (Buyers)</span>
+          <div className="mt-2 font-display text-2xl font-extrabold text-ink sm:text-3xl">
+            {stats?.totalBuyers ?? '...'}
           </div>
-          <div className="mt-3">
-            <div className="font-display font-extrabold text-2xl sm:text-3xl text-ink">
-              {stats?.totalBuyers ?? '...'}
-            </div>
-            <p className="text-[11px] text-ink-tertiary mt-0.5">
-              การจอง {stats?.totalReservations ?? 0} ครั้ง (สำเร็จ {stats?.completedDeals ?? 0})
-            </p>
-          </div>
+          <p className="mt-0.5 text-[11px] text-ink-tertiary">
+            การจอง {stats?.totalReservations ?? 0} ครั้ง (สำเร็จ {stats?.completedDeals ?? 0})
+          </p>
         </div>
 
-        <div className="card-tile p-4 sm:p-5 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="eyebrow-mono text-[11px] text-ink-tertiary">บัญชีที่ถูกแบน</span>
-            <div className="w-8 h-8 rounded-full bg-surface-soft border border-hairline flex items-center justify-center text-accent-red">
-              <Ban className="w-4 h-4" />
-            </div>
+        <div className="card-tile flex flex-col items-center p-4 text-center sm:p-5">
+          <span className="eyebrow-mono text-[11px] text-ink-tertiary">บัญชีที่ถูกแบน (Banned)</span>
+          <div className="mt-2 font-display text-2xl font-extrabold text-accent-red sm:text-3xl">
+            {stats?.totalBanned ?? '...'}
           </div>
-          <div className="mt-3">
-            <div className="font-display font-extrabold text-2xl sm:text-3xl text-accent-red">
-              {stats?.totalBanned ?? '...'}
-            </div>
-            <p className="text-[11px] text-ink-tertiary mt-0.5">ถูกระงับเนื่องจากผิดนัด/โดนเท</p>
-          </div>
+          <p className="mt-0.5 text-[11px] text-ink-tertiary">ถูกระงับเนื่องจากผิดนัด/โดนเท</p>
         </div>
       </div>
+      </ScrollReveal>
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 mb-5">
@@ -295,22 +276,36 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
         </div>
 
         {/* Filter controls */}
-        <div className="inline-flex p-1 bg-surface-soft rounded-pill border border-hairline text-body-sm font-medium text-ink-secondary overflow-x-auto">
+        <div className="relative grid w-full grid-cols-4 overflow-hidden rounded-pill border border-hairline bg-surface-soft p-1 text-center text-ink-secondary md:w-auto md:min-w-[600px]">
+          <span
+            aria-hidden="true"
+            className={`pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/4)] rounded-pill border border-hairline bg-canvas shadow-tinted-xs transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none ${
+              activeSideFilter === 'sellers'
+                ? 'translate-x-full'
+                : activeSideFilter === 'buyers'
+                  ? 'translate-x-[200%]'
+                  : activeSideFilter === 'banned'
+                    ? 'translate-x-[300%]'
+                    : 'translate-x-0'
+            }`}
+          />
           <button
             onClick={() => setActiveSideFilter('all')}
-            className={`px-3 py-1 rounded-pill transition-all duration-clickup ease-clickup whitespace-nowrap ${
+            aria-pressed={activeSideFilter === 'all'}
+            className={`relative z-10 min-h-10 rounded-pill px-1.5 py-1 text-[10px] leading-tight transition-colors duration-300 ease-clickup motion-reduce:transition-none sm:px-3 sm:text-xs md:whitespace-nowrap ${
               activeSideFilter === 'all'
-                ? 'bg-canvas text-ink font-semibold shadow-tinted-xs border border-hairline'
+                ? 'font-semibold text-ink'
                 : 'hover:text-ink'
             }`}
           >
-            ผู้ใช้ทั้งหมด ({users.length})
+            ผู้ใช้ทั้งหมด (Users)
           </button>
           <button
             onClick={() => setActiveSideFilter('sellers')}
-            className={`px-3 py-1 rounded-pill transition-all duration-clickup ease-clickup whitespace-nowrap ${
+            aria-pressed={activeSideFilter === 'sellers'}
+            className={`relative z-10 min-h-10 rounded-pill px-1.5 py-1 text-[10px] leading-tight transition-colors duration-300 ease-clickup motion-reduce:transition-none sm:px-3 sm:text-xs md:whitespace-nowrap ${
               activeSideFilter === 'sellers'
-                ? 'bg-canvas text-primary font-semibold shadow-tinted-xs border border-hairline'
+                ? 'font-semibold text-ink'
                 : 'hover:text-ink'
             }`}
           >
@@ -318,9 +313,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
           </button>
           <button
             onClick={() => setActiveSideFilter('buyers')}
-            className={`px-3 py-1 rounded-pill transition-all duration-clickup ease-clickup whitespace-nowrap ${
+            aria-pressed={activeSideFilter === 'buyers'}
+            className={`relative z-10 min-h-10 rounded-pill px-1.5 py-1 text-[10px] leading-tight transition-colors duration-300 ease-clickup motion-reduce:transition-none sm:px-3 sm:text-xs md:whitespace-nowrap ${
               activeSideFilter === 'buyers'
-                ? 'bg-canvas text-brand-orange font-semibold shadow-tinted-xs border border-hairline'
+                ? 'font-semibold text-ink'
                 : 'hover:text-ink'
             }`}
           >
@@ -328,13 +324,14 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
           </button>
           <button
             onClick={() => setActiveSideFilter('banned')}
-            className={`px-3 py-1 rounded-pill transition-all duration-clickup ease-clickup whitespace-nowrap ${
+            aria-pressed={activeSideFilter === 'banned'}
+            className={`relative z-10 min-h-10 rounded-pill px-1.5 py-1 text-[10px] leading-tight transition-colors duration-300 ease-clickup motion-reduce:transition-none sm:px-3 sm:text-xs md:whitespace-nowrap ${
               activeSideFilter === 'banned'
-                ? 'bg-canvas text-accent-red font-semibold shadow-tinted-xs border border-hairline'
+                ? 'font-semibold text-ink'
                 : 'hover:text-ink'
             }`}
           >
-            ถูกระงับ/แบน
+            บัญชีที่ถูกแบน (Banned)
           </button>
         </div>
       </div>
@@ -457,7 +454,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => openUserDetail(u.id)}
-                            className="btn-secondary-sm rounded-full px-2.5 py-1 text-[11px] flex items-center gap-1"
+                            className="btn-secondary-sm inline-flex min-h-10 items-center rounded-full px-4 py-2 text-[11px]"
                             title="ดูรายละเอียดการขายและการจอง"
                           >
                             <span>ดูประวัติ</span>
@@ -466,10 +463,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                           <button
                             onClick={() => setBanConfirmationUser(u)}
                             disabled={actionLoadingId === u.id}
-                            className={`px-2.5 py-1 rounded-sm text-[11px] font-semibold border transition-all ${
+                            className={`inline-flex min-h-10 items-center rounded-full border px-4 py-2 text-[11px] font-semibold transition-colors disabled:opacity-60 ${
                               u.isBanned
-                                ? 'bg-emerald-50 text-accent-green border-emerald-200 hover:bg-emerald-100'
-                                : 'rounded-full bg-red-50 text-accent-red border-red-200 hover:bg-red-100'
+                                ? 'border-emerald-200 bg-emerald-50 text-accent-green hover:bg-emerald-100'
+                                : 'border-red-200 bg-red-50 text-accent-red hover:bg-red-100'
                             }`}
                           >
                             {u.isBanned ? 'ปลดแบน' : 'ระงับบัญชี'}
@@ -490,6 +487,39 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
           </div>
         )}
       </div>
+
+      <AdminSupportInbox admin={currentAdmin} />
+
+      <section className="mb-6 overflow-hidden rounded-lg border border-purple-200 bg-canvas shadow-tinted-xs">
+        <header className="border-b border-purple-200 bg-purple-50 px-4 py-3">
+          <h2 className="text-sm font-bold text-ink">บัญชีผู้ดูแลระบบ (Admins)</h2>
+          <p className="mt-0.5 text-[11px] text-ink-secondary">แยกจากรายการผู้ใช้ทั่วไป และไม่สามารถแบนหรือปลดแบนบัญชี Admin ได้</p>
+        </header>
+        {loading ? (
+          <p className="px-4 py-5 text-xs text-ink-tertiary">กำลังโหลดบัญชีผู้ดูแลระบบ…</p>
+        ) : adminUsers.length > 0 ? (
+          <ul className="divide-y divide-hairline">
+            {adminUsers.map((admin) => (
+              <li key={admin.id} className="flex items-center gap-3 px-4 py-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-hairline bg-surface-soft text-xs font-bold text-ink">
+                  {admin.avatarUrl ? (
+                    <img src={admin.avatarUrl} alt={`รูปโปรไฟล์ ${admin.name}`} className="h-full w-full object-cover" />
+                  ) : (
+                    admin.name.trim().charAt(0).toLocaleUpperCase() || '?'
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-semibold text-ink">{admin.name}</p>
+                  <p className="truncate text-[11px] text-ink-tertiary">{admin.studentId} · {admin.email}</p>
+                </div>
+                <span className="shrink-0 rounded-xxs border border-purple-200 bg-purple-50 px-2 py-1 text-[10px] font-bold text-primary">{admin.role}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="px-4 py-5 text-xs text-ink-tertiary">ไม่พบบัญชีผู้ดูแลระบบตามคำค้นหา</p>
+        )}
+      </section>
 
       {/* ========================================================================= */}
       {/* USER DETAIL MODAL: VIEW BOTH SELLER SIDE AND BUYER SIDE IN FULL DETAIL     */}
@@ -626,7 +656,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                             className="p-4 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong transition-all shadow-tinted-xs"
                           >
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                              <div className="flex items-center gap-3 flex-1">
+                              <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <div className="w-14 h-14 rounded-md bg-surface border border-hairline shrink-0 overflow-hidden flex items-center justify-center">
                                   {getProductImageUrls(prod)[0] ? (
                                     <img src={getProductImageUrls(prod)[0]} alt="" className="w-full h-full object-cover" />
@@ -634,7 +664,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                                     <Tag className="w-5 h-5 text-ink-disabled" />
                                   )}
                                 </div>
-                                <div>
+                                <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-2 mb-0.5">
                                     <span
                                       className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
@@ -767,8 +797,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                             key={resv.id}
                             className="p-4 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong transition-all shadow-tinted-xs"
                           >
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                              <div className="flex items-center gap-3 flex-1">
+                            <div className="grid items-center gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(280px,32%)]">
+                              <div className="flex min-w-0 items-center gap-3">
                                 <div className="w-14 h-14 rounded-md bg-surface border border-hairline shrink-0 overflow-hidden flex items-center justify-center">
                                   {getProductImageUrls(resv.product)[0] ? (
                                     <img src={getProductImageUrls(resv.product)[0]} alt="" className="w-full h-full object-cover" />
@@ -777,7 +807,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                                   )}
                                 </div>
 
-                                <div>
+                                <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-2 mb-0.5">
                                     <span
                                       className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
@@ -803,7 +833,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                                     </span>
                                   </div>
 
-                                  <h4 className="font-semibold text-ink text-xs sm:text-sm">
+                                  <h4 className="truncate font-semibold text-ink text-xs sm:text-sm" title={resv.product?.title || 'สินค้าในระบบ'}>
                                     {resv.product?.title || 'สินค้าในระบบ'}
                                   </h4>
 
@@ -820,7 +850,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                               </div>
 
                               {/* Seller Info for this reservation */}
-                              <div className="p-2.5 bg-surface rounded-sm border border-hairline text-left text-xs min-w-[200px]">
+                              <div className="min-w-0 rounded-sm border border-hairline bg-surface p-2.5 text-left text-xs">
                                 <span className="eyebrow-mono text-[9px] text-ink-tertiary block">
                                   ผู้ขายสินค้าชิ้นนี้:
                                 </span>
@@ -856,7 +886,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleToggleRole(userDetail.user as AdminUserSummary)}
-                    className="btn-secondary-sm px-3 py-1.5 text-xs font-semibold"
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-hairline bg-white px-4 py-2 text-xs font-semibold text-ink transition hover:bg-surface-soft"
                   >
                     สลับบทบาทเป็น {isAdminRole(userDetail.user.role) ? 'STUDENT' : 'ADMIN'}
                   </button>
@@ -864,10 +894,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                   <button
                     onClick={() => setBanConfirmationUser(userDetail.user as AdminUserSummary)}
                     disabled={actionLoadingId === userDetail.user.id}
-                    className={`px-3 py-1.5 rounded-sm text-xs font-semibold border transition-all ${
+                    className={`inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
                       userDetail.user.isBanned
-                        ? 'bg-emerald-50 text-accent-green border-emerald-200 hover:bg-emerald-100'
-                        : 'bg-red-50 text-accent-red border-red-200 hover:bg-red-100'
+                        ? 'border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700'
+                        : 'border-red-600 bg-red-600 text-white hover:bg-red-700'
                     }`}
                   >
                     {userDetail.user.isBanned ? 'ปลดแบนบัญชีนี้' : 'แบนระงับบัญชีนี้'}

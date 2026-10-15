@@ -150,12 +150,6 @@ export class AuthController {
         });
       }
 
-      if (user.isBanned) {
-        console.warn(`[CPE OAuth Callback] User ${user.email} is banned`);
-        res.redirect(`${frontendUrl}/login?error=account_banned`);
-        return;
-      }
-
       // 4. Generate JWT
       const token = jwt.sign(
         { id: user.id, studentId: user.studentId, email: user.email },
@@ -239,11 +233,6 @@ export class AuthController {
             role: assignedRole,
           },
         });
-      }
-
-      if (user.isBanned) {
-        res.status(403).json({ success: false, message: 'This mock student account is banned.' });
-        return;
       }
 
       const token = jwt.sign(

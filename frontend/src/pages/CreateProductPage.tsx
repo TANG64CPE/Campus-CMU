@@ -3,6 +3,8 @@ import { productApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { isAdminRole, isContactComplete } from '../types';
 import { MAX_PRODUCT_IMAGE_BYTES, MAX_PRODUCT_IMAGES } from '../utils/productImages';
+import { PRODUCT_CATEGORIES, type ProductCategory } from '../utils/productCategories';
+import { ScrollReveal } from '../components/ScrollReveal';
 import {
   MapPin,
   Tag,
@@ -26,6 +28,7 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
   const { user, loading: authLoading } = useAuth();
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
+  const [category, setCategory] = useState<ProductCategory | ''>('');
   const [meetupLocation, setMeetupLocation] = useState('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -97,6 +100,10 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
       setErrorMsg('กรุณากรอกราคาที่ถูกต้อง');
       return;
     }
+    if (!category) {
+      setErrorMsg('กรุณาเลือกหมวดหมู่สินค้า');
+      return;
+    }
     if (!meetupLocation.trim()) {
       setErrorMsg('กรุณาเลือกหรือระบุจุดนัดรับของใน มช.');
       return;
@@ -109,6 +116,7 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
       const formData = new FormData();
       formData.append('title', title.trim());
       formData.append('price', price);
+      formData.append('category', category);
       formData.append('meetupLocation', meetupLocation.trim());
       imageFiles.forEach((file) => formData.append('images', file));
 
@@ -220,7 +228,8 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
       </button>
 
       {/* Main Form Container — design.md card-feature-panel: xxl (35px) on desktop, xl (25px) on mobile */}
-      <div className="card-feature-panel sm:rounded-xxl p-6 sm:p-8 shadow-tinted-sm">
+      <ScrollReveal>
+        <div className="card-feature-panel sm:rounded-xxl p-6 sm:p-8 shadow-tinted-sm">
         <div className="mb-6 pb-4 border-b border-hairline">
           <div className="inline-block mb-1.5">
             <span className="eyebrow-mono bg-surface-soft text-ink-deep px-2 py-0.5 rounded-xxs border border-hairline text-[10px]">
@@ -243,6 +252,29 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          <fieldset>
+            <legend className="eyebrow-mono block text-caption text-ink-secondary mb-2">
+              หมวดหมู่สินค้า <span className="text-accent-red">*</span>
+            </legend>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {PRODUCT_CATEGORIES.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-pressed={category === item.id}
+                  onClick={() => setCategory(item.id)}
+                  className={`rounded-lg border px-3 py-2.5 text-body-sm transition-all duration-clickup ease-clickup ${
+                    category === item.id
+                      ? 'border-ink bg-ink text-white font-semibold'
+                      : 'border-hairline bg-surface text-ink-secondary hover:border-hairline-strong hover:text-ink'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
           {/* Image Upload Box */}
           <div>
             <label className="eyebrow-mono block text-caption text-ink-secondary mb-2">
@@ -365,18 +397,18 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
           </div>
 
           {/* Submit Actions — design.md button-primary (dark pill) vs button-secondary */}
-          <div className="pt-5 border-t border-hairline flex items-center justify-end gap-3">
+          <div className="pt-5 border-t border-hairline flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={onCancel}
-              className="btn-secondary-sm px-5 py-2.5 text-button-md"
+              className="btn-secondary-sm h-12 w-full px-5 py-0 text-button-md sm:w-56"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary-pill h-[48px] px-6 text-button-md flex items-center gap-2 disabled:opacity-50"
+              className="btn-primary-pill h-12 w-full px-5 py-0 text-button-md flex items-center justify-center gap-2 disabled:opacity-50 sm:w-56"
             >
               {loading ? (
                 <span>กำลังบันทึก...</span>
@@ -390,6 +422,7 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
           </div>
         </form>
       </div>
+      </ScrollReveal>
     </div>
   );
 };

@@ -104,8 +104,12 @@ export class AdminController {
 
       if (role === 'ADMIN') {
         whereClause.role = { in: [...ADMIN_ROLES] };
-      } else if (role === 'STUDENT' || (typeof role === 'string' && isNumberedAdminRole(role))) {
+      } else if (role === 'STUDENT') {
         whereClause.role = role;
+      } else if (typeof role === 'string' && isNumberedAdminRole(role)) {
+        whereClause.role = role;
+      } else {
+        whereClause.role = 'STUDENT';
       }
 
       if (status === 'banned') {
@@ -316,6 +320,11 @@ export class AdminController {
 
       if (!targetUser) {
         res.status(404).json({ success: false, message: 'User not found' });
+        return;
+      }
+
+      if (isAdminRole(targetUser.role)) {
+        res.status(400).json({ success: false, message: 'ไม่สามารถแบนหรือปลดแบนบัญชี Admin ได้' });
         return;
       }
 

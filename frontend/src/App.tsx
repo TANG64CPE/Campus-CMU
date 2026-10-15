@@ -7,11 +7,12 @@ import { CreateProductPage } from './pages/CreateProductPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { LoginPage } from './pages/LoginPage';
 import { AdminPage } from './pages/AdminPage';
+import { BannedAccountPage } from './pages/BannedAccountPage';
 import { ChatInbox } from './components/ChatInbox';
 import { isAdminRole, isContactComplete } from './types';
 import { AlertTriangle } from 'lucide-react';
 
-type AppView = 'marketplace' | 'detail' | 'create' | 'profile' | 'login' | 'admin';
+type AppView = 'marketplace' | 'detail' | 'create' | 'profile' | 'login' | 'admin' | 'banned';
 
 const readRoute = (): { view: AppView; productId: string | null } => {
   const productMatch = window.location.pathname.match(/^\/products\/([^/]+)\/?$/);
@@ -25,6 +26,7 @@ const readRoute = (): { view: AppView; productId: string | null } => {
     profile: 'profile',
     login: 'login',
     admin: 'admin',
+    banned: 'banned',
   };
   return { view: views[route] || 'marketplace', productId: null };
 };
@@ -35,7 +37,7 @@ const pathForView = (view: AppView, productId?: string): string => {
 };
 
 const MainApp: React.FC = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, logout, refreshUser } = useAuth();
   const [initialRoute] = useState(readRoute);
   const [currentView, setCurrentView] = useState<AppView>(initialRoute.view);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(initialRoute.productId);
@@ -82,6 +84,23 @@ const MainApp: React.FC = () => {
     }
   }, [authLoading, user?.role, setRoute]);
 
+  useEffect(() => {
+    if (authLoading) return;
+    if (user?.isBanned && currentViewRef.current !== 'banned') {
+      setRoute('banned', undefined, true);
+    } else if (!user && currentViewRef.current === 'banned') {
+      setRoute('login', undefined, true);
+    }
+  }, [authLoading, user?.isBanned, setRoute]);
+
+  useEffect(() => {
+    const handleBannedAccount = () => {
+      void refreshUser().then(() => setRoute('banned', undefined, true));
+    };
+    window.addEventListener('campusmart:account-banned', handleBannedAccount);
+    return () => window.removeEventListener('campusmart:account-banned', handleBannedAccount);
+  }, [refreshUser, setRoute]);
+
   // Handle URL callback from CMU OAuth
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -104,6 +123,10 @@ const MainApp: React.FC = () => {
   }, []);
 
   const handleNavigate = (view: string, productId?: string) => {
+    if (user?.isBanned) {
+      setRoute('banned', undefined, true);
+      return;
+    }
     const shouldRestoreMarketplace = currentViewRef.current === 'detail' && view === 'marketplace';
     if (shouldRestoreMarketplace) restoreMarketplaceScroll.current = true;
 
@@ -142,16 +165,24 @@ const MainApp: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleLogout = async () => {
+    await logout();
+    restoreMarketplaceScroll.current = false;
+    setRoute('marketplace');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-canvas text-ink flex flex-col selection:bg-primary/10 selection:text-ink-deep font-sans">
       {/* Keep the login screen focused on its authentication card. */}
-      {currentView !== 'login' && (
+      {currentView !== 'login' && currentView !== 'banned' && (
         <Navbar
           currentView={currentView}
           onNavigate={handleNavigate}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onAccountSwitch={() => handleNavigate('marketplace')}
+          onLogout={() => void handleLogout()}
         />
       )}
 
@@ -185,7 +216,7 @@ const MainApp: React.FC = () => {
             onSelectProduct={handleSelectProduct}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            onNavigateToLogin={() => handleNavigate('login')}
+            onNavigateToCreate={() => handleNavigate('create')}
             onNavigateToProfile={() => handleNavigate('profile')}
             contactIncomplete={Boolean(user && !isAdminRole(user.role) && !isContactComplete(user))}
             canSell={!isAdminRole(user?.role)}
@@ -231,16 +262,20 @@ const MainApp: React.FC = () => {
           />
         )}
 
+        {currentView === 'banned' && user?.isBanned && (
+          <BannedAccountPage user={user} />
+        )}
+
         {currentView === 'login' && (
           <LoginPage onLoginSuccess={() => handleNavigate('marketplace')} />
         )}
       </main>
 
-      {user && !authLoading && !isAdminRole(user.role) && currentView !== 'login' && (
+      {user && !authLoading && !user.isBanned && !isAdminRole(user.role) && currentView !== 'login' && (
         <ChatInbox key={user.id} user={user} />
       )}
 
-      {currentView !== 'login' && (
+      {currentView !== 'login' && currentView !== 'banned' && (
         <footer className="relative flex min-h-[420px] items-end overflow-hidden py-8 text-white">
           <div
             aria-hidden="true"

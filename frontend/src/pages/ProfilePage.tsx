@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { userApi, reservationApi, productApi } from '../services/api';
 import { Product, Reservation, isContactComplete, isValidThaiMobileNumber } from '../types';
 import { getProductImageUrls } from '../utils/productImages';
+import { ScrollReveal } from '../components/ScrollReveal';
 import {
   User as UserIcon,
   ShoppingBag,
@@ -220,6 +221,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
 
       {/* Profile Contact Status Alert Banner (if incomplete) */}
       {!isProfileComplete && (
+        <ScrollReveal className="mb-6">
         <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200/80 shadow-tinted-xs flex items-start gap-3.5">
           <div className="w-8 h-8 rounded-full bg-amber-100 text-brand-orange flex items-center justify-center shrink-0 mt-0.5">
             <AlertTriangle className="w-4 h-4" />
@@ -236,10 +238,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
             </p>
           </div>
         </div>
+        </ScrollReveal>
       )}
 
       {/* Student profile panel */}
-      <div className="card-section p-6 sm:p-8 mb-8 shadow-tinted-xs">
+      <ScrollReveal className="mb-8">
+      <div className="card-section p-6 sm:p-8 shadow-tinted-xs">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-hairline">
           <div className="flex items-center gap-4">
             <div className="relative shrink-0">
@@ -504,6 +508,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
           </div>
         </form>
       </div>
+      </ScrollReveal>
 
       {/* Listings and reservations tabs */}
       <div className="flex border-b border-hairline mb-6">
@@ -541,12 +546,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
             </p>
           ) : myProducts.length > 0 ? (
             <div className="space-y-3">
-              {myProducts.map((p) => {
+              {myProducts.map((p, index) => {
                 return (
-                  <div
-                    key={p.id}
-                    className="p-4 sm:p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong hover:shadow-tinted-xs transition-all duration-clickup ease-clickup flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-                  >
+                  <ScrollReveal key={p.id} delay={(index % 3) * 70}>
+                  <div className="p-4 sm:p-5 bg-canvas rounded-lg border border-hairline hover:border-hairline-strong hover:shadow-tinted-xs transition-all duration-clickup ease-clickup flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div
                       className="flex items-center gap-4 cursor-pointer flex-1"
                       onClick={() => onSelectProduct(p.id)}
@@ -603,6 +606,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
                       </button>
                     </div>
                   </div>
+                  </ScrollReveal>
                 );
               })}
             </div>
@@ -624,16 +628,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
             </p>
           ) : myReservations.length > 0 ? (
             <div className="space-y-3">
-              {myReservations.map((r) => {
+              {myReservations.map((r, index) => {
                 const isPending = r.status === 'PENDING';
                 const isCompleted = r.status === 'COMPLETED';
                 const isCancelled = r.status === 'CANCELLED';
 
                 return (
-                  <div
-                    key={r.id}
-                    className="p-4 sm:p-5 bg-canvas rounded-lg border border-hairline hover:shadow-tinted-xs transition-all duration-clickup ease-clickup flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-                  >
+                  <ScrollReveal key={r.id} delay={(index % 3) * 70}>
+                  <div className="p-4 sm:p-5 bg-canvas rounded-lg border border-hairline hover:shadow-tinted-xs transition-all duration-clickup ease-clickup flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div
                       className="flex items-center gap-4 cursor-pointer flex-1"
                       onClick={() => onSelectProduct(r.productId)}
@@ -684,6 +686,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
                       </button>
                     </div>
                   </div>
+                  </ScrollReveal>
                 );
               })}
             </div>

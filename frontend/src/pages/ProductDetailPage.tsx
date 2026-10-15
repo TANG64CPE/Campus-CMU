@@ -26,6 +26,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { ProductImage } from '../components/ProductImage';
+import { ScrollReveal } from '../components/ScrollReveal';
 import { getProductImageUrls } from '../utils/productImages';
 
 interface ProductDetailPageProps {
@@ -318,6 +319,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       <div className="card-feature-panel sm:rounded-xxl shadow-tinted-sm overflow-hidden p-6 sm:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Big Product Image Frame */}
+          <ScrollReveal className="min-w-0">
           <div>
             <div className="relative aspect-square rounded-lg sm:rounded-xl bg-surface overflow-hidden flex items-center justify-center border border-hairline">
               {productImages.length ? (
@@ -373,8 +375,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               </div>
             )}
           </div>
+          </ScrollReveal>
 
           {/* Product Info & Action States */}
+          <ScrollReveal className="min-w-0">
           <div className="flex flex-col justify-between">
             <div>
               {/* Status pill & Meetup location */}
@@ -698,6 +702,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               )}
             </div>
           </div>
+          </ScrollReveal>
         </div>
       </div>
 

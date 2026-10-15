@@ -1,14 +1,16 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
-import { authenticateToken } from '../middlewares/auth.middleware';
+import { authenticateToken, requireActiveAccount } from '../middlewares/auth.middleware';
 import { avatarUpload } from '../middlewares/upload.middleware';
 
 const router = Router();
 
-router.get('/profile', authenticateToken, UserController.getProfile);
-router.patch('/profile', authenticateToken, UserController.updateProfile);
-router.patch('/profile/avatar', authenticateToken, avatarUpload.single('image'), UserController.uploadAvatar);
-router.get('/my-products', authenticateToken, UserController.getMyProducts);
-router.patch('/products/:id/toggle-status', authenticateToken, UserController.toggleProductStatus);
+router.use(authenticateToken, requireActiveAccount);
+
+router.get('/profile', UserController.getProfile);
+router.patch('/profile', UserController.updateProfile);
+router.patch('/profile/avatar', avatarUpload.single('image'), UserController.uploadAvatar);
+router.get('/my-products', UserController.getMyProducts);
+router.patch('/products/:id/toggle-status', UserController.toggleProductStatus);
 
 export default router;

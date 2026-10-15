@@ -9,6 +9,7 @@ interface NavbarProps {
   searchQuery: string;
   onSearchChange: (q: string) => void;
   onAccountSwitch: () => void;
+  onLogout: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -17,8 +18,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   searchQuery,
   onSearchChange,
   onAccountSwitch,
+  onLogout,
 }) => {
-  const { user, logout, mockLogin } = useAuth();
+  const { user, mockLogin } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const isAdmin = isAdminRole(user?.role);
 
@@ -196,9 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                       <div className="border-t border-hairline pt-1 mt-1">
                         <button
-                          onClick={() => {
-                            void logout().then(() => onNavigate('marketplace'));
-                          }}
+                          onClick={onLogout}
                           className="w-full px-4 py-2.5 text-left text-body-sm font-semibold text-accent-red hover:bg-surface-soft flex items-center gap-2 transition-colors"
                         >
                           <LogOut className="w-3.5 h-3.5" />

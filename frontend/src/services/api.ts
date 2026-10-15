@@ -1,10 +1,20 @@
 import axios from 'axios';
-import { User, Product, Reservation, SellerContact, AdminStats, AdminUserSummary, AdminUserDetail, ChatMessage, ChatThread } from '../types';
+import { User, Product, Reservation, SellerContact, AdminStats, AdminUserSummary, AdminUserDetail, ChatMessage, ChatThread, SupportMessage, AdminSupportConversation } from '../types';
 
 const api = axios.create({
   baseURL: '/api',
   withCredentials: true, // Send HTTP-Only cookies
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 403 && error.response.data?.isBanned === true) {
+      window.dispatchEvent(new Event('campusmart:account-banned'));
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const authApi = {
   getMe: async (): Promise<User | null> => {
@@ -108,6 +118,34 @@ export const reservationApi = {
   getSellerReservations: async (): Promise<Reservation[]> => {
     const res = await api.get<{ success: boolean; reservations: Reservation[] }>('/reservations/seller');
     return res.data.reservations;
+  },
+};
+
+export const supportApi = {
+  getMyMessages: async (): Promise<SupportMessage[]> => {
+    const res = await api.get<{ success: boolean; messages: SupportMessage[] }>('/support/messages');
+    return res.data.messages;
+  },
+  sendMessage: async (content: string): Promise<SupportMessage> => {
+    const res = await api.post<{ success: boolean; message: SupportMessage }>('/support/messages', { content });
+    return res.data.message;
+  },
+  getConversations: async (resolved = false): Promise<AdminSupportConversation[]> => {
+    const res = await api.get<{ success: boolean; conversations: AdminSupportConversation[] }>('/admin/support', {
+      params: { resolved },
+    });
+    return res.data.conversations;
+  },
+  getConversationMessages: async (userId: string): Promise<SupportMessage[]> => {
+    const res = await api.get<{ success: boolean; messages: SupportMessage[] }>(`/admin/support/${userId}/messages`);
+    return res.data.messages;
+  },
+  sendAdminMessage: async (userId: string, content: string): Promise<SupportMessage> => {
+    const res = await api.post<{ success: boolean; message: SupportMessage }>(`/admin/support/${userId}/messages`, { content });
+    return res.data.message;
+  },
+  setConversationResolved: async (userId: string, isResolved: boolean): Promise<void> => {
+    await api.patch(`/admin/support/${userId}/status`, { isResolved });
   },
 };
 
