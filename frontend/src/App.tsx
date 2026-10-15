@@ -7,6 +7,7 @@ import { CreateProductPage } from './pages/CreateProductPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { LoginPage } from './pages/LoginPage';
 import { AdminPage } from './pages/AdminPage';
+import { ChatInbox } from './components/ChatInbox';
 import { isAdminRole, isContactComplete } from './types';
 import { AlertTriangle } from 'lucide-react';
 
@@ -234,6 +235,10 @@ const MainApp: React.FC = () => {
           <LoginPage onLoginSuccess={() => handleNavigate('marketplace')} />
         )}
       </main>
+
+      {user && !authLoading && !isAdminRole(user.role) && currentView !== 'login' && (
+        <ChatInbox key={user.id} user={user} />
+      )}
 
       {currentView !== 'login' && (
         <footer className="relative flex min-h-[420px] items-end overflow-hidden py-8 text-white">

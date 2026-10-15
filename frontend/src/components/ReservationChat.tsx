@@ -6,9 +6,10 @@ import { reservationApi } from '../services/api';
 interface ReservationChatProps {
   reservationId: string;
   currentUserId: string;
+  onMessagesLoaded?: (messages: ChatMessage[]) => void;
 }
 
-export const ReservationChat: React.FC<ReservationChatProps> = ({ reservationId, currentUserId }) => {
+export const ReservationChat: React.FC<ReservationChatProps> = ({ reservationId, currentUserId, onMessagesLoaded }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
@@ -21,6 +22,7 @@ export const ReservationChat: React.FC<ReservationChatProps> = ({ reservationId,
     try {
       const next = await reservationApi.getMessages(reservationId);
       setMessages(next);
+      onMessagesLoaded?.(next);
       setError('');
       if (firstLoad.current) {
         firstLoad.current = false;
@@ -31,7 +33,7 @@ export const ReservationChat: React.FC<ReservationChatProps> = ({ reservationId,
     } finally {
       setLoading(false);
     }
-  }, [reservationId]);
+  }, [onMessagesLoaded, reservationId]);
 
   useEffect(() => {
     firstLoad.current = true;

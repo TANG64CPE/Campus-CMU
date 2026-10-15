@@ -84,6 +84,13 @@ export interface ChatMessage {
   sender: Pick<User, 'id' | 'name' | 'avatarUrl'>;
 }
 
+export interface ChatThread {
+  id: string;
+  product: Pick<Product, 'id' | 'title' | 'imageUrl'>;
+  otherParticipant: Pick<User, 'id' | 'name'>;
+  latestMessage: ChatMessage | null;
+}
+
 export interface SellerContact {
   name: string;
   studentId: string;

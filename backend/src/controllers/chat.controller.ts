@@ -17,6 +17,53 @@ async function getAuthorizedReservation(reservationId: string, userId: string) {
 }
 
 export class ChatController {
+  public static async getMyThreads(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user!.id;
+      const reservations = await prisma.reservation.findMany({
+        where: {
+          status: 'PENDING',
+          OR: [{ buyerId: userId }, { product: { sellerId: userId } }],
+        },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          product: {
+            select: {
+              id: true,
+              title: true,
+              imageUrl: true,
+              seller: { select: { id: true, name: true } },
+            },
+          },
+          buyer: { select: { id: true, name: true } },
+          chatMessages: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
+          },
+        },
+      });
+
+      const threads = reservations.map((reservation) => ({
+        id: reservation.id,
+        product: {
+          id: reservation.product.id,
+          title: reservation.product.title,
+          imageUrl: reservation.product.imageUrl,
+        },
+        otherParticipant: reservation.buyerId === userId
+          ? reservation.product.seller
+          : reservation.buyer,
+        latestMessage: reservation.chatMessages[0] || null,
+      }));
+
+      res.json({ success: true, threads });
+    } catch (error: any) {
+      console.error('[Get Chat Threads Error]:', error);
+      res.status(500).json({ success: false, message: 'Unable to load chats.' });
+    }
+  }
+
   public static async getMessages(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { reservation, forbidden } = await getAuthorizedReservation(req.params.id, req.user!.id);
