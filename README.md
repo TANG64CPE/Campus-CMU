@@ -202,20 +202,18 @@ docker compose --env-file .env -f docker-compose.prod.yml up -d --build backend
 docker compose --env-file .env -f docker-compose.prod.yml exec backend node -e "fetch('http://127.0.0.1:5000/api/health').then(async r => { console.log(r.status, await r.text()); process.exit(r.ok ? 0 : 1) }).catch(e => { console.error(e); process.exit(1) })"
 ```
 
-เมื่อตรวจยืนยันพอร์ตและช่วง cutover แล้ว ให้หยุดเฉพาะ frontend เดิม จากนั้นเปิด frontend CampusMart:
+หลังพอร์ต `6006` ว่าง (frontend เดิมถูกนำออกแล้ว) และผู้ดูแลยืนยัน HTTPS proxy พร้อม OAuth callback แล้ว ให้เปิด frontend CampusMart:
 
 ```bash
-docker stop g06-frontend
 docker compose --env-file .env -f docker-compose.prod.yml up -d --build frontend
 docker compose --env-file .env -f docker-compose.prod.yml ps
 curl -f http://127.0.0.1:6006/api/health
 ```
 
-หากต้อง rollback ให้หยุดเฉพาะ frontend CampusMart แล้วเริ่ม frontend เดิมอีกครั้ง:
+หากต้อง rollback ให้หยุดเฉพาะ frontend CampusMart ก่อน แล้วให้ผู้ดูแลกู้ frontend เดิมจาก Compose project `/home/g06/pf-deploy` โดยตรวจสอบไฟล์ Compose และ image ที่ถูกต้องก่อนสร้าง container กลับ (`docker start g06-frontend` ใช้ไม่ได้หลังจากลบ container แล้ว):
 
 ```bash
 docker compose --env-file .env -f docker-compose.prod.yml stop frontend
-docker start g06-frontend
 ```
 
 ห้ามใช้ `docker compose down -v`, ห้ามลบ volumes และห้ามรัน seed กับข้อมูลจริง ขั้นตอน `db push` ด้านบนใช้เฉพาะฐานข้อมูลใหม่ของ CampusMart; อย่าชี้ `DATABASE_URL` ไปยังฐานข้อมูลเดิมโดยไม่ได้รับอนุมัติ
