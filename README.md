@@ -169,18 +169,56 @@
 
 ### เตรียม Deploy ไปยัง FSG06 (`10.10.184.14`)
 
-> **สถานะ: ยังไม่พร้อม Deploy ด้วย Docker Compose ปัจจุบัน** — เอกสารส่วนนี้เป็น checklist เตรียมงานเท่านั้น ยังไม่มีการเชื่อมต่อหรือเปลี่ยนแปลงเซิร์ฟเวอร์
+ใช้ `docker-compose.prod.yml` สำหรับ production แทน `docker-compose.yml` ซึ่งเป็นค่าทดสอบ local โดยไฟล์ production แยก volumes ของฐานข้อมูลและ uploads, ไม่ publish พอร์ต PostgreSQL ออกสู่ host, บังคับปิด mock auth และไม่รัน `prisma db push` ทุกครั้งที่ Backend เริ่ม
 
-ก่อน Deploy ไปยังเซิร์ฟเวอร์ที่อาจมีระบบหรือข้อมูลเดิม:
+ไฟล์ root `.env.example` เป็นแม่แบบสำหรับ Compose production (`backend/.env.example` ใช้ local development) สร้าง `.env` ใน root บน server แล้วกรอกค่าผ่านช่องทางปลอดภัย ห้าม commit หรือส่ง secrets ในแชต:
 
-1. ยืนยันสิทธิ์ใช้งานเครื่องและช่วงเวลาที่สามารถ deploy ได้ พร้อมตรวจสอบว่าบริการใดใช้พอร์ตที่ CampusMart ต้องการ
-2. ตรวจสอบโครงสร้างระบบและฐานข้อมูลที่มีอยู่จริง สำรองฐานข้อมูลและข้อมูล uploads ไปยังตำแหน่งที่แยกจาก container ก่อนเปลี่ยนแปลงใด ๆ ห้ามใช้ `docker compose down -v` เพราะจะลบ volumes
-3. เตรียมค่าตั้ง Production ผ่านช่องทางลับที่ได้รับอนุมัติ ห้ามใส่รหัสผ่าน, OAuth secret หรือ JWT secret ใน README, Git หรือแชต ได้แก่ `DATABASE_URL`, `JWT_SECRET` ที่สุ่มใหม่, OAuth client credentials, callback URL และ frontend URL ที่ใช้งานได้จริง และตั้ง `ENABLE_MOCK_AUTH=false`
-4. ตรวจสอบและปรับ `docker-compose.yml` ก่อนใช้งานจริง: ค่าบางรายการใน `environment` ถูกกำหนดตายตัวและจะ override ค่าใน `backend/.env`, ฐานข้อมูล PostgreSQL เปิดพอร์ต `5432` ออกสู่ host และค่า URL ปัจจุบันเป็นของ local development จึงห้ามใช้ compose นี้กับเซิร์ฟเวอร์โดยตรง
-5. ตรวจสอบขั้นตอน schema update ก่อนเริ่ม Backend: `backend/Dockerfile` เรียก `prisma db push` ตอน container เริ่มทำงาน ควรตรวจผลกระทบกับ schema/ข้อมูลเดิมและทำหลัง backup เท่านั้น ห้ามรัน seed กับฐานข้อมูลที่มีข้อมูลจริง
-6. หลังเตรียม config และแผน migration แล้ว ค่อย deploy ตามวิธีที่ผู้ดูแล FSG06 อนุมัติ และตรวจ `/api/health`, การเข้าสู่ระบบ OAuth, การอัปโหลดรูป และข้อมูลเดิมหลัง deploy
+- ตั้ง `POSTGRES_PASSWORD` เป็นรหัสผ่านใหม่แบบสุ่มที่ URL-safe และตั้ง `DATABASE_URL` ให้ใช้ user/password/database เดียวกัน โดย host ต้องเป็น `postgres` ภายใน Compose network
+- ตั้ง `JWT_SECRET` เป็นค่าสุ่มใหม่ที่ยาวและไม่ซ้ำกับ development
+- ใส่ CMU OAuth client credentials และใช้ callback URL ที่ลงทะเบียนกับผู้ให้บริการ OAuth ให้ตรงกันทุกตัวอักษร
+- สำหรับ FSG06 ใช้ URL `https://fsg06.cpecmu.com` ใน `FRONTEND_URL` และ callback `https://fsg06.cpecmu.com/api/auth/callback` โดยต้องให้ HTTPS reverse proxy ของผู้ดูแลส่งต่อมายังพอร์ต `6006`
+- Production จะตั้ง session cookie เป็น `Secure`; ห้ามเปิด OAuth login ผ่าน HTTP หรือสลับไปใช้ IP แบบไม่เข้ารหัส
 
-ไฟล์ `.env` ถูกยกเว้นจาก Git อยู่แล้ว ให้สร้าง/ตั้งค่าเฉพาะบนเครื่องที่ได้รับอนุญาต และอย่าอัปโหลดหรือคัดลอกค่า secret ลง repository
+เตรียมและตรวจ config โดยยังไม่เริ่ม container:
+
+```bash
+cd ~/Campus-CMU
+cp .env.example .env
+nano .env
+docker compose --env-file .env -f docker-compose.prod.yml config --quiet
+```
+
+ก่อน cutover ให้ยืนยันว่าได้เตรียม image/config และได้รับอนุมัติช่วงหยุดบริการเดิมแล้ว จากนั้นเริ่ม PostgreSQL ของ CampusMart ซึ่งใช้ volume แยก และสร้าง schema เฉพาะในฐานข้อมูลใหม่นี้:
+
+```bash
+docker compose --env-file .env -f docker-compose.prod.yml up -d --build postgres
+docker compose --env-file .env -f docker-compose.prod.yml run --rm backend npx prisma db push
+docker compose --env-file .env -f docker-compose.prod.yml up -d --build backend
+```
+
+ตรวจ Backend ก่อนสลับ frontend:
+
+```bash
+docker compose --env-file .env -f docker-compose.prod.yml exec backend node -e "fetch('http://127.0.0.1:5000/api/health').then(async r => { console.log(r.status, await r.text()); process.exit(r.ok ? 0 : 1) }).catch(e => { console.error(e); process.exit(1) })"
+```
+
+เมื่อตรวจยืนยันพอร์ตและช่วง cutover แล้ว ให้หยุดเฉพาะ frontend เดิม จากนั้นเปิด frontend CampusMart:
+
+```bash
+docker stop g06-frontend
+docker compose --env-file .env -f docker-compose.prod.yml up -d --build frontend
+docker compose --env-file .env -f docker-compose.prod.yml ps
+curl -f http://127.0.0.1:6006/api/health
+```
+
+หากต้อง rollback ให้หยุดเฉพาะ frontend CampusMart แล้วเริ่ม frontend เดิมอีกครั้ง:
+
+```bash
+docker compose --env-file .env -f docker-compose.prod.yml stop frontend
+docker start g06-frontend
+```
+
+ห้ามใช้ `docker compose down -v`, ห้ามลบ volumes และห้ามรัน seed กับข้อมูลจริง ขั้นตอน `db push` ด้านบนใช้เฉพาะฐานข้อมูลใหม่ของ CampusMart; อย่าชี้ `DATABASE_URL` ไปยังฐานข้อมูลเดิมโดยไม่ได้รับอนุมัติ
 
 ### วิธีที่ 1: รันด้วย Docker Compose (แนะนำสำหรับการทดสอบครบวงจร)
 

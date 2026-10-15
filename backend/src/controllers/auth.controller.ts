@@ -65,7 +65,12 @@ export class AuthController {
       ENV.JWT_SECRET,
       { expiresIn: '10m' }
     );
-    res.clearCookie('token', { httpOnly: true, sameSite: 'lax', path: '/' });
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: ENV.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    });
     const authUrl = CmuOAuthService.getAuthorizationUrl(redirectUri, state);
     res.redirect(authUrl);
   }
@@ -160,7 +165,7 @@ export class AuthController {
       // 5. Set HTTP-Only Cookie
       res.cookie('token', token, {
         httpOnly: true,
-        secure: false, // allow http in localhost
+        secure: ENV.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: '/',
@@ -243,7 +248,7 @@ export class AuthController {
 
       res.cookie('token', token, {
         httpOnly: true,
-        secure: false,
+        secure: ENV.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: '/',
@@ -287,6 +292,7 @@ export class AuthController {
   public static logout(_req: Request, res: Response): void {
     res.clearCookie('token', {
       httpOnly: true,
+      secure: ENV.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
     });

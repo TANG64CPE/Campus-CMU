@@ -8,7 +8,11 @@ dist/
 
 # Environment configuration
 .env
+.env.*
+!.env.example
 backend/.env
+backend/.env.*
+!backend/.env.example
 frontend/.env
 *.env.local
 *.env.*.local
