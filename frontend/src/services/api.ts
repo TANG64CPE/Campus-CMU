@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, Product, Reservation, SellerContact, AdminStats, AdminUserSummary, AdminUserDetail } from '../types';
+import { User, Product, Reservation, SellerContact, AdminStats, AdminUserSummary, AdminUserDetail, ChatMessage } from '../types';
 
 const api = axios.create({
   baseURL: '/api',
@@ -66,6 +66,14 @@ export const productApi = {
 };
 
 export const reservationApi = {
+  getMessages: async (reservationId: string): Promise<ChatMessage[]> => {
+    const res = await api.get<{ success: boolean; messages: ChatMessage[] }>(`/reservations/${reservationId}/messages`);
+    return res.data.messages;
+  },
+  sendMessage: async (reservationId: string, content: string): Promise<ChatMessage> => {
+    const res = await api.post<{ success: boolean; message: ChatMessage }>(`/reservations/${reservationId}/messages`, { content });
+    return res.data.message;
+  },
   createReservation: async (
     productId: string
   ): Promise<{ reservation: Reservation; sellerContact: SellerContact }> => {

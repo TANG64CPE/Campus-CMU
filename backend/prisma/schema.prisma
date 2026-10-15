@@ -25,6 +25,7 @@ model User {
   createdAt    DateTime      @default(now())
   products     Product[]
   reservations Reservation[]
+  chatMessages ChatMessage[]
 }
 
 model Product {
@@ -49,4 +50,17 @@ model Reservation {
   buyer     User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   status    String   @default("PENDING") // PENDING, COMPLETED, CANCELLED
   createdAt DateTime @default(now())
+  chatMessages ChatMessage[]
+}
+
+model ChatMessage {
+  id            String      @id @default(uuid())
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  senderId      String
+  sender        User        @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content       String      @db.VarChar(2000)
+  createdAt     DateTime    @default(now())
+
+  @@index([reservationId, createdAt])
 }
