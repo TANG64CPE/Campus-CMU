@@ -5,24 +5,34 @@ import fs from 'fs';
 import path from 'path';
 import { isProfileContactComplete } from '../utils/userValidation';
 import { isAdminRole } from '../utils/roles';
+import { MAX_PRODUCT_IMAGES, resolveProductImageUrls } from '../utils/productImages';
 
 export class ProductController {
+  private static getUploadedImages(req: AuthenticatedRequest): Express.Multer.File[] {
+    return Array.isArray(req.files) ? req.files : [];
+  }
+
+  private static removeUploadedImages(files: Express.Multer.File[]): void {
+    files.forEach((file) => {
+      try {
+        fs.unlinkSync(file.path);
+      } catch {
+        // Ignore cleanup errors; the request is already failing.
+      }
+    });
+  }
+
   /**
    * POST /api/products
    * Create a new product listing with uploaded image
    */
   public static async createProduct(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const files = ProductController.getUploadedImages(req);
     try {
       const user = req.user!;
 
       if (isAdminRole(user.role)) {
-        if (req.file) {
-          try {
-            fs.unlinkSync(req.file.path);
-          } catch {
-            // Ignore cleanup errors; the account is still denied listing access.
-          }
-        }
+        ProductController.removeUploadedImages(files);
         res.status(403).json({
           success: false,
           message: 'บัญชีผู้ดูแลระบบไม่สามารถลงขายสินค้าได้',
@@ -32,9 +42,7 @@ export class ProductController {
 
       // Enforce mandatory profile contact info before listing products
       if (!isProfileContactComplete(user)) {
-        if (req.file) {
-          fs.unlinkSync(req.file.path);
-        }
+        ProductController.removeUploadedImages(files);
         res.status(403).json({
           success: false,
           message: 'กรุณากรอกข้อมูลติดต่อในหน้าโปรไฟล์ให้ครบถ้วนก่อนลงขายสินค้า (จำเป็นต้องมีเบอร์โทร และ Line/Facebook/Instagram อย่างน้อย 1 ช่อง)',
@@ -47,9 +55,7 @@ export class ProductController {
 
       if (!title || !price || !meetupLocation) {
         // If an image was uploaded, remove it since validation failed
-        if (req.file) {
-          fs.unlinkSync(req.file.path);
-        }
+        ProductController.removeUploadedImages(files);
         res.status(400).json({
           success: false,
           message: 'Title, price, and meetup location are required.',
@@ -59,15 +65,23 @@ export class ProductController {
 
       const parsedPrice = parseFloat(price);
       if (isNaN(parsedPrice) || parsedPrice < 0) {
-        if (req.file) {
-          fs.unlinkSync(req.file.path);
-        }
+        ProductController.removeUploadedImages(files);
         res.status(400).json({ success: false, message: 'Price must be a valid positive number.' });
         return;
       }
 
+      if (files.length > MAX_PRODUCT_IMAGES) {
+        ProductController.removeUploadedImages(files);
+        res.status(400).json({
+          success: false,
+          message: `อัปโหลดรูปสินค้าได้สูงสุด ${MAX_PRODUCT_IMAGES} รูป`,
+        });
+        return;
+      }
+
       // Store relative path for frontend access e.g., /uploads/filename.jpg
-      const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+      const imageUrls = files.map((file) => `/uploads/${file.filename}`);
+      const imageUrl = imageUrls[0] || null;
 
       const product = await prisma.product.create({
         data: {
@@ -75,6 +89,7 @@ export class ProductController {
           price: parsedPrice,
           meetupLocation: meetupLocation.trim(),
           imageUrl,
+          imageUrls,
           sellerId: user.id,
           isAvailable: true,
         },
@@ -95,6 +110,7 @@ export class ProductController {
         product,
       });
     } catch (error: any) {
+      ProductController.removeUploadedImages(files);
       console.error('[Create Product Error]:', error);
       res.status(500).json({ success: false, message: error.message });
     }
@@ -157,7 +173,7 @@ export class ProductController {
       res.json({
         success: true,
         count: products.length,
-        products,
+        products: products.map((product) => ProductController.withResolvedImages(product)),
       });
     } catch (error: any) {
       console.error('[Get Products Error]:', error);
@@ -250,10 +266,12 @@ export class ProductController {
         meetingNote: canViewSellerContact ? product.seller.meetingNote : null,
       };
 
+      const resolvedProduct = ProductController.withResolvedImages(product);
+
       res.json({
         success: true,
         product: {
-          ...product,
+          ...resolvedProduct,
           seller: sanitizedSeller,
           activeReservation: activeReservation || null,
           isUserSeller: isSeller,
@@ -286,9 +304,9 @@ export class ProductController {
         return;
       }
 
-      // Delete image file if exists
-      if (product.imageUrl) {
-        const filePath = path.resolve(__dirname, '../../', product.imageUrl.replace(/^\//, ''));
+      const imageUrls = new Set(resolveProductImageUrls(product.imageUrl, product.imageUrls));
+      for (const imageUrl of imageUrls) {
+        const filePath = path.resolve(__dirname, '../../', imageUrl!.replace(/^\//, ''));
         if (fs.existsSync(filePath)) {
           try {
             fs.unlinkSync(filePath);
@@ -305,5 +323,16 @@ export class ProductController {
       console.error('[Delete Product Error]:', error);
       res.status(500).json({ success: false, message: error.message });
     }
+  }
+
+  private static withResolvedImages<T extends { imageUrl: string | null; imageUrls: string[] }>(
+    product: T
+  ): T {
+    const imageUrls = resolveProductImageUrls(product.imageUrl, product.imageUrls);
+    return {
+      ...product,
+      imageUrls,
+      imageUrl: imageUrls[0] || product.imageUrl,
+    };
   }
 }

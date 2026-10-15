@@ -34,7 +34,8 @@ const createImageUploader = (prefix: 'product' | 'avatar') => multer({
     },
   }),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max
+    fileSize: 5 * 1024 * 1024, // 5MB max per file
+    files: prefix === 'product' ? 5 : 1,
   },
   fileFilter,
 });

@@ -34,7 +34,7 @@ const pathForView = (view: AppView, productId?: string): string => {
 };
 
 const MainApp: React.FC = () => {
-  const { user, refreshUser, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [initialRoute] = useState(readRoute);
   const [currentView, setCurrentView] = useState<AppView>(initialRoute.view);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(initialRoute.productId);
@@ -85,10 +85,9 @@ const MainApp: React.FC = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('login') === 'success') {
-      refreshUser();
       setRoute('marketplace', undefined, true);
     }
-  }, [refreshUser, setRoute]);
+  }, [setRoute]);
 
   const restoreMarketplacePosition = useCallback(() => {
     if (!restoreMarketplaceScroll.current) return;
@@ -151,6 +150,7 @@ const MainApp: React.FC = () => {
           onNavigate={handleNavigate}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          onAccountSwitch={() => handleNavigate('marketplace')}
         />
       )}
 

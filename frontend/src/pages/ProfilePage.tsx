@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { userApi, reservationApi, productApi } from '../services/api';
 import { Product, Reservation, isContactComplete, isValidThaiMobileNumber } from '../types';
+import { getProductImageUrls } from '../utils/productImages';
 import {
   User as UserIcon,
   ShoppingBag,
@@ -542,8 +543,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
                       onClick={() => onSelectProduct(p.id)}
                     >
                       <div className="w-16 h-16 rounded-md bg-surface overflow-hidden shrink-0 flex items-center justify-center border border-hairline">
-                        {p.imageUrl ? (
-                          <img src={p.imageUrl} alt="" className="w-full h-full object-cover" />
+                        {getProductImageUrls(p)[0] ? (
+                          <img src={getProductImageUrls(p)[0]} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <Tag className="w-6 h-6 text-ink-disabled" />
                         )}
@@ -625,8 +626,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
                       onClick={() => onSelectProduct(r.productId)}
                     >
                       <div className="w-16 h-16 rounded-md bg-surface overflow-hidden shrink-0 flex items-center justify-center border border-hairline">
-                        {r.product?.imageUrl ? (
-                          <img src={r.product.imageUrl} alt="" className="w-full h-full object-cover" />
+                        {getProductImageUrls(r.product)[0] ? (
+                          <img src={getProductImageUrls(r.product)[0]} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <Tag className="w-6 h-6 text-ink-disabled" />
                         )}

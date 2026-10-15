@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../services/api';
 import { AdminStats, AdminUserSummary, AdminUserDetail, isAdminRole } from '../types';
+import { getProductImageUrls } from '../utils/productImages';
 import {
   Users,
   Shield,
@@ -627,8 +628,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                               <div className="flex items-center gap-3 flex-1">
                                 <div className="w-14 h-14 rounded-md bg-surface border border-hairline shrink-0 overflow-hidden flex items-center justify-center">
-                                  {prod.imageUrl ? (
-                                    <img src={prod.imageUrl} alt="" className="w-full h-full object-cover" />
+                                  {getProductImageUrls(prod)[0] ? (
+                                    <img src={getProductImageUrls(prod)[0]} alt="" className="w-full h-full object-cover" />
                                   ) : (
                                     <Tag className="w-5 h-5 text-ink-disabled" />
                                   )}
@@ -769,8 +770,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateHome, onSelectPr
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                               <div className="flex items-center gap-3 flex-1">
                                 <div className="w-14 h-14 rounded-md bg-surface border border-hairline shrink-0 overflow-hidden flex items-center justify-center">
-                                  {resv.product?.imageUrl ? (
-                                    <img src={resv.product.imageUrl} alt="" className="w-full h-full object-cover" />
+                                  {getProductImageUrls(resv.product)[0] ? (
+                                    <img src={getProductImageUrls(resv.product)[0]} alt="" className="w-full h-full object-cover" />
                                   ) : (
                                     <Tag className="w-5 h-5 text-ink-disabled" />
                                   )}

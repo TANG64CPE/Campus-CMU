@@ -1,3 +1,14 @@
+export const MAX_PRODUCT_IMAGES = 5;
+export const MAX_PRODUCT_IMAGE_BYTES = 5 * 1024 * 1024;
+
+export function getProductImageUrls(
+  product?: { imageUrl?: string | null; imageUrls?: string[] | null } | null
+): string[] {
+  const urls = (product?.imageUrls ?? []).filter(Boolean);
+  if (urls.length) return urls;
+  return product?.imageUrl ? [product.imageUrl] : [];
+}
+
 /**
  * Local reference photos for the demo listings, matched by the product title.
  * They are illustrative only; a seller-uploaded image always takes priority.

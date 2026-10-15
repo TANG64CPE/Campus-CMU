@@ -4,6 +4,16 @@ import path from 'path';
 import { prisma } from '../lib/prisma';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { isProfileContactComplete, formatContactSummary, isValidThaiMobileNumber } from '../utils/userValidation';
+import { resolveProductImageUrls } from '../utils/productImages';
+
+const withResolvedImages = <T extends { imageUrl: string | null; imageUrls: string[] }>(product: T): T => {
+  const imageUrls = resolveProductImageUrls(product.imageUrl, product.imageUrls);
+  return {
+    ...product,
+    imageUrls,
+    imageUrl: imageUrls[0] || product.imageUrl,
+  };
+};
 
 export class UserController {
   /**
@@ -73,6 +83,11 @@ export class UserController {
         success: true,
         user: {
           ...fullUser,
+          products: fullUser.products.map(withResolvedImages),
+          reservations: fullUser.reservations.map((reservation) => ({
+            ...reservation,
+            product: withResolvedImages(reservation.product),
+          })),
           hasCompletedContact,
         },
       });
@@ -214,7 +229,7 @@ export class UserController {
 
       res.json({
         success: true,
-        products,
+        products: products.map(withResolvedImages),
       });
     } catch (error: any) {
       res.status(500).json({ success: false, message: error.message });

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { randomBytes } from 'crypto';
 import jwt from 'jsonwebtoken';
 import { ENV } from '../config/env';
 import { prisma } from '../lib/prisma';
@@ -56,9 +57,16 @@ export class AuthController {
    * Redirects user to CPE CMU OAuth authorization page
    */
   public static initiateCmuLogin(req: Request, res: Response): void {
-    const { redirectUri } = AuthController.getDynamicRedirectUri(req);
-    const authUrl = CmuOAuthService.getAuthorizationUrl(redirectUri);
-    console.log(`[CPE OAuth] Redirecting to authorization URL: ${authUrl}`);
+    const { redirectUri, frontendUrl } = AuthController.getDynamicRedirectUri(req);
+    // Preserve the exact redirect URI used in the authorization request. The
+    // callback request may arrive through a proxy with a different Host/Referer.
+    const state = jwt.sign(
+      { redirectUri, frontendUrl, nonce: randomBytes(16).toString('hex') },
+      ENV.JWT_SECRET,
+      { expiresIn: '10m' }
+    );
+    res.clearCookie('token', { httpOnly: true, sameSite: 'lax', path: '/' });
+    const authUrl = CmuOAuthService.getAuthorizationUrl(redirectUri, state);
     res.redirect(authUrl);
   }
 
@@ -68,7 +76,21 @@ export class AuthController {
    */
   public static async handleCmuCallback(req: Request, res: Response): Promise<void> {
     const code = req.query.code as string;
-    const { redirectUri, frontendUrl } = AuthController.getDynamicRedirectUri(req);
+    let redirectUri: string;
+    let frontendUrl: string;
+    try {
+      const state = jwt.verify(String(req.query.state || ''), ENV.JWT_SECRET) as {
+        redirectUri?: string;
+        frontendUrl?: string;
+      };
+      if (!state.redirectUri || !state.frontendUrl) throw new Error('Invalid OAuth state');
+      redirectUri = state.redirectUri;
+      frontendUrl = state.frontendUrl;
+    } catch {
+      const fallback = AuthController.getDynamicRedirectUri(req);
+      res.redirect(`${fallback.frontendUrl}/login?error=invalid_oauth_state`);
+      return;
+    }
 
     if (!code) {
       console.warn('[CPE OAuth Callback] Missing authorization code in query params');
@@ -77,14 +99,11 @@ export class AuthController {
     }
 
     try {
-      console.log(`[CPE OAuth Callback] Received code: ${code.substring(0, 10)}...`);
-
       // 1. Exchange authorization code for token
       const { accessToken, idToken } = await CmuOAuthService.exchangeCodeForToken(code, redirectUri);
 
       // 2. Fetch user profile
       const profile = await CmuOAuthService.getStudentProfile(accessToken, idToken);
-      console.log(`[CPE OAuth Callback] Authenticated user: ${profile.name} (${profile.email}, ID: ${profile.studentId})`);
 
       // 3. Upsert User in database safely
       let user = await prisma.user.findFirst({
@@ -153,10 +172,9 @@ export class AuthController {
         path: '/',
       });
 
-      console.log(`[CPE OAuth Callback] Login successful! Redirecting to ${frontendUrl}/?login=success`);
       res.redirect(`${frontendUrl}/?login=success`);
     } catch (error: any) {
-      console.error('[CPE OAuth Callback Error]:', error.response?.data || error.message);
+      console.error('[CPE OAuth Callback Error]:', error.response?.status || error.message);
       res.redirect(`${frontendUrl}/login?error=auth_failed`);
     }
   }

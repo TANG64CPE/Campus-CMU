@@ -44,6 +44,7 @@ export interface Product {
   title: string;
   price: number;
   imageUrl: string | null;
+  imageUrls?: string[];
   meetupLocation: string;
   isAvailable: boolean;
   sellerId: string;
@@ -132,6 +133,7 @@ export interface AdminUserDetail {
       title: string;
       price: number;
       imageUrl: string | null;
+      imageUrls?: string[];
       meetupLocation: string;
       isAvailable: boolean;
       createdAt: string;
@@ -166,6 +168,7 @@ export interface AdminUserDetail {
         title: string;
         price: number;
         imageUrl: string | null;
+        imageUrls?: string[];
         meetupLocation: string;
         isAvailable: boolean;
         seller: {

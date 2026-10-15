@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { User } from '../types';
 import { authApi } from '../services/api';
 
@@ -16,6 +16,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  // Capture this before child effects can clean the callback query from history.
+  const arrivedFromOAuth = useRef(
+    new URLSearchParams(window.location.search).get('login') === 'success'
+  );
 
   const fetchCurrentUser = async () => {
     try {
@@ -29,7 +33,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    fetchCurrentUser();
+    // A normal app visit starts signed out. Preserve the session only when
+    // returning from the CMU OAuth callback, where the server just created it.
+    if (arrivedFromOAuth.current) {
+      fetchCurrentUser();
+      return;
+    }
+
+    const startSignedOut = async () => {
+      try {
+        await authApi.logout();
+      } catch {
+        // Keep the UI signed out even if the server session is already gone.
+      } finally {
+        setUser(null);
+        setLoading(false);
+      }
+    };
+    startSignedOut();
   }, []);
 
   const loginWithCmu = () => {

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Tag } from 'lucide-react';
 import { Product } from '../types';
-import { getProductReferenceImage } from '../utils/productImages';
+import { getProductImageUrls, getProductReferenceImage } from '../utils/productImages';
 
 interface ProductImageProps {
-  product: Pick<Product, 'id' | 'title' | 'imageUrl'>;
+  product: Pick<Product, 'id' | 'title' | 'imageUrl' | 'imageUrls'>;
   className?: string;
   loading?: 'eager' | 'lazy';
 }
@@ -17,10 +17,11 @@ export const ProductImage: React.FC<ProductImageProps> = ({ product, className =
   useEffect(() => {
     setUploadedImageFailed(false);
     setReferenceImageFailed(false);
-  }, [product.id, product.imageUrl, product.title]);
+  }, [product.id, product.imageUrl, product.imageUrls, product.title]);
 
-  const imageUrl = product.imageUrl && !uploadedImageFailed
-    ? product.imageUrl
+  const primaryImageUrl = getProductImageUrls(product)[0] || null;
+  const imageUrl = primaryImageUrl && !uploadedImageFailed
+    ? primaryImageUrl
     : referenceImage && !referenceImageFailed
       ? referenceImage
       : null;
@@ -35,7 +36,7 @@ export const ProductImage: React.FC<ProductImageProps> = ({ product, className =
           loading={loading}
           className={className}
           onError={() => {
-            if (imageUrl === product.imageUrl) setUploadedImageFailed(true);
+            if (imageUrl === primaryImageUrl) setUploadedImageFailed(true);
             else setReferenceImageFailed(true);
           }}
         />

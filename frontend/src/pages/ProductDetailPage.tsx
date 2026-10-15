@@ -22,8 +22,11 @@ import {
   Camera,
   Share2,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { ProductImage } from '../components/ProductImage';
+import { getProductImageUrls } from '../utils/productImages';
 
 interface ProductDetailPageProps {
   productId: string;
@@ -50,6 +53,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   // Time state for 3-Hour window
   const [timeRemainingText, setTimeRemainingText] = useState<string>('');
@@ -61,6 +65,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     try {
       const data = await productApi.getProductById(productId);
       setProduct(data.product);
+      setActiveImageIndex(0);
       setIsSeller(data.isUserSeller);
       setIsBuyer(data.isUserBuyer);
       setActiveReservation(data.activeReservation);
@@ -262,6 +267,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     );
   }
 
+  const productImages = getProductImageUrls(product);
+  const safeImageIndex = productImages.length
+    ? Math.min(activeImageIndex, productImages.length - 1)
+    : 0;
+
   const isReserved = !product.isAvailable;
   const isCurrentUserTheBuyer = isBuyer || (activeReservation && activeReservation.buyerId === user?.id);
   const isCurrentUserTheSeller = isSeller || product.sellerId === user?.id;
@@ -307,16 +317,58 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       <div className="card-feature-panel sm:rounded-xxl shadow-tinted-sm overflow-hidden p-6 sm:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Big Product Image Frame */}
-          <div className="relative aspect-square rounded-lg sm:rounded-xl bg-surface overflow-hidden flex items-center justify-center border border-hairline">
-            <ProductImage product={product} loading="eager" className="h-full w-full object-cover" />
+          <div>
+            <div className="relative aspect-square rounded-lg sm:rounded-xl bg-surface overflow-hidden flex items-center justify-center border border-hairline">
+              {productImages.length ? (
+                <img src={productImages[safeImageIndex]} alt={`${product.title} รูปที่ ${safeImageIndex + 1}`} className="h-full w-full object-cover" />
+              ) : (
+                <ProductImage product={product} loading="eager" className="h-full w-full object-cover" />
+              )}
+              {productImages.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="รูปก่อนหน้า"
+                    onClick={() => setActiveImageIndex((index) => (index - 1 + productImages.length) % productImages.length)}
+                    className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 text-ink shadow-sm hover:bg-white"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="รูปถัดไป"
+                    onClick={() => setActiveImageIndex((index) => (index + 1) % productImages.length)}
+                    className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 text-ink shadow-sm hover:bg-white"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
 
-            {/* Reserved Overlay Badge */}
-            {isReserved && (
-              <div className="absolute top-3.5 right-3.5 z-10">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/95 backdrop-blur-sm text-brand-orange border border-brand-orange/30 shadow-tinted-xs">
-                  <Clock className="w-3.5 h-3.5" />
-                  ติดจองแล้ว
-                </span>
+              {/* Reserved Overlay Badge */}
+              {isReserved && (
+                <div className="absolute top-3.5 right-3.5 z-10">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/95 backdrop-blur-sm text-brand-orange border border-brand-orange/30 shadow-tinted-xs">
+                    <Clock className="w-3.5 h-3.5" />
+                    ติดจองแล้ว
+                  </span>
+                </div>
+              )}
+            </div>
+            {productImages.length > 1 && (
+              <div className="mt-3 flex gap-2 overflow-x-auto">
+                {productImages.map((imageUrl, index) => (
+                  <button
+                    key={imageUrl}
+                    type="button"
+                    onClick={() => setActiveImageIndex(index)}
+                    aria-label={`ดูรูปที่ ${index + 1}`}
+                    aria-pressed={safeImageIndex === index}
+                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 ${safeImageIndex === index ? 'border-primary' : 'border-hairline'}`}
+                  >
+                    <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+                  </button>
+                ))}
               </div>
             )}
           </div>

@@ -8,6 +8,7 @@ interface NavbarProps {
   onNavigate: (view: string, productId?: string) => void;
   searchQuery: string;
   onSearchChange: (q: string) => void;
+  onAccountSwitch: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -15,6 +16,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   searchQuery,
   onSearchChange,
+  onAccountSwitch,
 }) => {
   const { user, logout, mockLogin } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -175,8 +177,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                             key={s.studentId}
                             onClick={(e) => {
                               e.stopPropagation();
-                              mockLogin(s);
                               setShowUserMenu(false);
+                              void mockLogin(s).then(onAccountSwitch);
                             }}
                             className={`w-full text-left text-body-sm px-3 py-2 rounded-full transition-colors duration-clickup ease-clickup flex items-center justify-between ${
                               user.studentId === s.studentId
@@ -194,7 +196,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                       <div className="border-t border-hairline pt-1 mt-1">
                         <button
-                          onClick={logout}
+                          onClick={() => {
+                            void logout().then(() => onNavigate('marketplace'));
+                          }}
                           className="w-full px-4 py-2.5 text-left text-body-sm font-semibold text-accent-red hover:bg-surface-soft flex items-center gap-2 transition-colors"
                         >
                           <LogOut className="w-3.5 h-3.5" />

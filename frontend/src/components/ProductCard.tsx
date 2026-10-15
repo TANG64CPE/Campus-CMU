@@ -1,7 +1,8 @@
 import React from 'react';
 import { Product } from '../types';
-import { Clock, Check } from 'lucide-react';
+import { Clock, Check, Images } from 'lucide-react';
 import { ProductImage } from './ProductImage';
+import { getProductImageUrls } from '../utils/productImages';
 
 interface ProductCardProps {
   product: Product;
@@ -10,6 +11,7 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) => {
   const formattedPrice = new Intl.NumberFormat('th-TH').format(product.price);
+  const imageCount = getProductImageUrls(product).length;
 
   return (
     <button
@@ -26,6 +28,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) =>
           {product.isAvailable ? <Check className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
           {product.isAvailable ? 'พร้อมซื้อ' : 'มีคนจองแล้ว'}
         </span>
+        {imageCount > 1 && (
+          <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-black/80 px-2 py-1 text-[11px] font-medium text-white">
+            <Images className="h-3.5 w-3.5" />
+            {imageCount}
+          </span>
+        )}
       </div>
 
       <div className="p-4 sm:p-5">

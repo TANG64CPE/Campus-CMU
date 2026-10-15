@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { productApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { isAdminRole, isContactComplete } from '../types';
+import { MAX_PRODUCT_IMAGE_BYTES, MAX_PRODUCT_IMAGES } from '../utils/productImages';
 import {
   MapPin,
   Tag,
@@ -11,6 +12,7 @@ import {
   Camera,
   X,
   Sparkles,
+  ImagePlus,
 } from 'lucide-react';
 
 interface CreateProductPageProps {
@@ -25,8 +27,9 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
   const [meetupLocation, setMeetupLocation] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const imagePreviewsRef = useRef(imagePreviews);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -41,17 +44,47 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
     'คณะสถาปัตยกรรมศาสตร์ มช.',
   ];
 
+  useEffect(() => () => imagePreviewsRef.current.forEach(URL.revokeObjectURL), []);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+    const selectedFiles = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (!selectedFiles.length) return;
+
+    const availableSlots = MAX_PRODUCT_IMAGES - imageFiles.length;
+    const validFiles = selectedFiles.filter((file) => {
+      const isImage = file.type.startsWith('image/');
+      const isAllowedSize = file.size <= MAX_PRODUCT_IMAGE_BYTES;
+      return isImage && isAllowedSize;
+    });
+
+    if (validFiles.length !== selectedFiles.length) {
+      setErrorMsg('กรุณาเลือกไฟล์รูป JPG, PNG, WEBP หรือ GIF ขนาดไม่เกิน 5MB ต่อรูป');
+    } else if (validFiles.length > availableSlots) {
+      setErrorMsg(`อัปโหลดรูปได้สูงสุด ${MAX_PRODUCT_IMAGES} รูป (เพิ่มได้อีก ${availableSlots} รูป)`);
+    } else {
+      setErrorMsg(null);
     }
+
+    const filesToAdd = validFiles.slice(0, Math.max(availableSlots, 0));
+    if (!filesToAdd.length) return;
+
+    setImageFiles((current) => [...current, ...filesToAdd]);
+    setImagePreviews((current) => {
+      const next = [...current, ...filesToAdd.map((file) => URL.createObjectURL(file))];
+      imagePreviewsRef.current = next;
+      return next;
+    });
   };
 
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
+  const removeImage = (index: number) => {
+    setImageFiles((current) => current.filter((_, fileIndex) => fileIndex !== index));
+    setImagePreviews((current) => {
+      URL.revokeObjectURL(current[index]);
+      const next = current.filter((_, previewIndex) => previewIndex !== index);
+      imagePreviewsRef.current = next;
+      return next;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,9 +110,7 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
       formData.append('title', title.trim());
       formData.append('price', price);
       formData.append('meetupLocation', meetupLocation.trim());
-      if (imageFile) {
-        formData.append('image', imageFile);
-      }
+      imageFiles.forEach((file) => formData.append('images', file));
 
       const created = await productApi.createProduct(formData);
       onSuccess(created.id);
@@ -218,36 +249,47 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
               รูปภาพสินค้า
             </label>
 
-            {imagePreview ? (
-              <div className="relative aspect-[16/9] sm:aspect-[2/1] rounded-lg bg-surface overflow-hidden border border-hairline">
-                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute top-3 right-3 p-1.5 rounded-full bg-ink/80 text-canvas hover:bg-ink transition-colors duration-clickup ease-clickup shadow-tinted-xs"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center aspect-[16/9] sm:aspect-[2/1] rounded-lg border-2 border-dashed border-hairline-strong hover:border-primary bg-surface/40 hover:bg-surface cursor-pointer transition-all duration-clickup ease-clickup p-6 text-center group">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {imagePreviews.map((preview, index) => (
+                <div key={preview} className="relative aspect-[4/3] rounded-lg bg-surface overflow-hidden border border-hairline">
+                  <img src={preview} alt={`รูปสินค้า ${index + 1}`} className="w-full h-full object-cover" />
+                  <span className="absolute bottom-2 left-2 rounded-full bg-ink/75 px-2 py-0.5 text-[10px] text-white">
+                    {index + 1}/{MAX_PRODUCT_IMAGES}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    aria-label={`ลบรูปที่ ${index + 1}`}
+                    className="absolute top-2 right-2 p-1.5 rounded-full bg-ink/80 text-canvas hover:bg-ink shadow-tinted-xs"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              {imageFiles.length < MAX_PRODUCT_IMAGES && (
+              <label className="flex flex-col items-center justify-center aspect-[4/3] rounded-lg border-2 border-dashed border-hairline-strong hover:border-primary bg-surface/40 hover:bg-surface cursor-pointer transition-all duration-clickup ease-clickup p-5 text-center group">
                 <div className="w-11 h-11 rounded-full bg-surface-soft border border-hairline text-ink-secondary flex items-center justify-center mb-2.5 group-hover:scale-105 group-hover:text-primary transition-all duration-clickup ease-clickup">
-                  <Camera className="w-5 h-5" />
+                  {imageFiles.length ? <ImagePlus className="w-5 h-5" /> : <Camera className="w-5 h-5" />}
                 </div>
                 <span className="text-body-sm font-semibold text-ink">
-                  คลิกเพื่ออัปโหลดรูปภาพสินค้า
+                  {imageFiles.length ? 'เพิ่มรูปภาพ' : 'คลิกเพื่ออัปโหลดรูปภาพสินค้า'}
                 </span>
                 <span className="text-[11px] font-mono text-ink-tertiary mt-1">
-                  JPG, PNG, WEBP (MAX 5MB)
+                  JPG, PNG, WEBP (สูงสุดรูปละ 5MB)
                 </span>
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageChange}
                   className="hidden"
                 />
               </label>
-            )}
+              )}
+            </div>
+            <p className="text-[11px] text-ink-tertiary mt-2">
+              เลือกได้สูงสุด {MAX_PRODUCT_IMAGES} รูป · {imageFiles.length}/{MAX_PRODUCT_IMAGES} รูป
+            </p>
           </div>
 
           {/* Product Title — design.md text-input: 44px, sm (9px) radius */}
@@ -271,7 +313,6 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
               ราคา (บาท ฿) <span className="text-accent-red">*</span>
             </label>
             <div className="relative">
-              <span className="absolute left-3.5 top-3 text-ink-tertiary font-bold text-body-md">฿</span>
               <input
                 type="number"
                 required
@@ -294,7 +335,6 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
               จุดนัดรับของภายใน มช. <span className="text-accent-red">*</span>
             </label>
             <div className="relative mb-2.5">
-              <MapPin className="w-4 h-4 text-primary absolute left-3.5 top-3.5" />
               <input
                 type="text"
                 required

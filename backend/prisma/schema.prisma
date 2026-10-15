@@ -31,7 +31,8 @@ model Product {
   id             String        @id @default(uuid())
   title          String
   price          Float
-  imageUrl       String?       // เก็บ Path ของไฟล์รูปภาพในเครื่อง (/uploads/...)
+  imageUrl       String?       // รูปหลักของสินค้า รองรับข้อมูลเก่า
+  imageUrls      String[]      @default([]) // รูปสินค้าทั้งหมด สูงสุด 5 รูป
   meetupLocation String        // จุดนัดรับสินค้า (เช่น หอสมุด มช., ลานสัก, โรงอาหารอ่างแก้ว)
   isAvailable    Boolean       @default(true)
   sellerId       String

@@ -17,14 +17,17 @@ export class CmuOAuthService {
   /**
    * Generates authorization URL for CPE OAuth redirect
    */
-  public static getAuthorizationUrl(redirectUri?: string): string {
+  public static getAuthorizationUrl(redirectUri?: string, state?: string): string {
     const targetRedirectUri = redirectUri || ENV.CMU_OAUTH_REDIRECT_URI || 'http://localhost:5173/api/auth/callback';
     const params = new URLSearchParams({
       client_id: ENV.CMU_OAUTH_CLIENT_ID,
       redirect_uri: targetRedirectUri,
       response_type: 'code',
       scope: 'openid profile email basic_info',
+      prompt: 'login',
+      max_age: '0',
     });
+    if (state) params.set('state', state);
     return `${this.AUTH_URL}?${params.toString()}`;
   }
 
@@ -83,12 +86,10 @@ export class CmuOAuthService {
         timeout: 10000,
       });
       data = response.data;
-      console.log('[CPE OAuth] Fetched userinfo data successfully:', JSON.stringify(data));
     } catch (err: any) {
       console.warn('[CPE OAuth] Userinfo endpoint call failed, falling back to id_token:', err.message);
       if (idToken) {
         data = jwt.decode(idToken) || {};
-        console.log('[CPE OAuth] Decoded id_token payload:', JSON.stringify(data));
       }
     }
 
