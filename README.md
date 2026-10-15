@@ -29,11 +29,11 @@
   - Node-Cron (ระบบ Background Job สำหรับยกเลิกการจองอัตโนมัติ)
 - **Authentication & Security:**
   - CPE CMU OAuth 2.0 (`https://oauth497.cpecmu.com`)
-  - JWT Authentication ผ่าน **HTTP-Only Cookies** (ป้องกัน XSS)
+  - JWT Authentication ผ่าน **HTTP-Only Cookies** (ช่วยป้องกัน JavaScript อ่าน session cookie; ไม่ได้ป้องกัน XSS ทุกกรณี)
   - Local Dev Mock Authentication (พร้อมปุ่มสลับ Persona นักศึกษาและ Admin ทันที)
-  - Role-Based Access Control Middleware (`requireAdmin`)
+  - Role-Based Access Control Middleware (`requireAdmin`) และ Middleware จำกัดบัญชีที่ถูกแบน
 - **Testing & Quality Assurance:**
-  - Vitest (Unit & Business Rules Integration Testing)
+  - Vitest (Unit tests สำหรับ business rules)
   - Playwright (End-to-End Testing)
 - **DevOps & Containerization:**
   - Docker & Docker Compose (Multi-container setup: PostgreSQL + Backend + Frontend + Nginx)
@@ -43,59 +43,11 @@
 
 ## Database Structure (Prisma Schema)
 
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+ใช้ PostgreSQL ผ่าน Prisma โดย schema หลักประกอบด้วย `User`, `Product`, `Reservation`, `ChatMessage`, `SupportConversation` และ `SupportMessage`:
 
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
-}
-
-model User {
-  id           String        @id @default(uuid())
-  studentId    String        @unique
-  email        String        @unique
-  name         String
-  phone        String?       // เบอร์โทรติดต่อ (*จำเป็นต้องมี)
-  lineId       String?       // Line ID (*จำเป็นต้องมีอย่างน้อย 1 ช่องใน Social Media)
-  facebook     String?       // Facebook Profile / Name
-  instagram    String?       // Instagram Handle
-  meetingNote  String?       // ข้อมูลทั่วไป / สถานที่หรือจุดนัดพบที่สะดวก
-  contactInfo  String?       // รวมข้อความสรุปช่องทางติดต่อ (สำหรับแสดงผลแบบย่อ)
-  role         String        @default("STUDENT") // "STUDENT" | "ADMIN"
-  isBanned     Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  products     Product[]
-  reservations Reservation[]
-}
-
-model Product {
-  id             String        @id @default(uuid())
-  title          String
-  price          Float
-  category       String?       // หมวดสินค้าที่ผู้ขายเลือก (micro, books, arch, dorm, other)
-  imageUrl       String?       // เก็บ Path รูปภาพในเครื่อง (/uploads/...)
-  meetupLocation String        // จุดนัดรับใน มช. (เช่น หอสมุดกลาง, ตึก 30 ปี วิศวะ, ลานสัก)
-  isAvailable    Boolean       @default(true)
-  sellerId       String
-  seller         User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  createdAt      DateTime      @default(now())
-  reservations   Reservation[]
-}
-
-model Reservation {
-  id        String   @id @default(uuid())
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  buyerId   String
-  buyer     User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  status    String   @default("PENDING") // PENDING, COMPLETED, CANCELLED
-  createdAt DateTime @default(now())
-}
-```
+- `Product.category` เป็น nullable เพื่อรองรับสินค้าเดิม และรายการสินค้ามี `imageUrl` กับ `imageUrls`
+- `SupportConversation.isResolved` ใช้แยกบทสนทนาที่ Admin ทำเครื่องหมายว่าแก้ไขแล้ว โดยยังเก็บประวัติข้อความไว้
+- รายละเอียด field และ relation ที่เป็นแหล่งข้อมูลจริงอยู่ใน [backend/prisma/schema.prisma](backend/prisma/schema.prisma)
 
 ---
 
@@ -135,9 +87,9 @@ model Reservation {
 - **Anti-Ghosting Report:** หากผู้ซื้อไม่มาตามนัดหมาย ผู้ขายสามารถกดปุ่ม **"รายงานผู้ซื้อไม่มาตามนัด (Report Ghosting)"** ระบบจะยกเลิกการจอง คืนสถานะสินค้า และตั้งค่าระงับบัญชีผู้ซื้อ (`isBanned = true`) ทันที
 
 ### 6. ระบบผู้ดูแลระบบ (Admin Management System)
-- **Role-based Access Control:** สิทธิ์ `ADMIN` ได้รับการป้องกันผ่าน `requireAdmin` middleware
+- **Role-based Access Control:** สิทธิ์ Admin (`ADMIN`, `ADMIN1`, `ADMIN2`, `ADMIN3`) ได้รับการป้องกันผ่าน `requireAdmin` middleware
 - **Dashboard KPI Metrics:** ดูสถิติรวมของระบบ เช่น จำนวนผู้ใช้ทั้งหมด, จำนวนผู้ขาย (Sellers), จำนวนผู้ซื้อ (Buyers), สินค้าที่ลงขาย, การจอง, และดีลที่ปิดสำเร็จ
-- **User Management & Filters:** ค้นหาบัญชีนักศึกษาตามชื่อ อีเมล หรือรหัสนักศึกษา กรองตามสถานะการใช้งาน (Active / Banned) และกิจกรรม (ผู้ขาย / ผู้ซื้อ)
+- **User Management & Filters:** ค้นหาบัญชีนักศึกษาตามชื่อ อีเมล หรือรหัสนักศึกษา กรองบัญชีตามสถานะถูกแบนและกิจกรรม (ผู้ขาย / ผู้ซื้อ); บัญชี Admin แสดงแยกต่างหาก
 - **Separated Admin Accounts:** แสดงบัญชี Admin ในส่วนแยกจากรายชื่อผู้ใช้ และไม่อนุญาตให้แบนหรือปลดแบนบัญชี Admin
 - **Banned Account Support:** ผู้ใช้ที่ถูกระงับจะเข้าสู่หน้าข้อความแจ้งสถานะและส่งข้อความหา Admin ได้ โดย Admin ตอบกลับจากกล่องข้อความในหน้า Admin
 - **Support Conversation Resolution:** Admin ทำเครื่องหมายบทสนทนาว่าแก้ไขแล้วเพื่อเก็บประวัติและแยกออกจากรายการที่กำลังดำเนินการได้
@@ -155,18 +107,19 @@ model Reservation {
 ### Authentication (`/api/auth`)
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/auth/login` หรือ `/cmu` | Redirect ผู้ใช้ไปยังหน้า CPE CMU OAuth |
-| `GET` | `/api/auth/callback` | Callback รับ Code แลก Token และสร้างเซสชัน JWT Cookie |
+| `GET` | `/api/auth/login`, `/api/auth/cmu` | เริ่มการล็อกอินและ Redirect ไป CPE CMU OAuth |
+| `GET` | `/api/auth/callback`, `/api/auth/cmu/callback` | Callback แลก Code และสร้างเซสชัน JWT Cookie |
 | `POST` | `/api/auth/mock-login` | จำลองล็อกอินสำหรับ Local Testing (ระบุ studentId, role ได้) |
 | `GET` | `/api/auth/me` | ดึงข้อมูลโปรไฟล์ของผู้ใช้ปัจจุบันที่ล็อกอินอยู่ |
 | `POST` | `/api/auth/logout` | ล้าง Cookie เซสชันและออกจากระบบ |
+| `GET` | `/callback`, `/auth/callback` | Callback aliases ที่ Backend เปิดไว้เพื่อรองรับ OAuth allowlist |
 
 ### Products (`/api/products`)
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/products` | ดึงรายการสินค้าทั้งหมด (รองรับ Query `search`) |
+| `GET` | `/api/products` | ดึงสินค้า (รองรับ Query `search` และ `available`: `all`, `true`, `false`; ค่าเริ่มต้นแสดงสินค้าพร้อมขาย) |
 | `GET` | `/api/products/:id` | ดึงรายละเอียดสินค้า พร้อมข้อมูลผู้ขาย |
-| `POST` | `/api/products` | ลงประกาศขายสินค้าใหม่ (แนบไฟล์รูปภาพ `image`) *(Auth Required)* |
+| `POST` | `/api/products` | ลงประกาศขายสินค้าใหม่ (ส่งไฟล์แบบ `images` ได้สูงสุด 5 รูป พร้อมข้อมูลสินค้า) *(Auth Required)* |
 | `DELETE` | `/api/products/:id` | ลบประกาศขายสินค้า *(เฉพาะเจ้าของสินค้า)* |
 
 ### Reservations (`/api/reservations`)
@@ -178,6 +131,9 @@ model Reservation {
 | `POST` | `/api/reservations/:id/report-ghost` | รายงานผู้ซื้อเทนัด คืนสถานะสินค้า และแบนผู้ซื้อ |
 | `GET` | `/api/reservations/my` | รายการสินค้าที่ตัวเราเป็นผู้กดจอง |
 | `GET` | `/api/reservations/seller` | รายการจองสินค้าที่เข้ามายังสินค้าที่เราลงขาย |
+| `GET` | `/api/reservations/chats` | รายการแชตของการจองที่ยัง `PENDING` |
+| `GET` | `/api/reservations/:id/messages` | โหลดข้อความแชตการจอง (เฉพาะผู้ซื้อ/ผู้ขายที่เกี่ยวข้อง) |
+| `POST` | `/api/reservations/:id/messages` | ส่งข้อความในแชตการจองที่ยัง `PENDING` |
 
 ### Account Support (`/api/support`)
 | Method | Endpoint | Description |
@@ -190,6 +146,7 @@ model Reservation {
 |---|---|---|
 | `GET` | `/api/users/profile` | ดึงข้อมูลโปรไฟล์และช่องทางติดต่อ |
 | `PATCH` | `/api/users/profile` | แก้ไขข้อมูลการติดต่อ (เช่น Line ID, เบอร์โทรศัพท์) |
+| `PATCH` | `/api/users/profile/avatar` | อัปโหลดหรือเปลี่ยนรูปโปรไฟล์ |
 | `GET` | `/api/users/my-products` | รายการสินค้าทั้งหมดที่เราเป็นผู้ลงขาย |
 | `PATCH` | `/api/users/products/:id/toggle-status` | สลับสถานะสินค้า วางขาย ↔ ปิดรับการจอง |
 
@@ -197,10 +154,10 @@ model Reservation {
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/api/admin/stats` | สรุปภาพรวมสถิติทั้งระบบ (ผู้ใช้, ผู้ขาย, ผู้ซื้อ, สินค้า, การจอง) |
-| `GET` | `/api/admin/users` | รายชื่อผู้ใช้ทั้งหมด รองรับ Search, Role, Status, Activity filter |
+| `GET` | `/api/admin/users` | รายชื่อนักศึกษา รองรับ Search, Role, Status, Activity filter; ค่าเริ่มต้นไม่รวม Admin |
 | `GET` | `/api/admin/users/:id` | เจาะลึกประวัติของผู้ใช้ ดูรายการที่ขาย และรายการที่กดจองทั้งหมด |
-| `PATCH` | `/api/admin/users/:id/ban` | สลับสถานะระงับการใช้งานบัญชี (Ban / Unban) |
-| `PATCH` | `/api/admin/users/:id/role` | ปรับเปลี่ยนระดับสิทธิ์ (`STUDENT` / `ADMIN`) |
+| `PATCH` | `/api/admin/users/:id/ban` | สลับสถานะแบน/ปลดแบนบัญชีนักศึกษา (บัญชี Admin ถูกป้องกันไม่ให้แบน) |
+| `PATCH` | `/api/admin/users/:id/role` | ปรับเปลี่ยนระดับสิทธิ์ระหว่างนักศึกษาและ Admin |
 | `GET` | `/api/admin/support` | รายการบทสนทนาที่ผู้ใช้ส่งถึง Admin |
 | `GET` | `/api/admin/support/:userId/messages` | โหลดบทสนทนาของผู้ใช้ |
 | `POST` | `/api/admin/support/:userId/messages` | ส่งข้อความตอบกลับผู้ใช้ |
@@ -210,12 +167,28 @@ model Reservation {
 
 ## วิธีการรันโปรเจกต์ (Quick Start)
 
+### เตรียม Deploy ไปยัง FSG06 (`10.10.184.14`)
+
+> **สถานะ: ยังไม่พร้อม Deploy ด้วย Docker Compose ปัจจุบัน** — เอกสารส่วนนี้เป็น checklist เตรียมงานเท่านั้น ยังไม่มีการเชื่อมต่อหรือเปลี่ยนแปลงเซิร์ฟเวอร์
+
+ก่อน Deploy ไปยังเซิร์ฟเวอร์ที่อาจมีระบบหรือข้อมูลเดิม:
+
+1. ยืนยันสิทธิ์ใช้งานเครื่องและช่วงเวลาที่สามารถ deploy ได้ พร้อมตรวจสอบว่าบริการใดใช้พอร์ตที่ CampusMart ต้องการ
+2. ตรวจสอบโครงสร้างระบบและฐานข้อมูลที่มีอยู่จริง สำรองฐานข้อมูลและข้อมูล uploads ไปยังตำแหน่งที่แยกจาก container ก่อนเปลี่ยนแปลงใด ๆ ห้ามใช้ `docker compose down -v` เพราะจะลบ volumes
+3. เตรียมค่าตั้ง Production ผ่านช่องทางลับที่ได้รับอนุมัติ ห้ามใส่รหัสผ่าน, OAuth secret หรือ JWT secret ใน README, Git หรือแชต ได้แก่ `DATABASE_URL`, `JWT_SECRET` ที่สุ่มใหม่, OAuth client credentials, callback URL และ frontend URL ที่ใช้งานได้จริง และตั้ง `ENABLE_MOCK_AUTH=false`
+4. ตรวจสอบและปรับ `docker-compose.yml` ก่อนใช้งานจริง: ค่าบางรายการใน `environment` ถูกกำหนดตายตัวและจะ override ค่าใน `backend/.env`, ฐานข้อมูล PostgreSQL เปิดพอร์ต `5432` ออกสู่ host และค่า URL ปัจจุบันเป็นของ local development จึงห้ามใช้ compose นี้กับเซิร์ฟเวอร์โดยตรง
+5. ตรวจสอบขั้นตอน schema update ก่อนเริ่ม Backend: `backend/Dockerfile` เรียก `prisma db push` ตอน container เริ่มทำงาน ควรตรวจผลกระทบกับ schema/ข้อมูลเดิมและทำหลัง backup เท่านั้น ห้ามรัน seed กับฐานข้อมูลที่มีข้อมูลจริง
+6. หลังเตรียม config และแผน migration แล้ว ค่อย deploy ตามวิธีที่ผู้ดูแล FSG06 อนุมัติ และตรวจ `/api/health`, การเข้าสู่ระบบ OAuth, การอัปโหลดรูป และข้อมูลเดิมหลัง deploy
+
+ไฟล์ `.env` ถูกยกเว้นจาก Git อยู่แล้ว ให้สร้าง/ตั้งค่าเฉพาะบนเครื่องที่ได้รับอนุญาต และอย่าอัปโหลดหรือคัดลอกค่า secret ลง repository
+
 ### วิธีที่ 1: รันด้วย Docker Compose (แนะนำสำหรับการทดสอบครบวงจร)
 
 ```bash
 # รันทุก Services พร้อมกัน (PostgreSQL + Backend + Frontend + Nginx)
 docker compose up --build
 ```
+- ใช้สำหรับ local development/testing เท่านั้น ไม่ใช่คำสั่ง Deploy ไป FSG06
 - **Frontend เข้าใช้งานได้ที่:** `http://localhost`
 - **Backend API:** `http://localhost:5000/api`
 
@@ -271,10 +244,10 @@ cd backend
 npm test
 ```
 
-### 2. ทดสอบ End-to-End Flows (Playwright)
+### 2. ทดสอบ End-to-End (Playwright)
 ```bash
 cd frontend
-npx playwright test
+npm run test:e2e
 ```
 
 ---
@@ -287,22 +260,22 @@ Project Campus/
 ├── backend/
 │   ├── src/
 │   │   ├── config/env.ts              # จัดการ Environment Variables
-│   │   ├── controllers/               # Auth, Product, Reservation, User, Admin Controllers
-│   │   ├── middlewares/              # JWT Auth, requireAdmin, Multer Upload, Error Handler
-│   │   ├── routes/                    # auth, product, reservation, user, admin routes
+│   │   ├── controllers/               # Auth, Product, Reservation, User, Admin, Support Controllers
+│   │   ├── middlewares/              # JWT Auth, requireAdmin, active-account, Multer Upload, Error Handler
+│   │   ├── routes/                    # auth, product, reservation, user, admin, support routes
 │   │   ├── services/                  # CPE OAuth 2.0 Client & Cron Auto-Cancel Job
 │   │   ├── lib/prisma.ts              # Prisma Client Singleton
 │   │   ├── app.ts                     # Express App Initialization
 │   │   └── server.ts                  # Server Entrypoint
 │   ├── prisma/
-│   │   ├── schema.prisma              # Database Schema (User, Product, Reservation)
+│   │   ├── schema.prisma              # Database Schema (including chat and support conversations)
 │   │   └── seed.ts                    # Seed Data (Mock CMU Students & Sample Products)
 │   ├── tests/
 │   │   └── reservation_rules.test.ts # Vitest Test Suite
 │   └── uploads/                       # ที่จัดเก็บรูปภาพสินค้าในเครื่อง
 ├── frontend/
 │   ├── src/
-│   │   ├── components/                # Navbar, ProductCard, shared UI components
+│   │   ├── components/                # Shared UI, reservation chat, support chat, and Admin support inbox
 │   │   ├── context/AuthContext.tsx    # Auth State, Login, Logout, Role State
 │   │   ├── pages/
 │   │   │   ├── MarketplacePage.tsx    # หน้าตลาดนัด ค้นหาสินค้า และแท็กหมวดหมู่
@@ -310,7 +283,8 @@ Project Campus/
 │   │   │   ├── CreateProductPage.tsx  # หน้าลงประกาศขายสินค้าพร้อมอัปโหลดรูป
 │   │   │   ├── ProfilePage.tsx        # ข้อมูลส่วนตัว สินค้าที่ลงขาย และสินค้าที่กดจอง
 │   │   │   ├── LoginPage.tsx          # หน้าล็อกอิน CMU OAuth และ Dev Sandbox
-│   │   │   └── AdminPage.tsx          # หน้าแดชบอร์ดแอดมิน ตรวจสอบผู้ซื้อ/ผู้ขาย & จัดการสิทธิ์
+│   │   │   ├── AdminPage.tsx          # หน้าแดชบอร์ดแอดมิน ตรวจสอบผู้ซื้อ/ผู้ขาย & จัดการสิทธิ์
+│   │   │   └── BannedAccountPage.tsx  # หน้าบัญชีถูกระงับและช่องทางติดต่อ Admin
 │   │   ├── services/api.ts            # Axios Client เชื่อมต่อ Backend พร้อม Cookies
 │   │   ├── types/index.ts             # TypeScript Interfaces & Models
 │   │   ├── index.css                  # Monochrome design tokens & utility classes
