@@ -47,9 +47,9 @@ export default {
         },
       },
       fontFamily: {
-        display: ["Inter", "Kanit", "system-ui", "sans-serif"],
-        sans: ["Inter", "Kanit", "system-ui", "sans-serif"],
-        mono: ["Inter", "Kanit", "system-ui", "sans-serif"],
+        display: ["Google Sans", "Kanit", "system-ui", "sans-serif"],
+        sans: ["Google Sans", "Kanit", "system-ui", "sans-serif"],
+        mono: ["Google Sans", "Kanit", "system-ui", "sans-serif"],
       },
       fontSize: {
         "display-3xl": ["76px", { lineHeight: "1.05", fontWeight: "700" }],

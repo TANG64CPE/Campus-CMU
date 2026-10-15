@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -28,9 +30,9 @@
     --color-shadow-indigo: #000000;
     --color-shadow-navy: #000000;
 
-    --font-display: Inter, Kanit, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --font-sans: Inter, Kanit, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --font-mono: Inter, Kanit, system-ui, sans-serif;
+    --font-display: "Google Sans", Kanit, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-sans: "Google Sans", Kanit, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "Google Sans", Kanit, system-ui, sans-serif;
 
     --space-xxs: 4px;
     --space-xs: 6px;

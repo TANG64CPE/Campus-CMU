@@ -27,12 +27,12 @@ Use status labels, icons and copy to distinguish states. Keep status colors insi
 
 ## Typography
 
-- **Display and body:** Inter, weight 400–500 for body and controls; weight 700 for headlines.
+- **Display and body:** Google Sans, weight 400–700 for body, controls and headlines.
 - **Thai fallback:** Kanit, with the same weight hierarchy.
 - **Display scale:** 52px / 36px / 32px / 24px / 20px, with line-height around 1.22–1.4.
 - **Body scale:** 18px / 16px / 14px / 12px.
 - Keep headlines sentence-case with neutral letter spacing. Do not use a mono font or all-caps treatment for Thai labels.
-- UberMove and UberMoveText are proprietary; Inter and Kanit are the project's practical web-safe substitutes.
+- Kanit remains the fallback for Thai glyphs not covered by Google Sans.
 
 ## Shape and spacing
 
