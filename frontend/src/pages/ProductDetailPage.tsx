@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Product, Reservation, SellerContact, isAdminRole, isContactComplete } from '../types';
 import { productApi, reservationApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { ProductImage } from '../components/ProductImage';
 import { getProductImageUrls } from '../utils/productImages';
+import { ReservationChat } from '../components/ReservationChat';
 
 interface ProductDetailPageProps {
   productId: string;
@@ -54,12 +55,13 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [linkCopied, setLinkCopied] = useState(false);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [showReservationChat, setShowReservationChat] = useState(false);
 
   // Time state for 3-Hour window
   const [timeRemainingText, setTimeRemainingText] = useState<string>('');
   const [isWithin3Hours, setIsWithin3Hours] = useState<boolean>(true);
 
-  const loadProduct = async (showPageLoader = false) => {
+  const loadProduct = useCallback(async (showPageLoader = false) => {
     if (showPageLoader) setLoading(true);
     setErrorMsg(null);
     try {
@@ -79,11 +81,20 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     } finally {
       if (showPageLoader) setLoading(false);
     }
-  };
+  }, [productId]);
 
   useEffect(() => {
     loadProduct(true);
-  }, [productId]);
+  }, [loadProduct]);
+
+  // Keep the seller's page current when a buyer reserves the product.
+  useEffect(() => {
+    if (!isSeller || activeReservation) return;
+    const interval = window.setInterval(() => {
+      void loadProduct();
+    }, 4000);
+    return () => window.clearInterval(interval);
+  }, [isSeller, activeReservation, loadProduct]);
 
   const handleCopyProductLink = async () => {
     try {
@@ -691,6 +702,45 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           </div>
         </div>
       </div>
+
+      {activeReservation && user && !isAdminRole(user.role) && (isCurrentUserTheBuyer || isCurrentUserTheSeller) && (
+        <>
+          <button
+            type="button"
+            onClick={() => setShowReservationChat(true)}
+            className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white shadow-xl transition hover:bg-ink-deep focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            aria-haspopup="dialog"
+            aria-expanded={showReservationChat}
+          >
+            <MessageSquare className="h-4 w-4" />
+            แชตการจอง
+          </button>
+
+          {showReservationChat && (
+            <div
+              className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget) setShowReservationChat(false);
+              }}
+            >
+              <div role="dialog" aria-modal="true" aria-label="แชตผู้ซื้อกับผู้ขาย" className="w-full max-w-lg overflow-hidden rounded-t-2xl border border-hairline bg-white shadow-2xl sm:rounded-2xl">
+                <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
+                  <div>
+                    <h2 className="font-semibold text-ink">แชตผู้ซื้อกับผู้ขาย</h2>
+                    <p className="text-xs text-ink-tertiary">{product.title}</p>
+                  </div>
+                  <button type="button" onClick={() => setShowReservationChat(false)} className="rounded-full p-2 text-ink-secondary transition hover:bg-surface-soft hover:text-ink" aria-label="ปิดแชต">
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="max-h-[75vh] overflow-y-auto p-3 sm:max-h-[min(75vh,620px)]">
+                  <ReservationChat reservationId={activeReservation.id} currentUserId={user.id} />
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {showCancelConfirmation && (
         <div

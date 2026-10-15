@@ -74,6 +74,15 @@ export interface Reservation {
   createdAt: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  reservationId: string;
+  senderId: string;
+  content: string;
+  createdAt: string;
+  sender: Pick<User, 'id' | 'name' | 'avatarUrl'>;
+}
+
 export interface SellerContact {
   name: string;
   studentId: string;
