@@ -67,9 +67,7 @@ export const ReservationChat: React.FC<ReservationChatProps> = ({ reservationId,
   return (
     <section className="mt-6 overflow-hidden rounded-xl border border-hairline bg-canvas shadow-tinted-xs" aria-label="แชตการจอง">
       <header className="flex items-center gap-2 border-b border-hairline px-4 py-3">
-        <MessageCircle className="h-4 w-4 text-primary" />
-        <h2 className="font-semibold text-ink">แชตผู้ซื้อกับผู้ขาย</h2>
-        <span className="ml-auto text-[11px] text-ink-tertiary">ข้อความอัปเดตอัตโนมัติ</span>
+        <h3 className="font-semibold text-ink">แชตผู้ซื้อกับผู้ขาย</h3>
       </header>
 
       <div className="h-72 space-y-3 overflow-y-auto bg-surface/50 px-4 py-4" aria-live="polite">
