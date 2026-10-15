@@ -53,6 +53,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   // Time state for 3-Hour window
@@ -233,15 +235,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   // Handle Seller Delete Product
   const handleDeleteProduct = async () => {
-    if (!confirm('ต้องการลบรายการสินค้านี้ใช่หรือไม่?')) return;
-
     setActionLoading(true);
+    setDeleteError(null);
     try {
       await productApi.deleteProduct(productId);
-      alert('ลบรายการสินค้าเรียบร้อยแล้ว');
       onBack();
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || 'ไม่สามารถลบสินค้าได้');
+      setDeleteError(err.response?.data?.message || 'ไม่สามารถลบสินค้าได้');
+    } finally {
       setActionLoading(false);
     }
   };
@@ -478,7 +479,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
                   {!isReserved && (
                     <button
-                      onClick={handleDeleteProduct}
+                      onClick={() => setShowDeleteConfirmation(true)}
                       disabled={actionLoading}
                       className="w-full py-2.5 bg-surface-soft hover:bg-red-50 text-ink-secondary hover:text-accent-red border border-hairline rounded-sm text-button-md flex items-center justify-center gap-1.5 transition-all duration-clickup ease-clickup"
                     >
@@ -728,12 +729,12 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="mt-7 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <div className="mt-7 grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setShowCancelConfirmation(false)}
                 disabled={actionLoading}
-                className="btn-secondary-sm px-5"
+                className="btn-secondary-sm h-12 w-full px-3"
               >
                 กลับไปหน้าสินค้า
               </button>
@@ -741,9 +742,81 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 type="button"
                 onClick={confirmBuyerCancel}
                 disabled={actionLoading}
-                className="btn-primary-pill px-5 disabled:opacity-60"
+                className="h-12 w-full rounded-pill bg-[#dc2626] px-3 text-sm font-semibold text-white transition-colors hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {actionLoading ? 'กำลังยกเลิก...' : 'ยืนยันยกเลิกการจอง'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteConfirmation && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm"
+          onClick={(event) => {
+            if (event.target === event.currentTarget && !actionLoading) {
+              setShowDeleteConfirmation(false);
+              setDeleteError(null);
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-product-title"
+            aria-describedby="delete-product-description"
+            className="w-full max-w-md rounded-2xl border border-hairline bg-white p-6 shadow-2xl"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-soft text-ink">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 id="delete-product-title" className="text-lg font-bold text-ink">
+                  ยืนยันการลบรายการสินค้า?
+                </h2>
+                <p id="delete-product-description" className="mt-2 text-sm leading-relaxed text-ink-secondary">
+                  รายการ “{product.title}” จะถูกลบออกจากตลาดและไม่สามารถกู้คืนได้
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteConfirmation(false);
+                  setDeleteError(null);
+                }}
+                disabled={actionLoading}
+                aria-label="ปิดหน้าต่างยืนยัน"
+                className="rounded-full p-1 text-ink-tertiary hover:bg-surface-soft hover:text-ink disabled:opacity-50"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {deleteError && (
+              <p role="alert" className="mt-4 text-sm text-accent-red">
+                {deleteError}
+              </p>
+            )}
+            <div className="mt-7 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteConfirmation(false);
+                  setDeleteError(null);
+                }}
+                disabled={actionLoading}
+                className="btn-secondary-sm h-12 w-full px-3"
+              >
+                กลับไปหน้าสินค้า
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteProduct}
+                disabled={actionLoading}
+                className="h-12 w-full rounded-pill bg-[#dc2626] px-3 text-sm font-semibold text-white transition-colors hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {actionLoading ? 'กำลังลบ...' : 'ยืนยันลบสินค้า'}
               </button>
             </div>
           </div>

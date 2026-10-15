@@ -24,6 +24,7 @@ import {
   Info,
   Sparkles,
   ArrowLeft,
+  X,
 } from 'lucide-react';
 
 interface ProfilePageProps {
@@ -54,6 +55,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
   const [myProducts, setMyProducts] = useState<Product[]>([]);
   const [myReservations, setMyReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState(false);
+  const [deleteProductError, setDeleteProductError] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -170,13 +174,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
     }
   };
 
-  const handleDeleteProduct = async (productId: string) => {
-    if (!confirm('ยืนยันที่จะลบสินค้านี้?')) return;
+  const handleDeleteProduct = async () => {
+    if (!productToDelete || deletingProduct) return;
+    setDeletingProduct(true);
+    setDeleteProductError(null);
     try {
-      await productApi.deleteProduct(productId);
+      await productApi.deleteProduct(productToDelete.id);
+      setProductToDelete(null);
       await loadData();
-    } catch (err) {
-      alert('ไม่สามารถลบสินค้าได้');
+    } catch (err: any) {
+      setDeleteProductError(err.response?.data?.message || 'ไม่สามารถลบสินค้าได้');
+    } finally {
+      setDeletingProduct(false);
     }
   };
 
@@ -582,7 +591,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
                         {p.isAvailable ? 'พักการขาย' : 'เปิดขายต่อ'}
                       </button>
                       <button
-                        onClick={() => handleDeleteProduct(p.id)}
+                        onClick={() => {
+                          setProductToDelete(p);
+                          setDeleteProductError(null);
+                        }}
+                        aria-label={`ลบสินค้า ${p.title}`}
                         className="p-2 text-ink-secondary hover:text-accent-red hover:bg-red-50 rounded-md transition-colors"
                         title="ลบสินค้านี้"
                       >
@@ -680,6 +693,78 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
               <p className="text-body-sm text-ink-secondary">คุณยังไม่มีรายการที่กดจองไว้</p>
             </div>
           )}
+        </div>
+      )}
+
+      {productToDelete && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm"
+          onClick={(event) => {
+            if (event.target === event.currentTarget && !deletingProduct) {
+              setProductToDelete(null);
+              setDeleteProductError(null);
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-delete-product-title"
+            aria-describedby="profile-delete-product-description"
+            className="w-full max-w-md rounded-2xl border border-hairline bg-white p-6 shadow-2xl"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-soft text-ink">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 id="profile-delete-product-title" className="text-lg font-bold text-ink">
+                  ยืนยันการลบรายการสินค้า?
+                </h2>
+                <p id="profile-delete-product-description" className="mt-2 text-sm leading-relaxed text-ink-secondary">
+                  รายการ “{productToDelete.title}” จะถูกลบออกจากตลาดและไม่สามารถกู้คืนได้
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setProductToDelete(null);
+                  setDeleteProductError(null);
+                }}
+                disabled={deletingProduct}
+                aria-label="ปิดหน้าต่างยืนยัน"
+                className="rounded-full p-1 text-ink-tertiary hover:bg-surface-soft hover:text-ink disabled:opacity-50"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {deleteProductError && (
+              <p role="alert" className="mt-4 text-sm text-accent-red">
+                {deleteProductError}
+              </p>
+            )}
+            <div className="mt-7 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setProductToDelete(null);
+                  setDeleteProductError(null);
+                }}
+                disabled={deletingProduct}
+                className="btn-secondary-sm h-12 w-full px-3"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteProduct}
+                disabled={deletingProduct}
+                className="h-12 w-full rounded-pill bg-[#dc2626] px-3 text-sm font-semibold text-white transition-colors hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deletingProduct ? 'กำลังลบ...' : 'ยืนยันลบสินค้า'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
