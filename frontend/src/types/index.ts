@@ -45,6 +45,7 @@ export interface Product {
   id: string;
   title: string;
   price: number;
+  quantity: number;
   imageUrl: string | null;
   imageUrls?: string[];
   category?: ProductCategory | null;
@@ -71,6 +72,7 @@ export interface Product {
 export interface Reservation {
   id: string;
   productId: string;
+  quantity: number;
   product: Product;
   buyerId: string;
   buyer?: User;

@@ -28,6 +28,7 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
   const { user, loading: authLoading } = useAuth();
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
+  const [quantity, setQuantity] = useState('1');
   const [category, setCategory] = useState<ProductCategory | ''>('');
   const [meetupLocation, setMeetupLocation] = useState('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -100,6 +101,10 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
       setErrorMsg('กรุณากรอกราคาที่ถูกต้อง');
       return;
     }
+    if (!/^\d+$/.test(quantity) || Number(quantity) < 1 || Number(quantity) > 10000) {
+      setErrorMsg('กรุณาระบุจำนวนสินค้าเป็นจำนวนเต็มตั้งแต่ 1 ถึง 10,000 ชิ้น');
+      return;
+    }
     if (!category) {
       setErrorMsg('กรุณาเลือกหมวดหมู่สินค้า');
       return;
@@ -116,6 +121,7 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
       const formData = new FormData();
       formData.append('title', title.trim());
       formData.append('price', price);
+      formData.append('quantity', quantity);
       formData.append('category', category);
       formData.append('meetupLocation', meetupLocation.trim());
       imageFiles.forEach((file) => formData.append('images', file));
@@ -359,6 +365,25 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
             <p className="text-[11px] text-ink-tertiary mt-1">
               * ชำระเงินสดหรือโอนหน้างานโดยตรงระหว่างนักศึกษา (ไม่มีการหักเปอร์เซ็นต์)
             </p>
+          </div>
+
+          <div>
+            <label htmlFor="product-quantity" className="eyebrow-mono block text-caption text-ink-secondary mb-1.5">
+              จำนวนสินค้า (ชิ้น) <span className="text-accent-red">*</span>
+            </label>
+            <input
+              id="product-quantity"
+              type="number"
+              required
+              min="1"
+              max="10000"
+              step="1"
+              inputMode="numeric"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              className="w-full input-field"
+            />
+            <p className="text-[11px] text-ink-tertiary mt-1">ใส่จำนวนสินค้าที่รวมอยู่ในรายการขายนี้</p>
           </div>
 
           {/* Meetup Location */}

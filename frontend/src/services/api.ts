@@ -89,13 +89,14 @@ export const reservationApi = {
     return res.data.message;
   },
   createReservation: async (
-    productId: string
+    productId: string,
+    quantity: number = 1
   ): Promise<{ reservation: Reservation; sellerContact: SellerContact }> => {
     const res = await api.post<{
       success: boolean;
       reservation: Reservation;
       sellerContact: SellerContact;
-    }>('/reservations', { productId });
+    }>('/reservations', { productId, quantity });
     return {
       reservation: res.data.reservation,
       sellerContact: res.data.sellerContact,

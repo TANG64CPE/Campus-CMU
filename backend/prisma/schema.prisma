@@ -34,6 +34,8 @@ model Product {
   id             String        @id @default(uuid())
   title          String
   price          Float
+  quantity       Int           @default(1)
+  inventoryInitialized Boolean @default(false)
   category       String?       // Category selected by the seller; null for listings created before categories were added
   imageUrl       String?       // รูปหลักของสินค้า รองรับข้อมูลเก่า
   imageUrls      String[]      @default([]) // รูปสินค้าทั้งหมด สูงสุด 5 รูป
@@ -51,6 +53,7 @@ model Reservation {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   buyerId   String
   buyer     User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
   status    String   @default("PENDING") // PENDING, COMPLETED, CANCELLED
   createdAt DateTime @default(now())
   chatMessages ChatMessage[]

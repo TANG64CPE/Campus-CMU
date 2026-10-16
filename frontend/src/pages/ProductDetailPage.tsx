@@ -47,6 +47,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [isSeller, setIsSeller] = useState(false);
   const [isBuyer, setIsBuyer] = useState(false);
   const [activeReservation, setActiveReservation] = useState<Reservation | null>(null);
+  const [reserveQuantity, setReserveQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [revealedSellerContact, setRevealedSellerContact] = useState<SellerContact | null>(null);
@@ -68,6 +69,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     try {
       const data = await productApi.getProductById(productId);
       setProduct(data.product);
+      setReserveQuantity((current) => Math.min(Math.max(current, 1), Math.max(data.product.quantity ?? 1, 1)));
       setActiveImageIndex(0);
       setIsSeller(data.isUserSeller);
       setIsBuyer(data.isUserBuyer);
@@ -155,7 +157,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     setSuccessMsg(null);
 
     try {
-      const res = await reservationApi.createReservation(productId);
+      const res = await reservationApi.createReservation(productId, reserveQuantity);
       setRevealedSellerContact(res.sellerContact);
       setSuccessMsg('🎉 จองสินค้าสำเร็จ! ข้อมูลติดต่อผู้ขายเปิดเผยแล้วด้านล่าง');
       await loadProduct();
@@ -408,6 +410,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 </span>
               </div>
 
+              <p className="mb-5 text-sm text-ink-secondary">คงเหลือ: {product.quantity ?? 1} ชิ้น</p>
+
               {/* Seller summary */}
               <div className="p-3.5 sm:p-4 bg-surface rounded-md border border-hairline mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -527,10 +531,31 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         </div>
                       )}
 
+                      {/* Choose the requested stock quantity before reserving */}
+                      <div className="mb-3">
+                        <label htmlFor="reserve-quantity" className="mb-1.5 block text-sm font-medium text-ink-secondary">
+                          จำนวนที่ต้องการจอง (เหลือ {product.quantity} ชิ้น)
+                        </label>
+                        <input
+                          id="reserve-quantity"
+                          type="number"
+                          min="1"
+                          max={product.quantity}
+                          step="1"
+                          value={reserveQuantity}
+                          onChange={(event) => setReserveQuantity(Number(event.target.value))}
+                          className="w-full input-field"
+                          disabled={product.quantity < 1}
+                        />
+                        <p className="mt-1 text-xs text-ink-secondary">
+                          รวม {new Intl.NumberFormat('th-TH').format(product.price * (Number.isInteger(reserveQuantity) ? reserveQuantity : 0))} บาท
+                        </p>
+                      </div>
+
                       {/* Reservation action */}
                       <button
                         onClick={handleReserve}
-                        disabled={actionLoading || (user ? !isContactComplete(user) : false)}
+                        disabled={actionLoading || product.quantity < 1 || !Number.isInteger(reserveQuantity) || reserveQuantity < 1 || reserveQuantity > product.quantity || (user ? !isContactComplete(user) : false)}
                         className={`w-full h-[52px] px-6 text-body-lg font-semibold tracking-tight-body-sm flex items-center justify-center gap-2 shadow-tinted-md active:scale-[0.99] transition-all duration-clickup ease-clickup ${
                           user && !isContactComplete(user)
                             ? 'bg-surface-soft text-ink-tertiary cursor-not-allowed border border-hairline'
@@ -687,6 +712,12 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                           </div>
                         </div>
                       )}
+                    </div>
+                  ) : product.quantity < 1 ? (
+                    <div className="p-4 bg-surface rounded-lg border border-hairline text-center text-body-sm text-ink-secondary">
+                      <Clock className="w-5 h-5 text-ink-tertiary mx-auto mb-1.5" />
+                      <p className="font-bold text-ink text-heading-sm">สินค้าหมดแล้ว</p>
+                      <p className="mt-0.5 text-ink-tertiary text-[11px]">ขณะนี้ไม่มีสินค้าเหลือในรายการนี้</p>
                     </div>
                   ) : (
                     /* Product reserved by another student */

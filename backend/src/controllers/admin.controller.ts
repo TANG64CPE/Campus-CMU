@@ -348,13 +348,16 @@ export class AdminController {
         });
 
         for (const resv of pendingReservations) {
-          await prisma.reservation.update({
-            where: { id: resv.id },
-            data: { status: 'CANCELLED' },
-          });
-          await prisma.product.update({
-            where: { id: resv.productId },
-            data: { isAvailable: true },
+          await prisma.$transaction(async (tx) => {
+            const cancelled = await tx.reservation.updateMany({
+              where: { id: resv.id, status: 'PENDING' },
+              data: { status: 'CANCELLED' },
+            });
+            if (cancelled.count !== 1) return;
+            await tx.product.update({
+              where: { id: resv.productId },
+              data: { quantity: { increment: resv.quantity }, isAvailable: true },
+            });
           });
         }
       }

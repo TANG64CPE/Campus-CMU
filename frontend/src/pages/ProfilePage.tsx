@@ -583,6 +583,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
                         <p className="font-display font-extrabold text-sm text-ink-deep mt-0.5">
                           ฿{new Intl.NumberFormat('th-TH').format(p.price)}
                         </p>
+                        <p className="text-xs text-ink-secondary mt-1">คงเหลือ: {p.quantity} ชิ้น</p>
                       </div>
                     </div>
 
@@ -674,6 +675,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onSelectProduct, onNav
                           ฿{r.product ? new Intl.NumberFormat('th-TH').format(r.product.price) : '0'}
                         </p>
                       </div>
+                        <p className="text-xs text-ink-secondary mt-1">จำนวนที่จอง: {r.quantity} ชิ้น</p>
                     </div>
 
                     <div className="flex items-center gap-2 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-hairline">

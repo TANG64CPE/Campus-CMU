@@ -25,8 +25,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) =>
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.025]"
         />
         <span className={`absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${product.isAvailable ? 'bg-black text-white' : 'bg-white text-black'}`}>
-          {product.isAvailable ? <Check className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
-          {product.isAvailable ? 'พร้อมซื้อ' : 'มีคนจองแล้ว'}
+          {product.quantity < 1 ? <Clock className="h-3.5 w-3.5" /> : product.isAvailable ? <Check className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
+          {product.quantity < 1 ? 'สินค้าหมด' : product.isAvailable ? 'พร้อมซื้อ' : 'มีคนจองแล้ว'}
         </span>
         {imageCount > 1 && (
           <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-black/80 px-2 py-1 text-[11px] font-medium text-white">
@@ -44,6 +44,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) =>
         <h3 className="line-clamp-2 min-h-[44px] text-body-sm font-medium leading-relaxed text-black">
           {product.title}
         </h3>
+        <p className="mt-2 text-xs text-ink-secondary">เหลือ {product.quantity} ชิ้น</p>
       </div>
     </button>
   );

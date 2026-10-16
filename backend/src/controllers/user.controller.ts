@@ -256,6 +256,21 @@ export class UserController {
         return;
       }
 
+      if (!product.isAvailable) {
+        const pendingReservation = await prisma.reservation.findFirst({
+          where: { productId: id, status: 'PENDING' },
+          select: { id: true },
+        });
+        if (pendingReservation) {
+          res.status(409).json({ success: false, message: 'This listing has a pending reservation and cannot be reopened yet.' });
+          return;
+        }
+        if (product.quantity < 1) {
+          res.status(400).json({ success: false, message: 'This listing is out of stock and cannot be reopened.' });
+          return;
+        }
+      }
+
       const updated = await prisma.product.update({
         where: { id },
         data: { isAvailable: !product.isAvailable },

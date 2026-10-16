@@ -53,14 +53,14 @@ export class ProductController {
         return;
       }
 
-      const { title, price, category, meetupLocation } = req.body;
+      const { title, price, quantity, category, meetupLocation } = req.body;
 
-      if (!title || !price || !category || !meetupLocation) {
+      if (!title || !price || quantity === undefined || !category || !meetupLocation) {
         // If an image was uploaded, remove it since validation failed
         ProductController.removeUploadedImages(files);
         res.status(400).json({
           success: false,
-          message: 'Title, price, category, and meetup location are required.',
+          message: 'Title, price, quantity, category, and meetup location are required.',
         });
         return;
       }
@@ -81,6 +81,13 @@ export class ProductController {
         return;
       }
 
+      const parsedQuantity = Number(quantity);
+      if (!Number.isInteger(parsedQuantity) || parsedQuantity < 1 || parsedQuantity > 10000) {
+        ProductController.removeUploadedImages(files);
+        res.status(400).json({ success: false, message: 'Quantity must be a whole number between 1 and 10000.' });
+        return;
+      }
+
       if (files.length > MAX_PRODUCT_IMAGES) {
         ProductController.removeUploadedImages(files);
         res.status(400).json({
@@ -98,6 +105,8 @@ export class ProductController {
         data: {
           title: title.trim(),
           price: parsedPrice,
+          quantity: parsedQuantity,
+          inventoryInitialized: true,
           category,
           meetupLocation: meetupLocation.trim(),
           imageUrl,

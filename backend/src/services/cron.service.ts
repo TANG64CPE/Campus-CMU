@@ -20,6 +20,7 @@ export class CronService {
       select: {
         id: true,
         productId: true,
+        quantity: true,
       },
     });
 
@@ -32,16 +33,17 @@ export class CronService {
     // Process cancellations in transactions
     for (const res of expiredReservations) {
       try {
-        await prisma.$transaction([
-          prisma.reservation.update({
-            where: { id: res.id },
+        await prisma.$transaction(async (tx) => {
+          const cancelled = await tx.reservation.updateMany({
+            where: { id: res.id, status: 'PENDING' },
             data: { status: 'CANCELLED' },
-          }),
-          prisma.product.update({
+          });
+          if (cancelled.count !== 1) return;
+          await tx.product.update({
             where: { id: res.productId },
-            data: { isAvailable: true },
-          }),
-        ]);
+            data: { quantity: { increment: res.quantity }, isAvailable: true },
+          });
+        });
         console.log(`[Cron] Auto-cancelled reservation ${res.id} and restored product ${res.productId}`);
       } catch (err) {
         console.error(`[Cron] Error auto-cancelling reservation ${res.id}:`, err);

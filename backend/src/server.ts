@@ -9,6 +9,29 @@ const startServer = async () => {
     await prisma.$connect();
     console.log('✅ Connected to Database successfully.');
 
+    // Backfill stock on listings created before quantity-based reservations.
+    const legacyProducts = await prisma.product.findMany({
+      where: { inventoryInitialized: false },
+      select: {
+        id: true,
+        quantity: true,
+        reservations: {
+          where: { status: { in: ['PENDING', 'COMPLETED'] } },
+          select: { id: true },
+          take: 1,
+        },
+      },
+    });
+    for (const product of legacyProducts) {
+      await prisma.product.updateMany({
+        where: { id: product.id, inventoryInitialized: false },
+        data: {
+          quantity: product.reservations.length > 0 ? 0 : product.quantity,
+          inventoryInitialized: true,
+        },
+      });
+    }
+
     // Initialize 24-hour auto cancellation cron
     CronService.initCronJobs();
 

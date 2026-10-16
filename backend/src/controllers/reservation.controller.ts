@@ -32,9 +32,15 @@ export class ReservationController {
       }
 
       const { productId } = req.body;
+      const requestedQuantity = Number(req.body.quantity ?? 1);
 
       if (!productId) {
         res.status(400).json({ success: false, message: 'Product ID is required.' });
+        return;
+      }
+
+      if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1) {
+        res.status(400).json({ success: false, message: 'Reservation quantity must be a positive whole number.' });
         return;
       }
 
@@ -55,7 +61,7 @@ export class ReservationController {
         return;
       }
 
-      if (!product.isAvailable) {
+      if (!product.isAvailable || product.quantity < 1) {
         res.status(400).json({
           success: false,
           message: 'Product has already been reserved or is no longer available.',
@@ -83,25 +89,21 @@ export class ReservationController {
       // Atomic Prisma Transaction to prevent race conditions
       const result = await prisma.$transaction(async (tx) => {
         // Double-check availability inside transaction lock
-        const freshProduct = await tx.product.findUnique({
-          where: { id: productId },
+        // Conditional update keeps simultaneous reservations from overselling stock.
+        const stockUpdate = await tx.product.updateMany({
+          where: { id: productId, isAvailable: true, quantity: { gte: requestedQuantity } },
+          data: { quantity: { decrement: requestedQuantity }, isAvailable: false },
         });
-
-        if (!freshProduct || !freshProduct.isAvailable) {
-          throw new Error('Product was just reserved by another student. Please refresh.');
+        if (stockUpdate.count !== 1) {
+          throw new Error('The requested quantity is no longer available. Please refresh and try again.');
         }
-
-        // Mark product as not available
-        await tx.product.update({
-          where: { id: productId },
-          data: { isAvailable: false },
-        });
 
         // Create reservation record
         const newReservation = await tx.reservation.create({
           data: {
             productId,
             buyerId: user.id,
+            quantity: requestedQuantity,
             status: 'PENDING',
           },
           include: {
@@ -211,16 +213,14 @@ export class ReservationController {
       }
 
       // Transaction: Cancel reservation and restore product availability
-      await prisma.$transaction([
-        prisma.reservation.update({
-          where: { id },
-          data: { status: 'CANCELLED' },
-        }),
-        prisma.product.update({
+      await prisma.$transaction(async (tx) => {
+        const cancelled = await tx.reservation.updateMany({ where: { id, status: 'PENDING' }, data: { status: 'CANCELLED' } });
+        if (cancelled.count !== 1) throw new Error('Reservation is no longer pending. Refresh and try again.');
+        await tx.product.update({
           where: { id: reservation.productId },
-          data: { isAvailable: true },
-        }),
-      ]);
+          data: { quantity: { increment: reservation.quantity }, isAvailable: true },
+        });
+      });
 
       res.json({
         success: true,
@@ -264,9 +264,13 @@ export class ReservationController {
         return;
       }
 
-      await prisma.reservation.update({
-        where: { id },
-        data: { status: 'COMPLETED' },
+      await prisma.$transaction(async (tx) => {
+        const completed = await tx.reservation.updateMany({ where: { id, status: 'PENDING' }, data: { status: 'COMPLETED' } });
+        if (completed.count !== 1) throw new Error('Reservation is no longer pending. Refresh and try again.');
+        await tx.product.update({
+          where: { id: reservation.productId },
+          data: { isAvailable: reservation.product.quantity > 0 },
+        });
       });
 
       res.json({
@@ -325,20 +329,15 @@ export class ReservationController {
       }
 
       // Transaction: Cancel reservation, restore product, and ban buyer
-      await prisma.$transaction([
-        prisma.reservation.update({
-          where: { id },
-          data: { status: 'CANCELLED' },
-        }),
-        prisma.product.update({
+      await prisma.$transaction(async (tx) => {
+        const cancelled = await tx.reservation.updateMany({ where: { id, status: 'PENDING' }, data: { status: 'CANCELLED' } });
+        if (cancelled.count !== 1) throw new Error('Reservation is no longer pending. Refresh and try again.');
+        await tx.product.update({
           where: { id: reservation.productId },
-          data: { isAvailable: true },
-        }),
-        prisma.user.update({
-          where: { id: reservation.buyerId },
-          data: { isBanned: true },
-        }),
-      ]);
+          data: { quantity: { increment: reservation.quantity }, isAvailable: true },
+        });
+        await tx.user.update({ where: { id: reservation.buyerId }, data: { isBanned: true } });
+      });
 
       res.json({
         success: true,
