@@ -46,6 +46,7 @@ export interface Product {
   title: string;
   price: number;
   quantity: number;
+  description?: string | null;
   imageUrl: string | null;
   imageUrls?: string[];
   category?: ProductCategory | null;

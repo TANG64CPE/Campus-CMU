@@ -36,6 +36,7 @@ model Product {
   price          Float
   quantity       Int           @default(1)
   inventoryInitialized Boolean @default(false)
+  description    String?       @db.VarChar(3000)
   category       String?       // Category selected by the seller; null for listings created before categories were added
   imageUrl       String?       // รูปหลักของสินค้า รองรับข้อมูลเก่า
   imageUrls      String[]      @default([]) // รูปสินค้าทั้งหมด สูงสุด 5 รูป

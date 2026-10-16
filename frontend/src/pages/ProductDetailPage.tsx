@@ -401,6 +401,13 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 {product.title}
               </h1>
 
+              {product.description && (
+                <section className="mb-5 rounded-lg border border-hairline bg-surface p-4" aria-labelledby="product-description-title">
+                  <h2 id="product-description-title" className="mb-1.5 text-sm font-semibold text-ink">รายละเอียดสินค้า</h2>
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-ink-secondary">{product.description}</p>
+                </section>
+              )}
+
               {/* Price */}
               <div className="flex items-baseline gap-1 font-display font-extrabold text-3xl sm:text-display-md text-ink-deep mb-5 tracking-tight-md">
                 <span className="text-xl font-semibold text-ink-tertiary">฿</span>

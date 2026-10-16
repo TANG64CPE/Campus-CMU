@@ -12,6 +12,8 @@ import {
   CheckCircle,
   AlertTriangle,
   Camera,
+  ChevronLeft,
+  ChevronRight,
   X,
   Sparkles,
   ImagePlus,
@@ -29,6 +31,7 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState('1');
+  const [description, setDescription] = useState('');
   const [category, setCategory] = useState<ProductCategory | ''>('');
   const [meetupLocation, setMeetupLocation] = useState('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -91,6 +94,23 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
     });
   };
 
+  const moveImage = (index: number, direction: -1 | 1) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= imageFiles.length) return;
+
+    setImageFiles((current) => {
+      const next = [...current];
+      [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+      return next;
+    });
+    setImagePreviews((current) => {
+      const next = [...current];
+      [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+      imagePreviewsRef.current = next;
+      return next;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
@@ -122,6 +142,7 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
       formData.append('title', title.trim());
       formData.append('price', price);
       formData.append('quantity', quantity);
+      formData.append('description', description.trim());
       formData.append('category', category);
       formData.append('meetupLocation', meetupLocation.trim());
       imageFiles.forEach((file) => formData.append('images', file));
@@ -292,8 +313,28 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
                 <div key={preview} className="relative aspect-[4/3] rounded-lg bg-surface overflow-hidden border border-hairline">
                   <img src={preview} alt={`รูปสินค้า ${index + 1}`} className="w-full h-full object-cover" />
                   <span className="absolute bottom-2 left-2 rounded-full bg-ink/75 px-2 py-0.5 text-[10px] text-white">
-                    {index + 1}/{MAX_PRODUCT_IMAGES}
+                    {index === 0 ? 'รูปหลัก · ' : ''}{index + 1}/{MAX_PRODUCT_IMAGES}
                   </span>
+                  <div className="absolute bottom-2 right-2 flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => moveImage(index, -1)}
+                      disabled={index === 0}
+                      aria-label={`เลื่อนรูปที่ ${index + 1} ไปทางซ้าย`}
+                      className="rounded-full bg-ink/80 p-1.5 text-white shadow-tinted-xs hover:bg-ink disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveImage(index, 1)}
+                      disabled={index === imageFiles.length - 1}
+                      aria-label={`เลื่อนรูปที่ ${index + 1} ไปทางขวา`}
+                      className="rounded-full bg-ink/80 p-1.5 text-white shadow-tinted-xs hover:bg-ink disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
                   <button
                     type="button"
                     onClick={() => removeImage(index)}
@@ -384,6 +425,22 @@ export const CreateProductPage: React.FC<CreateProductPageProps> = ({ onSuccess,
               className="w-full input-field"
             />
             <p className="text-[11px] text-ink-tertiary mt-1">ใส่จำนวนสินค้าที่รวมอยู่ในรายการขายนี้</p>
+          </div>
+
+          <div>
+            <label htmlFor="product-description" className="eyebrow-mono block text-caption text-ink-secondary mb-1.5">
+              รายละเอียดสินค้า
+            </label>
+            <textarea
+              id="product-description"
+              rows={5}
+              maxLength={3000}
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder={'อธิบายสภาพการใช้งานและตำหนิ\nประกันสินค้าคงเหลือ (ถ้ามี)\nเหตุผลที่ส่งต่อหรือขาย'}
+              className="w-full input-field min-h-32 resize-y py-3"
+            />
+            <p className="mt-1 text-[11px] text-ink-tertiary">ไม่เกิน 3,000 ตัวอักษร · {description.length}/3,000</p>
           </div>
 
           {/* Meetup Location */}

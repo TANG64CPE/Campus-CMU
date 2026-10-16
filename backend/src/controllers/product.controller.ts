@@ -53,7 +53,7 @@ export class ProductController {
         return;
       }
 
-      const { title, price, quantity, category, meetupLocation } = req.body;
+      const { title, price, quantity, description, category, meetupLocation } = req.body;
 
       if (!title || !price || quantity === undefined || !category || !meetupLocation) {
         // If an image was uploaded, remove it since validation failed
@@ -88,6 +88,12 @@ export class ProductController {
         return;
       }
 
+      if (description !== undefined && (typeof description !== 'string' || description.length > 3000)) {
+        ProductController.removeUploadedImages(files);
+        res.status(400).json({ success: false, message: 'Description must be 3000 characters or fewer.' });
+        return;
+      }
+
       if (files.length > MAX_PRODUCT_IMAGES) {
         ProductController.removeUploadedImages(files);
         res.status(400).json({
@@ -107,6 +113,7 @@ export class ProductController {
           price: parsedPrice,
           quantity: parsedQuantity,
           inventoryInitialized: true,
+          description: typeof description === 'string' && description.trim() ? description.trim() : null,
           category,
           meetupLocation: meetupLocation.trim(),
           imageUrl,
